@@ -1,0 +1,877 @@
+<<<<<<< HEAD
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Gestión de EOATs</title>
+    <!-- Carga de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Carga de Iconos (Heroicons) -->
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    
+    <!-- Configuración de Tailwind (opcional, para fuentes) -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                },
+            },
+        };
+    </script>
+
+    <!-- Estilos personalizados -->
+    <style>
+        /* Estilo para la fuente Inter */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Ocultar scrollbar en sidebar (opcional) */
+        .sidebar::-webkit-scrollbar {
+            display: none;
+        }
+        .sidebar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="flex h-screen">
+        <!-- Barra lateral de Navegación -->
+        <nav class="sidebar fixed top-0 left-0 h-full w-64 bg-gray-800 text-white flex flex-col shadow-lg">
+            <div class="flex items-center justify-center h-20 border-b border-gray-700">
+                <h1 class="text-2xl font-bold">Gestión EOAT</h1>
+            </div>
+            <ul class="flex-1 py-4">
+                <!-- Enlaces de Navegación -->
+                <li>
+                    <a href="#" data-page="page-search" class="nav-link flex items-center px-6 py-3 text-base font-medium rounded-md hover:bg-gray-700 active-link">
+                        <ion-icon name="search-outline" class="w-6 h-6 mr-3"></ion-icon>
+                        Buscar EOAT
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="page-maintenance" class="nav-link flex items-center px-6 py-3 text-base font-medium rounded-md hover:bg-gray-700">
+                        <ion-icon name="build-outline" class="w-6 h-6 mr-3"></ion-icon>
+                        Bitácora Mantenimiento
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="page-parts" class="nav-link flex items-center px-6 py-3 text-base font-medium rounded-md hover:bg-gray-700">
+                        <ion-icon name="cube-outline" class="w-6 h-6 mr-3"></ion-icon>
+                        Refacciones
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="page-log" class="nav-link flex items-center px-6 py-3 text-base font-medium rounded-md hover:bg-gray-700">
+                        <ion-icon name="swap-horizontal-outline" class="w-6 h-6 mr-3"></ion-icon>
+                        Entradas y Salidas
+                    </a>
+                </li>
+            </ul>
+            <div class="p-4 border-t border-gray-700">
+                <a href="#" class="flex items-center px-4 py-2 text-base font-medium rounded-md hover:bg-gray-700">
+                    <ion-icon name="log-out-outline" class="w-6 h-6 mr-3"></ion-icon>
+                    Cerrar Sesión
+                </a>
+            </div>
+        </nav>
+
+        <!-- Contenido Principal -->
+        <main class="flex-1 ml-64 p-8 overflow-y-auto">
+            
+            <!-- SECCIÓN 1: BÚSQUEDA DE EOATs -->
+            <div id="page-search" class="page-content">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Búsqueda de Herramentales (EOAT)</h2>
+                
+                <!-- Barra de Búsqueda -->
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <div class="flex space-x-4">
+                        <input type="text" placeholder="Buscar por ID, Nombre o Ubicación..." class="flex-1 p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button class="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 shadow-md transition duration-150 ease-in-out">
+                            Buscar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabla de Resultados (Datos de ejemplo) -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Herramental</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">EOAT-001</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Gripper Doble Iny. 35</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Gripper</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Almacén A-1</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Disponible
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="#" class="text-blue-600 hover:text-blue-900">Detalles</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">EOAT-002</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Ventosa Múltiple Tapa</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Ventosa</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Robot #5</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                        En Producción
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="#" class="text-blue-600 hover:text-blue-900">Detalles</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">EOAT-003</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Pinza Corte Colada</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Pinza</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Taller Mto.</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                        En Mantenimiento
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="#" class="text-blue-600 hover:text-blue-900">Detalles</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 2: BITÁCORA DE MANTENIMIENTO -->
+            <div id="page-maintenance" class="page-content hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Bitácora de Mantenimiento</h2>
+                
+                <!-- Formulario para Nuevo Registro -->
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <h3 class="text-xl font-semibold mb-4">Registrar Nuevo Mantenimiento</h3>
+                    <form action="#" method="POST" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="maint-eoat" class="block text-sm font-medium text-gray-700">EOAT (ID o Nombre)</label>
+                                <input type="text" id="maint-eoat" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="maint-type" class="block text-sm font-medium text-gray-700">Tipo de Mantenimiento</label>
+                                <select id="maint-type" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option>Preventivo</option>
+                                    <option>Correctivo</option>
+                                    <option>Predictivo</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="maint-date" class="block text-sm font-medium text-gray-700">Fecha</label>
+                                <input type="date" id="maint-date" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="maint-tech" class="block text-sm font-medium text-gray-700">Técnico Responsable</label>
+                                <input type="text" id="maint-tech" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="maint-notes" class="block text-sm font-medium text-gray-700">Notas y Observaciones</label>
+                            <textarea id="maint-notes" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                        </div>
+                        <div class="text-right">
+                            <button type="submit" class="px-6 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 shadow-md transition duration-150 ease-in-out">
+                                Guardar Registro
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Historial de Mantenimiento -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <h3 class="text-xl font-semibold p-5 border-b border-gray-200">Historial Reciente</h3>
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">EOAT</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Técnico</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notas</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">2025-10-28</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">EOAT-003</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Correctivo</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">J. Pérez</td>
+                                <td class="px-6 py-4 text-sm text-gray-700 truncate max-w-xs">Cambio de sensor de posición.</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">2025-10-25</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">EOAT-001</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Preventivo</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">A. López</td>
+                                <td class="px-6 py-4 text-sm text-gray-700 truncate max-w-xs">Limpieza y lubricación de guías.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 3: REFACCIONES -->
+            <div id="page-parts" class="page-content hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Gestión de Refacciones</h2>
+
+                <!-- Barra de Búsqueda -->
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <div class="flex space-x-4">
+                        <input type="text" placeholder="Buscar por N/P, Descripción o Ubicación..." class="flex-1 p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button class="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 shadow-md transition duration-150 ease-in-out">
+                            Buscar
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Tabla de Inventario -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">N/P</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">PN-SENS-01A</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Sensor Inductivo M12</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">15</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Rack B-3</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="#" class="text-blue-600 hover:text-blue-900">Ajustar</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">PN-VENT-30B</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Ventosa 30mm Silicona</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">150</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Rack C-1</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="#" class="text-blue-600 hover:text-blue-900">Ajustar</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">PN-GRIP-05</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Dedo de Gripper (Par)</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">3</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Rack B-3</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="#" class="text-blue-600 hover:text-blue-900">Ajustar</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 4: ENTRADAS Y SALIDAS A PISO -->
+            <div id="page-log" class="page-content hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Registro de Entradas y Salidas a Piso</h2>
+                
+                <!-- Formulario de Registro -->
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <h3 class="text-xl font-semibold mb-4">Registrar Movimiento</h3>
+                    <form action="#" method="POST" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Tipo de Movimiento</label>
+                            <div class="mt-2 flex space-x-4">
+                                <label class="flex items-center">
+                                    <input type="radio" name="mov-type" value="entrada" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
+                                    <span class="ml-2 text-sm text-gray-700">Entrada a Almacén / Taller</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="mov-type" value="salida" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300" checked>
+                                    <span class="ml-2 text-sm text-gray-700">Salida a Piso (Producción)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="log-item" class="block text-sm font-medium text-gray-700">ID de Item (EOAT o Refacción)</label>
+                                <input type="text" id="log-item" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="log-user" class="block text-sm font-medium text-gray-700">Usuario (Solicita / Entrega)</label>
+                                <input type="text" id="log-user" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="log-reason" class="block text-sm font-medium text-gray-700">Razón / Comentarios</label>
+                            <textarea id="log-reason" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ej: Instalación en Robot #5, Mantenimiento..."></textarea>
+                        </div>
+                        <div class="text-right">
+                            <button type="submit" class="px-6 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 shadow-md transition duration-150 ease-in-out">
+                                Registrar Movimiento
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Log de Movimientos -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <h3 class="text-xl font-semibold p-5 border-b border-gray-200">Últimos Movimientos</h3>
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Razón</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">2025-10-29 10:30 AM</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        Salida a Piso
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">EOAT-002</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">R. Castillo</td>
+                                <td class="px-6 py-4 text-sm text-gray-700 truncate max-w-xs">Instalación en Robot #5.</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">2025-10-29 09:15 AM</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Entrada Taller
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">EOAT-003</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">J. Pérez</td>
+                                <td class="px-6 py-4 text-sm text-gray-700 truncate max-w-xs">Recepción para mantenimiento.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Script para la navegación de pestañas -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const pages = document.querySelectorAll('.page-content');
+            
+            // Estilo para el enlace activo
+            const activeLinkClass = 'bg-gray-900'; // O la clase que prefieras
+            const inactiveLinkClass = 'hover:bg-gray-700';
+
+            // Mostrar la primera página por defecto
+            pages[0].classList.remove('hidden');
+            navLinks[0].classList.add(activeLinkClass);
+            navLinks[0].classList.remove(inactiveLinkClass);
+
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    const pageId = link.getAttribute('data-page');
+
+                    // Ocultar todas las páginas
+                    pages.forEach(page => {
+                        page.classList.add('hidden');
+                    });
+
+                    // Quitar clase activa de todos los enlaces
+                    navLinks.forEach(navLink => {
+                        navLink.classList.remove(activeLinkClass);
+                        navLink.classList.add(inactiveLinkClass);
+                    });
+
+                    // Mostrar la página seleccionada
+                    const targetPage = document.getElementById(pageId);
+                    if (targetPage) {
+                        targetPage.classList.remove('hidden');
+                    }
+
+                    // Añadir clase activa al enlace clickeado
+                    link.classList.add(activeLinkClass);
+                    link.classList.remove(inactiveLinkClass);
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>
+=======
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Gestión de EOATs</title>
+    <!-- Carga de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Carga de Iconos (Heroicons) -->
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    
+    <!-- Configuración de Tailwind (opcional, para fuentes) -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                },
+            },
+        };
+    </script>
+
+    <!-- Estilos personalizados -->
+    <style>
+        /* Estilo para la fuente Inter */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Ocultar scrollbar en sidebar (opcional) */
+        .sidebar::-webkit-scrollbar {
+            display: none;
+        }
+        .sidebar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="flex h-screen">
+        <!-- Barra lateral de Navegación -->
+        <nav class="sidebar fixed top-0 left-0 h-full w-64 bg-gray-800 text-white flex flex-col shadow-lg">
+            <div class="flex items-center justify-center h-20 border-b border-gray-700">
+                <h1 class="text-2xl font-bold">Gestión EOAT</h1>
+            </div>
+            <ul class="flex-1 py-4">
+                <!-- Enlaces de Navegación -->
+                <li>
+                    <a href="#" data-page="page-search" class="nav-link flex items-center px-6 py-3 text-base font-medium rounded-md hover:bg-gray-700 active-link">
+                        <ion-icon name="search-outline" class="w-6 h-6 mr-3"></ion-icon>
+                        Buscar EOAT
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="page-maintenance" class="nav-link flex items-center px-6 py-3 text-base font-medium rounded-md hover:bg-gray-700">
+                        <ion-icon name="build-outline" class="w-6 h-6 mr-3"></ion-icon>
+                        Bitácora Mantenimiento
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="page-parts" class="nav-link flex items-center px-6 py-3 text-base font-medium rounded-md hover:bg-gray-700">
+                        <ion-icon name="cube-outline" class="w-6 h-6 mr-3"></ion-icon>
+                        Refacciones
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="page-log" class="nav-link flex items-center px-6 py-3 text-base font-medium rounded-md hover:bg-gray-700">
+                        <ion-icon name="swap-horizontal-outline" class="w-6 h-6 mr-3"></ion-icon>
+                        Entradas y Salidas
+                    </a>
+                </li>
+            </ul>
+            <div class="p-4 border-t border-gray-700">
+                <a href="#" class="flex items-center px-4 py-2 text-base font-medium rounded-md hover:bg-gray-700">
+                    <ion-icon name="log-out-outline" class="w-6 h-6 mr-3"></ion-icon>
+                    Cerrar Sesión
+                </a>
+            </div>
+        </nav>
+
+        <!-- Contenido Principal -->
+        <main class="flex-1 ml-64 p-8 overflow-y-auto">
+            
+            <!-- SECCIÓN 1: BÚSQUEDA DE EOATs -->
+            <div id="page-search" class="page-content">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Búsqueda de Herramentales (EOAT)</h2>
+                
+                <!-- Barra de Búsqueda -->
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <div class="flex space-x-4">
+                        <input type="text" placeholder="Buscar por ID, Nombre o Ubicación..." class="flex-1 p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button class="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 shadow-md transition duration-150 ease-in-out">
+                            Buscar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabla de Resultados (Datos de ejemplo) -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Herramental</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">EOAT-001</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Gripper Doble Iny. 35</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Gripper</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Almacén A-1</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Disponible
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="#" class="text-blue-600 hover:text-blue-900">Detalles</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">EOAT-002</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Ventosa Múltiple Tapa</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Ventosa</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Robot #5</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                        En Producción
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="#" class="text-blue-600 hover:text-blue-900">Detalles</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">EOAT-003</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Pinza Corte Colada</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Pinza</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Taller Mto.</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                        En Mantenimiento
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="#" class="text-blue-600 hover:text-blue-900">Detalles</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 2: BITÁCORA DE MANTENIMIENTO -->
+            <div id="page-maintenance" class="page-content hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Bitácora de Mantenimiento</h2>
+                
+                <!-- Formulario para Nuevo Registro -->
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <h3 class="text-xl font-semibold mb-4">Registrar Nuevo Mantenimiento</h3>
+                    <form action="#" method="POST" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="maint-eoat" class="block text-sm font-medium text-gray-700">EOAT (ID o Nombre)</label>
+                                <input type="text" id="maint-eoat" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="maint-type" class="block text-sm font-medium text-gray-700">Tipo de Mantenimiento</label>
+                                <select id="maint-type" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option>Preventivo</option>
+                                    <option>Correctivo</option>
+                                    <option>Predictivo</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="maint-date" class="block text-sm font-medium text-gray-700">Fecha</label>
+                                <input type="date" id="maint-date" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="maint-tech" class="block text-sm font-medium text-gray-700">Técnico Responsable</label>
+                                <input type="text" id="maint-tech" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="maint-notes" class="block text-sm font-medium text-gray-700">Notas y Observaciones</label>
+                            <textarea id="maint-notes" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                        </div>
+                        <div class="text-right">
+                            <button type="submit" class="px-6 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 shadow-md transition duration-150 ease-in-out">
+                                Guardar Registro
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Historial de Mantenimiento -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <h3 class="text-xl font-semibold p-5 border-b border-gray-200">Historial Reciente</h3>
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">EOAT</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Técnico</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notas</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">2025-10-28</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">EOAT-003</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Correctivo</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">J. Pérez</td>
+                                <td class="px-6 py-4 text-sm text-gray-700 truncate max-w-xs">Cambio de sensor de posición.</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">2025-10-25</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">EOAT-001</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Preventivo</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">A. López</td>
+                                <td class="px-6 py-4 text-sm text-gray-700 truncate max-w-xs">Limpieza y lubricación de guías.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 3: REFACCIONES -->
+            <div id="page-parts" class="page-content hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Gestión de Refacciones</h2>
+
+                <!-- Barra de Búsqueda -->
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <div class="flex space-x-4">
+                        <input type="text" placeholder="Buscar por N/P, Descripción o Ubicación..." class="flex-1 p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button class="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 shadow-md transition duration-150 ease-in-out">
+                            Buscar
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Tabla de Inventario -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">N/P</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">PN-SENS-01A</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Sensor Inductivo M12</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">15</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Rack B-3</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="#" class="text-blue-600 hover:text-blue-900">Ajustar</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">PN-VENT-30B</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Ventosa 30mm Silicona</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">150</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Rack C-1</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="#" class="text-blue-600 hover:text-blue-900">Ajustar</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">PN-GRIP-05</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Dedo de Gripper (Par)</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">3</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Rack B-3</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="#" class="text-blue-600 hover:text-blue-900">Ajustar</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 4: ENTRADAS Y SALIDAS A PISO -->
+            <div id="page-log" class="page-content hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Registro de Entradas y Salidas a Piso</h2>
+                
+                <!-- Formulario de Registro -->
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <h3 class="text-xl font-semibold mb-4">Registrar Movimiento</h3>
+                    <form action="#" method="POST" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Tipo de Movimiento</label>
+                            <div class="mt-2 flex space-x-4">
+                                <label class="flex items-center">
+                                    <input type="radio" name="mov-type" value="entrada" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
+                                    <span class="ml-2 text-sm text-gray-700">Entrada a Almacén / Taller</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="mov-type" value="salida" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300" checked>
+                                    <span class="ml-2 text-sm text-gray-700">Salida a Piso (Producción)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="log-item" class="block text-sm font-medium text-gray-700">ID de Item (EOAT o Refacción)</label>
+                                <input type="text" id="log-item" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="log-user" class="block text-sm font-medium text-gray-700">Usuario (Solicita / Entrega)</label>
+                                <input type="text" id="log-user" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="log-reason" class="block text-sm font-medium text-gray-700">Razón / Comentarios</label>
+                            <textarea id="log-reason" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ej: Instalación en Robot #5, Mantenimiento..."></textarea>
+                        </div>
+                        <div class="text-right">
+                            <button type="submit" class="px-6 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 shadow-md transition duration-150 ease-in-out">
+                                Registrar Movimiento
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Log de Movimientos -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <h3 class="text-xl font-semibold p-5 border-b border-gray-200">Últimos Movimientos</h3>
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Razón</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">2025-10-29 10:30 AM</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        Salida a Piso
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">EOAT-002</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">R. Castillo</td>
+                                <td class="px-6 py-4 text-sm text-gray-700 truncate max-w-xs">Instalación en Robot #5.</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">2025-10-29 09:15 AM</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Entrada Taller
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">EOAT-003</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">J. Pérez</td>
+                                <td class="px-6 py-4 text-sm text-gray-700 truncate max-w-xs">Recepción para mantenimiento.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Script para la navegación de pestañas -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const pages = document.querySelectorAll('.page-content');
+            
+            // Estilo para el enlace activo
+            const activeLinkClass = 'bg-gray-900'; // O la clase que prefieras
+            const inactiveLinkClass = 'hover:bg-gray-700';
+
+            // Mostrar la primera página por defecto
+            pages[0].classList.remove('hidden');
+            navLinks[0].classList.add(activeLinkClass);
+            navLinks[0].classList.remove(inactiveLinkClass);
+
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    const pageId = link.getAttribute('data-page');
+
+                    // Ocultar todas las páginas
+                    pages.forEach(page => {
+                        page.classList.add('hidden');
+                    });
+
+                    // Quitar clase activa de todos los enlaces
+                    navLinks.forEach(navLink => {
+                        navLink.classList.remove(activeLinkClass);
+                        navLink.classList.add(inactiveLinkClass);
+                    });
+
+                    // Mostrar la página seleccionada
+                    const targetPage = document.getElementById(pageId);
+                    if (targetPage) {
+                        targetPage.classList.remove('hidden');
+                    }
+
+                    // Añadir clase activa al enlace clickeado
+                    link.classList.add(activeLinkClass);
+                    link.classList.remove(inactiveLinkClass);
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>
+>>>>>>> dc13148 (Mi primera subida desde Windows)
