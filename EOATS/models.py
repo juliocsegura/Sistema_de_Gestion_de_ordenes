@@ -136,7 +136,6 @@ class Movimientos(models.Model):
    fecha = models.DateTimeField(auto_now_add=True)
 
    class Meta:
-<<<<<<< HEAD
        
         ordering = ['-fecha']
 
@@ -164,10 +163,3 @@ class Movimientos(models.Model):
 
     def __str__(self):
         return f"Plan para {self.eoat.numero_eoat}"
-=======
-        # IMPORTANTE: Este modelo SÍ es manejado por Django
-        ordering = ['-fecha'] # Ordenar del más nuevo al más viejo
-
-   def __str__(self):
-        return f"{self.eoat.numero_eoat}: {self.estado_anterior} -> {self.estado_nuevo}"
->>>>>>> dc13148 (Mi primera subida desde Windows)
