@@ -141,25 +141,4 @@ class Movimientos(models.Model):
 
    def __str__(self):
         return f"{self.eoat.numero_eoat}: {self.estado_anterior} -> {self.estado_nuevo}"
-   class PlanMantenimiento(models.Model):
-    # Esta es la clave:
-    # Se relaciona 1 a 1 con un EOAT. Si se borra el EOAT, se borra su plan.
-    eoat = models.OneToOneField(
-        Eoats, 
-        on_delete=models.CASCADE, 
-        primary_key=True, # Hace que el EOAT sea la clave primaria de esta tabla
-        related_name="plan_mantenimiento" # Nombre para acceder desde el EOAT
-    )
-
-    # El resto de campos que antes queríamos poner en Eoats
-    plan = models.CharField(
-        max_length=50, 
-        blank=True, 
-        null=True, 
-        verbose_name="Plan Asignado"
-    )
-    
-    
-
-    def __str__(self):
-        return f"Plan para {self.eoat.numero_eoat}"
+  
