@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Gestión</title>
+    
+    <!-- Carga de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Carga de Iconos (Ionicons) -->
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Un gris/azul muy claro */
+        }
+        .app-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .app-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <div class="max-w-4xl w-full p-8">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-800">Sistema de Gestión de Manufactura</h1>
+            <p class="text-lg text-gray-600 mt-2">Selecciona el módulo al que deseas acceder.</p>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-2 gap-10">
+
+            <!-- 
+                TARJETA 1: GESTIÓN DE EOAT
+                Esto te llevará a la aplicación que ya construimos.
+                Apunta a la URL principal de tu app de EOATs (ej. 'buscar_eoat').
+            -->
+            <a href="{% url 'lista_eoats' %}" class="app-card bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-8">
+                    <div class="flex items-center space-x-5">
+                        <div class="p-4 bg-blue-100 rounded-full">
+                            <ion-icon name="build-outline" class="text-4xl text-blue-600"></ion-icon>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">Gestión de EOATs</h2>
+                            <p class="text-gray-600 mt-1">Bitácoras, refacciones y localización de herramentales.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-8 pb-5 text-blue-600 font-medium flex items-center">
+                    Acceder al módulo
+                    <ion-icon name="arrow-forward-outline" class="ml-2"></ion-icon>
+                </div>
+            </a>
+
+            <!-- 
+                TARJETA 2: GESTIÓN DE MOLDEO
+                Esto te llevará a tu OTRA aplicación.
+                Deberás crear una URL para esta (ej. 'dashboard_moldeo').
+            -->
+            <a href="{% url 'panel_principal' %}" class="app-card bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-8">
+                    <div class="flex items-center space-x-5">
+                        <div class="p-4 bg-green-100 rounded-full">
+                            <ion-icon name="hardware-chip-outline" class="text-4xl text-green-600"></ion-icon>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">Gestión de Moldeo</h2>
+                            <p class="text-gray-600 mt-1">Parámetros, ciclos y eficiencia de máquinas.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-8 pb-5 text-green-600 font-medium flex items-center">
+                    Acceder al módulo
+                    <ion-icon name="arrow-forward-outline" class="ml-2"></ion-icon>
+                </div>
+            </a>
+
+        </main>
+        
+        <footer class="text-center mt-12 text-gray-500">
+            &copy; {% now "Y" %} Tu Compañía. Todos los derechos reservados.
+        </footer>
+    </div>
+
+</body>
+</html>

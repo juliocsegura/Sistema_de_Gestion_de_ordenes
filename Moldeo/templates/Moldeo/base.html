@@ -1,0 +1,172 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" class="dark"> <!-- Activamos el modo oscuro en todo el HTML -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Panel de Órdenes{% endblock %}</title>
+    <!-- Incluimos el script de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Configuración opcional de Tailwind (para modo oscuro)
+        tailwind.config = {
+            darkMode: 'class', // Habilita el modo oscuro basado en una clase en <html>
+        }
+    </script>
+</head>
+<body class="bg-gray-900 text-gray-200 font-sans antialiased">
+
+    <!-- 1. MENÚ HORIZONTAL CON DESPLEGABLES (RESPONSIVO) -->
+    <nav class="bg-gray-800 shadow-md">
+        <!-- Contenedor principal del menú -->
+        <div class="max-w-7xl mx-auto px-4">
+            <!-- Contenedor flexible para logo, menú desktop y botón móvil -->
+            <div class="flex justify-between items-center h-16">
+                
+                <!-- Logo/Brand -->
+                <div class="flex-shrink-0">
+                    <a href="#" class="text-white text-xl font-bold">Panel Órdenes</a>
+                </div>
+
+                <!-- Menú Desktop (Oculto en móvil) -->
+                <div class="hidden md:flex md:items-center md:space-x-2">
+                    <ul class="flex space-x-2">
+                        
+                        <!-- Enlace Simple -->
+                        <li>
+                            <a href="#" class="block py-4 px-5 text-gray-200 hover:bg-gray-700 rounded-md">
+                                Inicio
+                            </a>
+                        </li>
+
+                        <!-- Enlace CON DESPLEGABLE -->
+                        <li class="relative group">
+                            <a href="#" class="block py-4 px-5 text-gray-200 hover:bg-gray-700 rounded-md">
+                                Órdenes
+                                <svg class="inline-block w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </a>
+                            
+                            <ul class="absolute left-0 w-48 bg-gray-700 rounded-md shadow-lg py-1 z-10 
+                                       hidden group-hover:block"> 
+                                <li>
+                                    <a href="#" class="block px-4 py-2 text-sm hover:bg-gray-600">
+                                        Ver Todas
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#"  class="block px-4 py-2 text-sm hover:bg-gray-600">
+                                        Buscar Orden
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#" class="block px-4 py-2 text-sm hover:bg-gray-600">
+                                        Reportes
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        
+                        <!-- Enlace Simple -->
+                        <li>
+                            <a href="#" class="block py-4 px-5 text-gray-200 hover:bg-gray-700 rounded-md">
+                                Clientes
+                            </a>
+                        </li>
+                        
+                        <!-- Enlace Simple -->
+                        <li>
+                            <a href="#" class="block py-4 px-5 text-gray-200 hover:bg-gray-700 rounded-md">
+                                Configuración
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Botón Hamburger (Visible en móvil) -->
+                <div class="flex md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-300 hover:text-white focus:outline-none p-2 rounded-md">
+                        <span class="sr-only">Abrir menú</span>
+                        <!-- Icono Hamburger -->
+                        <svg id="icon-open" class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-8 6h8"></path>
+                        </svg>
+                        <!-- Icono 'X' (Oculto por defecto) -->
+                        <svg id="icon-close" class="h-6 w-6 hidden" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menú Desplegable Móvil (Oculto por defecto) -->
+        <div id="mobile-menu" class="hidden md:hidden">
+            <ul class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <li>
+                    <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:bg-gray-700">
+                        Inicio
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:bg-gray-700">
+                        Órdenes
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="block pl-8 pr-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700">
+                        - Ver Todas
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="block pl-8 pr-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700">
+                        - Buscar Orden
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="block pl-8 pr-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700">
+                        - Reportes
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:bg-gray-700">
+                        Clientes
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:bg-gray-700">
+                        Configuración
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Contenedor principal para el contenido de las páginas hijas -->
+    <main>
+        {% block content %}
+        <!-- El contenido de las páginas hijas (como dashboard.html) irá aquí -->
+        {% endblock  %}
+    </main>
+
+    <!-- Script para el menú móvil (pertenece a la base) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const iconOpen = document.getElementById('icon-open');
+            const iconClose = document.getElementById('icon-close');
+
+            menuButton.addEventListener('click', () => {
+                // Toggle (mostrar/ocultar) el menú
+                mobileMenu.classList.toggle('hidden');
+                
+                // Toggle (mostrar/ocultar) los iconos
+                iconOpen.classList.toggle('hidden');
+                iconClose.classList.toggle('hidden');
+            });
+        });
+    </script>
+
+</body>
+</html>
+
