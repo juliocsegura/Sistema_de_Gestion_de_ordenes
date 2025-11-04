@@ -79,8 +79,13 @@ WSGI_APPLICATION = 'Gestion_EOATS.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'Mantenimiento_EOAT.db',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'mi_proyecto_db',
+        'USER': 'mi_usuario_django',
+        'PASSWORD': 'Hashira10',
+        'HOST': 'mi_db_postgres',          # <-- ¡El nombre del contenedor de Postgres!
+        'PORT': '5432',                 # <-- El puerto *interno* (casi siempre 5432)
+    
     }
 }
 
