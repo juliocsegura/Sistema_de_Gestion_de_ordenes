@@ -125,3 +125,14 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# In settings.py
+
+# Use a wildcard to trust all subdomains from ngrok-free.dev
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.ngrok-free.dev',
+    # You should also keep your local domains trusted
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    'http://0.0.0.0:8000',
+]
