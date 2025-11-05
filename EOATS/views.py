@@ -16,7 +16,8 @@ def lista_eoats_view(request):
     # 2. Empezamos con todos los EOATs, pero si hay un término de búsqueda, filtramos.
     if not query:
         # Si no hay búsqueda, simplemente muestra todos los EOATs
-        lista_de_eoats = Eoats.objects.all()
+       lista_de_eoats = Eoats.objects.all().order_by('locacion')
+
     else:
         
       # 2. Dividimos la búsqueda en una lista de términos individuales.

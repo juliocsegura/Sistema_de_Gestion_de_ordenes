@@ -69,8 +69,7 @@ class Moldes(models.Model):
 
 class NumerosDeParte(models.Model):
     id_np = models.AutoField(primary_key=True, blank=True, null=False)
-    id_molde = models.ForeignKey(Moldes, models.DO_NOTHING, db_column='id_Molde', blank=True, null=True)  # Field name made lowercase.
-    numero_molde = models.TextField(blank=True, null=True)  # This field type is a guess.
+    id_molde = models.CharField(max_length=50, blank=True, null=True)  # Field name made lowercase.  # This field type is a guess.
     numero_parte = models.TextField(blank=True, null=True)
     terminacion = models.TextField(blank=True, null=True)
     inicio = models.TextField(blank=True, null=True)

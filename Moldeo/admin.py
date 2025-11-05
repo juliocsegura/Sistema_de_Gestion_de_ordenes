@@ -39,7 +39,7 @@ class MoldesAdmin(admin.ModelAdmin):
 
 @admin.register(NumerosDeParte)
 class NumerosDeParteAdmin(admin.ModelAdmin):
-    list_display = ('id_np', 'id_molde', 'numero_molde', 'numero_parte', 'terminacion', 'inicio', 'number_part', 'junto')
+    list_display = ('id_np', 'id_molde', 'numero_parte', 'terminacion', 'inicio', 'number_part', 'junto')
 
 @admin.register(Retorno)
 class RetornoAdmin(admin.ModelAdmin):

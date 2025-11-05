@@ -37,8 +37,9 @@ class Eoats(models.Model):
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default=STATUS_PREPARACION
-
+        default=STATUS_PREPARACION,
+        null=True,
+        blank=True
     )
     class Meta:
 
