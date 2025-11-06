@@ -3,9 +3,12 @@ from django.contrib import messages
 import pandas as pd
 from .models import STATUS_PRODUCCION, STATUS_DISPONIBLE, STATUS_MANTENIMIENTO,STATUS_PREPARACION
 from django.db.models import Q
+from django.http import JsonResponse
+from .models import Eoats, Preventivos, Refacciones,Movimientos,RegistroPlanCargado ,FotoEoat ,STATUS_CHOICES
+from django.db import transaction # Importamos transaction para asegurar la operación
+import re # Importamos re para limpieza de strings
+import io # Para manejar archivos en memoria de forma más flexible
 
-# Create your views here.
-from .models import Eoats, Preventivos, Refacciones,Movimientos,STATUS_CHOICES
 def desarrollo_view(request):
     return render(request, 'EOATS/desarrollo.html')
 def lista_eoats_view(request):
@@ -212,61 +215,191 @@ def movimientos_view(request):
     # 3. Renderizamos la página y le pasamos los datos
     return render(request, 'EOATS/movimientos_log.html', context)
 def plan_view(request):
-
-    return render(request, 'EOATS/planes.html')
-def upload_plan_view(request):
+    """
+    Muestra la página con la tabla de los datos cargados desde el Excel.
+    """
+    # 1. Consultamos la nueva tabla de registros crudos
+    registros = RegistroPlanCargado.objects.all()
     
-    # Si el usuario envía el formulario (POST)
-    if request.method == 'POST':
-        # 1. Obtenemos el archivo usando el 'name' del input
-        file = request.FILES.get('plan_file') 
+    context = {
+        # 2. Pasamos los registros a la plantilla HTML
+        'registros_cargados': registros
+    }
+    # 3. Renderizamos la plantilla que también contiene el formulario de carga
+    return render(request, 'EOATS/planes.html', context)
 
-        if not file:
-            messages.error(request, 'No se seleccionó ningún archivo.')
-            return redirect('upload_plan_file') # Redirige a la misma página
 
-        # 2. Verificamos la extensión (opcional pero recomendado)
-        if not file.name.endswith(('.xlsx', '.xls', '.csv')):
-            messages.error(request, 'Formato de archivo no válido. Usar .xlsx, .xls o .csv')
-            return redirect('upload_plan_file')
+def upload_plan_view(request):
+    """
+    Maneja la carga del archivo Excel/CSV.
+    Transforma el MOLDE (M -> 21-)
+    Asigna el STATUS (MANTENIMIENTO)
+    Guarda los datos procesados en la tabla 'RegistroPlanCargado'.
+    Y ADEMÁS, actualiza el 'status' en la tabla maestra 'Eoats'.
+    """
+    # Solo debe funcionar con POST
+    if request.method != 'POST':
+        return redirect('plan_view') 
 
-        try:
-            # 3. Usamos Pandas para leer el archivo en memoria
-            if file.name.endswith('.csv'):
-                df = pd.read_csv(file)
-            else:
-                df = pd.read_excel(file)
+    # 1. Obtenemos el archivo
+    file = request.FILES.get('plan_file') 
 
-            # 4. Procesamos los datos (¡AQUÍ ESTÁ LA MAGIA!)
-            # Iteramos sobre cada fila leída del Excel
+    if not file:
+        messages.error(request, 'No se seleccionó ningún archivo.')
+        return redirect('plan_view') 
+
+    # 2. Verificamos la extensión
+    if not file.name.endswith(('.xlsx', '.xls', '.csv')):
+        messages.error(request, 'Formato de archivo no válido. Usar .xlsx, .xls o .csv')
+        return redirect('plan_view')
+
+    try:
+        # --- LÓGICA DE LECTURA ROBUSTA ---
+        df = None
+        if file.name.endswith('.csv'):
+            file_data = file.read().decode('utf-8')
+            try:
+                df = pd.read_csv(io.StringIO(file_data), sep=',', on_bad_lines='skip')
+            except Exception:
+                df = pd.read_csv(io.StringIO(file_data), sep=';', on_bad_lines='skip')
+            
+            if len(df.columns) <= 1:
+                messages.error(request, 'El CSV solo contiene una columna. Asegúrese de que los datos estén separados por **comas (,)** o **punto y comas (;)** en su archivo.')
+                return redirect('plan_view')
+        else:
+            df = pd.read_excel(file, engine='openpyxl') 
+
+        # --- LÓGICA DE PROCESAMIENTO ROBUSTA ---
+        
+        # Limpiar y mapear encabezados
+        df.columns = [str(col).strip().upper() for col in df.columns]
+        
+        COL_MAQUINA = 'MAQUINA'
+        COL_MOLDE = 'MOLDE'
+        COL_FECHA = 'FECHA'
+
+        required_cols = [COL_MAQUINA, COL_MOLDE, COL_FECHA]
+        if not all(col in df.columns for col in required_cols):
+            missing_cols = [col for col in required_cols if col not in df.columns]
+            messages.error(request, f'El archivo debe contener las columnas exactas: {", ".join(required_cols)}. Faltan: {", ".join(missing_cols)}.')
+            return redirect('plan_view')
+
+        # Procesar fechas y limpiar strings
+        df[COL_FECHA] = pd.to_datetime(df[COL_FECHA], errors='coerce', dayfirst=True) 
+        df[COL_MAQUINA] = df[COL_MAQUINA].fillna('').astype(str).str.strip()
+        df[COL_MOLDE] = df[COL_MOLDE].fillna('').astype(str).str.strip()
+
+
+        # --- LÓGICA DE ACTUALIZACIÓN (PROCESAR Y GUARDAR) ---
+        with transaction.atomic():
+            
+            # Borrar el log anterior
+            RegistroPlanCargado.objects.all().delete()
+            
+            nuevos_registros_auditoria = []
+            filas_guardadas = 0
+            filas_ignoradas_no_molde = 0
+            
+            # Contadores para la actualización de Eoats
+            filas_eoat_actualizadas = 0
+            filas_ignoradas_no_eoat = 0
+
+
             for index, row in df.iterrows():
-                # Asumimos que tu Excel tiene columnas 'ID', 'Plan', 'Fecha'
-                # Y tu modelo tiene campos 'numero_eoat', 'plan', 'proximo_mantenimiento'
+                maquina = row[COL_MAQUINA]
+                molde_crudo = row[COL_MOLDE]
+                fecha_pandas = row[COL_FECHA]
                 
-                # Buscamos si el EOAT ya existe
-                eoat, created = Eoats.objects.update_or_create(
-                    numero_eoat=row['ID Herramental'], # Columna del Excel
-                    defaults={
-                        'plan': row['Plan Asignado'], # Columna del Excel
-                        'proximo_mantenimiento': row['Próxima Fecha de Mto.'], # Columna del Excel
-                        # ... otros campos ...
-                    }
+                # Validación de Molde no vacío
+                if not molde_crudo:
+                    filas_ignoradas_no_molde += 1
+                    continue 
+
+                # *** LÓGICA DE TRANSFORMACIÓN ***
+                # 1. Transformar Molde (M -> 21-)
+                molde_final = re.sub(r'^[Mm]', '21-', molde_crudo, 1)
+                
+                # 2. Asignar Status
+                status_asignado = STATUS_MANTENIMIENTO
+
+
+                # *** NUEVA LÓGICA PARA ACTUALIZAR EOATS ***
+                try:
+                    # 3. Buscar el EOAT maestro
+                    eoat_maestro = Eoats.objects.get(numero_eoat=molde_final)
+                    
+                    # 4. Actualizar su status
+                    eoat_maestro.status = STATUS_MANTENIMIENTO
+                    eoat_maestro.save(update_fields=['status']) # Eficiente: solo actualiza el status
+                    
+                    filas_eoat_actualizadas += 1
+
+                except Eoats.DoesNotExist:
+                    # El EOAT existe en el Excel pero no en la BD maestra
+                    filas_ignoradas_no_eoat += 1
+                    # No hacemos nada, solo lo guardamos en el RegistroPlanCargado
+                    pass
+                # *** FIN DE LA NUEVA LÓGICA ***
+
+
+                # Manejo de fechas
+                fecha_db = None
+                if pd.notna(fecha_pandas):
+                    fecha_db = fecha_pandas.date() 
+                
+                # PASO A: Registrar en la tabla (siempre se registra)
+                nuevos_registros_auditoria.append(
+                    RegistroPlanCargado(
+                        maquina=maquina,
+                        molde=molde_final, # Guardamos el molde transformado
+                        fecha=fecha_db,
+                        status=status_asignado # Guardamos el status
+                    )
                 )
+                filas_guardadas += 1
+            
+            # Guardar los registros
+            if nuevos_registros_auditoria:
+                RegistroPlanCargado.objects.bulk_create(nuevos_registros_auditoria)
 
-            messages.success(request, f'¡Archivo procesado! Se actualizaron {len(df)} registros.')
+        # Mensaje de éxito simple
+        total_filas = len(df)
+        if filas_guardadas > 0:
+            messages.success(request, f'¡Carga exitosa! Se procesaron {total_filas} filas. Se guardaron {filas_guardadas} registros en el plan.')
+            # Mensaje específico para Eoats
+            if filas_eoat_actualizadas > 0:
+                messages.info(request, f'Se actualizó el estado a "MANTENIMIENTO" en {filas_eoat_actualizadas} EOATs de la tabla maestra.')
+            if filas_ignoradas_no_molde > 0:
+                messages.warning(request, f'Se ignoraron {filas_ignoradas_no_molde} filas por tener el MOLDE vacío.')
+            # Mensaje específico si no se encontró el EOAT
+            if filas_ignoradas_no_eoat > 0:
+                messages.error(request, f'Se ignoraron {filas_ignoradas_no_eoat} registros (solo en la actualización de estado) porque el MOLDE no fue encontrado en la tabla maestra de Eoats.')
+        else:
+            messages.error(request, 'El archivo se leyó, pero no se encontró ningún registro válido para guardar.')
 
-        except Exception as e:
-            # Capturamos cualquier error durante la lectura o procesamiento
-            messages.error(request, f'Error al procesar el archivo: {e}')
 
-        # 5. Redirigimos de vuelta a la página del formulario
-        return redirect('upload_plan_file') # Usa el 'name' de la URL de tu plantilla
+    except Exception as e:
+        messages.error(request, f'Error al procesar el archivo. Detalle: {e}')
+        print(f"ERROR EN LA VISTA UPLOAD_PLAN_VIEW: {e}")
 
-    # Si el usuario solo carga la página (GET)
-    else:
-        # Simplemente mostramos la página con la tabla
-        eoats = Eoats.objects.filter(plan__isnull=False) # Ejemplo
-        context = {
-            'eoats_con_plan': eoats
-        }
-        return render(request, 'planes.html', context)
+    # Redirigimos de vuelta a la vista del plan
+    return redirect('plan_view')
+
+def get_eoat_fotos(request, eoat_id):
+    """
+    Esta vista devuelve una lista de URLs de las fotos
+    para un EOAT específico.
+    """
+    try:
+        eoat = Eoats.objects.get(pk=eoat_id)
+        
+        # Usamos el related_name 'fotos' que definimos en el modelo FotoEoat
+        fotos = eoat.fotos.all()  
+        
+        # Creamos una lista de las URLs de las imágenes
+        urls_fotos = [foto.imagen.url for foto in fotos]
+        
+        print("URLs de fotos encontradas:", urls_fotos)
+        return JsonResponse({'status': 'ok', 'fotos': urls_fotos})
+    except Eoats.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'EOAT no encontrado'}, status=404)
