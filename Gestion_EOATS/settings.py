@@ -80,8 +80,8 @@ WSGI_APPLICATION = 'Gestion_EOATS.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'moldeo_y_eoats',
-        'USER': 'postgres',
+        'NAME': 'moldes_y_eoats',
+        'USER': 'juliocsegura',
         'PASSWORD': 'Julio284956',
         'HOST': 'localhost',
         'PORT': '5432', 
