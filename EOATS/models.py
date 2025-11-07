@@ -59,8 +59,9 @@ class Eoats(models.Model):
         elif self.status== STATUS_PREPARACION:
             return 'bg-red-100 text-red-800'
         return 'bg-gray-100 text-gray-800'
+        
     def __str__(self):
-            return f"Foto de {self.eoat_fotos.numero_eoat}"
+        return self.numero_eoat
 
 class FotoEoat(models.Model):
     # El EOAT al que pertenece esta foto
