@@ -26,7 +26,7 @@ class RefaccionesAdmin(admin.ModelAdmin):
 
 @admin.register(RegistroPlanCargado)
 class PlanAdmin(admin.ModelAdmin):
-    list_display = ('id', 'maquina', 'molde')
+    list_display = ('id', 'maquina', 'molde','tipo_plan')
 
 @admin.register(FotoEoat)
 class PlanAdmin(admin.ModelAdmin):

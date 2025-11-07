@@ -219,7 +219,7 @@ def plan_view(request):
     Muestra la página con la tabla de los datos cargados desde el Excel.
     """
     # 1. Consultamos la nueva tabla de registros crudos
-    registros = RegistroPlanCargado.objects.all()
+    registros = RegistroPlanCargado.objects.all().order_by('fecha')
     
     context = {
         # 2. Pasamos los registros a la plantilla HTML
@@ -243,7 +243,8 @@ def upload_plan_view(request):
 
     # 1. Obtenemos el archivo
     file = request.FILES.get('plan_file') 
-
+    
+    tipo_plan_seleccionado = request.POST.get('tipo_plan_form', 'PREP')
     if not file:
         messages.error(request, 'No se seleccionó ningún archivo.')
         return redirect('plan_view') 
@@ -294,7 +295,7 @@ def upload_plan_view(request):
         with transaction.atomic():
             
             # Borrar el log anterior
-            RegistroPlanCargado.objects.all().delete()
+           # RegistroPlanCargado.objects.all().delete()
             
             nuevos_registros_auditoria = []
             filas_guardadas = 0
@@ -353,7 +354,8 @@ def upload_plan_view(request):
                         maquina=maquina,
                         molde=molde_final, # Guardamos el molde transformado
                         fecha=fecha_db,
-                        status=status_asignado # Guardamos el status
+                        status=status_asignado, # Guardamos el status
+                        tipo_plan=tipo_plan_seleccionado 
                     )
                 )
                 filas_guardadas += 1
@@ -365,13 +367,12 @@ def upload_plan_view(request):
         # Mensaje de éxito simple
         total_filas = len(df)
         if filas_guardadas > 0:
-            messages.success(request, f'¡Carga exitosa! Se procesaron {total_filas} filas. Se guardaron {filas_guardadas} registros en el plan.')
+            messages.success(request, f'¡Carga exitosa! Se procesaron {total_filas} filas. Se guardaron {filas_guardadas} registros en el plan como "{tipo_plan_seleccionado}".')
             # Mensaje específico para Eoats
             if filas_eoat_actualizadas > 0:
                 messages.info(request, f'Se actualizó el estado a "MANTENIMIENTO" en {filas_eoat_actualizadas} EOATs de la tabla maestra.')
             if filas_ignoradas_no_molde > 0:
                 messages.warning(request, f'Se ignoraron {filas_ignoradas_no_molde} filas por tener el MOLDE vacío.')
-            # Mensaje específico si no se encontró el EOAT
             if filas_ignoradas_no_eoat > 0:
                 messages.error(request, f'Se ignoraron {filas_ignoradas_no_eoat} registros (solo en la actualización de estado) porque el MOLDE no fue encontrado en la tabla maestra de Eoats.')
         else:

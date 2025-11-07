@@ -16,6 +16,9 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+import barcode
+from barcode.writer import ImageWriter
+from io import BytesIO
 STATUS_PRODUCCION = 'produccion'
 STATUS_MANTENIMIENTO = 'mantenimiento'
 STATUS_DISPONIBLE = 'disponible'
@@ -42,12 +45,38 @@ class Eoats(models.Model):
         default=STATUS_PREPARACION
 
     )
+    codigo_barras = models.ImageField(
+        upload_to='codigos_eoat/',  # Se guardará en MEDIA_ROOT/codigos_eoat/
+        blank=True, 
+        null=True,
+        editable=False # No queremos editar esto en el admin
+    )
     class Meta:
 
         managed = False
 
         db_table = 'eoats'
-  
+    def save(self, *args, **kwargs):
+        # 1. Revisar si tenemos un numero_eoat para codificar
+        if self.numero_eoat and self.numero_eoat.strip():
+            
+            # 2. Crear un buffer de bytes en memoria (para no crear un archivo temporal)
+            buffer = BytesIO()
+            
+            # 3. Generar el código de barras (Code128 es una buena elección)
+            # Usamos "write_text: True" para que el número aparezca debajo del código
+            codigo = barcode.get('code128', self.numero_eoat, writer=ImageWriter())
+            codigo.write(buffer, options={"write_text": True})
+            
+            # 4. Definir el nombre del archivo
+            file_name = f'{self.numero_eoat}.png'
+            
+            # 5. Guardar el contenido del buffer en el campo ImageField
+            # Usamos save=False para evitar un bucle infinito al llamar a save()
+            #self.codigo_barras.save(file_name, File(buffer), save=False)
+        
+        # 6. Llamar al método save() original para guardar el objeto en la BD
+        super().save(*args, **kwargs)
     def get_status_css_class(self):
         if self.status == STATUS_PRODUCCION:
             return 'bg-blue-100 text-blue-800'
@@ -170,7 +199,7 @@ class RegistroPlanCargado(models.Model):
     molde = models.CharField(max_length=100, blank=True, null=True) 
     
     fecha = models.DateField(blank=True, null=True)
-    
+    tipo_plan = models.CharField(max_length=10, blank=True, null=True, default='PREP')
     # Campo de Status añadido
     status = models.CharField(
         max_length=20,
@@ -199,7 +228,7 @@ class RegistroPlanCargado(models.Model):
         return 'bg-gray-100 text-gray-800'
 
     def __str__(self):
-        return f"Registro: {self.molde} ({self.status}) en {self.maquina} para {self.fecha}"
+        return f"Registro: {self.molde} - {self.tipo_plan} ({self.status}) en {self.maquina} para {self.fecha}"
 @receiver(post_save, sender=Eoats)
 def limpiar_plan_al_terminar(sender, instance, **kwargs):
     """

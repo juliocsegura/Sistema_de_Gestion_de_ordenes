@@ -9,106 +9,170 @@
     SECCIÓN 1: CARGA DE ARCHIVO
     Formulario para subir el archivo.
 -->
-<div class="bg-white p-6 rounded-lg shadow-md mb-8">
-    <h3 class="text-xl font-semibold text-gray-700 mb-4">Cargar Plan desde Excel/CSV</h3>
-    
-    <p class="text-gray-600 mb-4">
-        Sube un archivo (.xlsx, .xls, .csv) con las columnas: <strong>MAQUINA, MOLDE, FECHA</strong>.
-        <br>
-        <strong class="text-red-600">Atención:</strong> Esto borrará todos los datos anteriores y los reemplazará con el contenido del nuevo archivo.
-    </p>
-    
-    <!-- 
-        Asegúrate de tener una URL llamada 'upload_plan_file' en tu urls.py 
-        que apunte a la vista 'upload_plan_view'.
-    -->
-    <form action="{% url 'upload_plan_file' %}" method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
+<div class="container mx-auto px-4 py-6">  
+    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+        <h3 class="text-xl font-semibold text-gray-700 mb-4">Cargar Plan desde Excel/CSV</h3>
         
-        <div class="flex flex-col items-center justify-center w-full">
-            <label for="plan-file-input" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                    <svg class="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-4-4V7a4 4 0 014-4h.5a3.5 3.5 0 013.5 3.5v.5a4 4 0 01-4 4H7zM10 6h3m-3 4h3m5-4h3m-3 4h3m-3 4h3m0 4h-3"></path></svg>
-                    <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Haz clic para subir</span> o arrastra el archivo</p>
-                    <p class="text-xs text-gray-500">.XLSX, .XLS, o .CSV</p>
-                </div>
-                <!-- El input real, oculto -->
-                <input id="plan-file-input" name="plan_file" type="file" class="hidden" accept=".xlsx, .xls, .csv" />
-            </label>
+        <p class="text-gray-600 mb-4">
+            Sube un archivo (.xlsx, .xls, .csv) con las columnas: <strong>MAQUINA, MOLDE, FECHA</strong>.
+            <br>
+            <strong class="text-red-600">Atención:</strong> Esto borrará todos los datos anteriores y los reemplazará con el contenido del nuevo archivo.
+        </p>
+        
+        <!-- 
+            Asegúrate de tener una URL llamada 'upload_plan_file' en tu urls.py 
+            que apunte a la vista 'upload_plan_view'.
+        -->
+        <form action="{% url 'upload_plan_file' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
             
-            <span id="file-name-display" class="mt-4 text-sm text-gray-600 font-medium">Ningún archivo seleccionado</span>
-        </div>
-
-        <div class="text-right mt-6">
-            <button type="submit" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 shadow-md transition duration-150 ease-in-out">
-                Procesar Archivo
-            </button>
-        </div>
-    </form>
-</div>
-
-<!-- 
-    SECCIÓN 2: VISUALIZACIÓN DE DATOS CARGADOS
-    Esta tabla muestra los datos del modelo 'RegistroPlanCargado'.
--->
-<div class="bg-white rounded-lg shadow-md overflow-hidden">
-    <h3 class="text-xl font-semibold text-gray-700 p-6 border-b border-gray-200">Datos Cargados en el Sistema</h3>
-    
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <!-- Actualizamos los encabezados para que coincidan con la nueva tabla -->
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Máquina</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Molde</th>
-                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Próximo Mto.</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Carga</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
+            <div class="flex flex-col items-center justify-center w-full">
+                <label for="plan-file-input" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                        <svg class="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-4-4V7a4 4 0 014-4h.5a3.5 3.5 0 013.5 3.5v.5a4 4 0 01-4 4H7zM10 6h3m-3 4h3m5-4h3m-3 4h3m-3 4h3m0 4h-3"></path></svg>
+                        <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Haz clic para subir</span> o arrastra el archivo</p>
+                        <p class="text-xs text-gray-500">.XLSX, .XLS, o .CSV</p>
+                    </div>
+                    <!-- El input real, oculto -->
+                    <input id="plan-file-input" name="plan_file" type="file" class="hidden" accept=".xlsx, .xls, .csv" />
+                </label>
                 
-                <!-- 
-                    AQUÍ ESTÁ EL CAMBIO PRINCIPAL:
-                    Iteramos sobre 'registros_cargados', que es la variable
-                    que pasamos desde 'plan_view'
-                -->
-                {% for registro in registros_cargados %}
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ registro.maquina }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ registro.molde }}</td>
-                    <span>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ registro.get_status_css_class }}">
-                        {{ registro.get_status_display }}
-                    </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        <!-- Mostramos la fecha si existe -->
-                        {% if registro.fecha %}
-                            {{ registro.fecha|date:"Y-m-d" }}
-                        {% else %}
-                            <span class="text-gray-400">N/A</span>
-                        {% endif %}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ registro.fecha_carga|date:"Y-m-d H:i" }}</td>
-                </tr>
-                {% empty %}
-                <!-- Mensaje si la tabla está vacía -->
-                <tr>
-                    <td colspan="4" class="px-6 py-4 text-center text-gray-500">
-                        No hay registros cargados. Sube un archivo para comenzar.
-                    </td>
-                </tr>
-                {% endfor %}
+                <span id="file-name-display" class="mt-4 text-sm text-gray-600 font-medium">Ningún archivo seleccionado</span>
+            </div>
+            <div class="space-y-6">
                 
-            </tbody>
-        </table>
-
-
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Tipo de Plan</label>
+                        <div class="mt-2 flex space-x-4">
+                            <label class="flex items-center">
+                                <input type="radio" name="tipo_plan_form" value="TPM" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
+                                <span class="ml-2 text-sm text-gray-700">TPM</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="tipo_plan_form" value="PREP" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300" checked>
+                                <span class="ml-2 text-sm text-gray-700">PREP</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="text-left">
+                        <button type="submit" class="w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 shadow-md transition duration-150 ease-in-out">
+                            Procesar Archivo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
-</div>
 
+    <!-- 
+        SECCIÓN 2: VISUALIZACIÓN DE DATOS CARGADOS
+        Esta tabla muestra los datos del modelo 'RegistroPlanCargado'.
+    -->
+
+    <div class="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+        <h3 class="text-xl font-semibold text-gray-700 p-6 border-b border-gray-200">Plan de Preparación (PREP)</h3>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Máquina</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Molde</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Próximo Mto.</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Carga</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    
+                    {% for registro in registros_cargados %}
+                        <!-- *** FILTRO PREP *** Mostramos si es PREP, None, o cadena vacía (default)
+                        -->
+                        {% if registro.tipo_plan == 'PREP' or registro.tipo_plan == None or registro.tipo_plan == '' %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ registro.maquina }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ registro.molde }}</td>
+                            <!-- *** CORRECCIÓN ***
+                                El <span> estaba mal anidado, se quita.
+                            -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ registro.get_status_css_class }}">
+                                    {{ registro.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                {% if registro.fecha %}
+                                    {{ registro.fecha|date:"Y-m-d" }}
+                                {% else %}
+                                    <span class="text-gray-400">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ registro.fecha_carga|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                        {% endif %}
+                    {% empty %}
+                    <!-- Mensaje si la tabla está vacía -->
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                            No hay registros cargados. Sube un archivo para comenzar.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <h3 class="text-xl font-semibold text-gray-700 p-6 border-b border-gray-200">Plan TPM</h3>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Máquina</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Molde</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Próximo Mto.</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Carga</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    
+                    {% for registro in registros_cargados %}
+                        <!-- *** FILTRO TPM *** -->
+                        {% if registro.tipo_plan == 'TPM' %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ registro.maquina }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ registro.molde }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ registro.get_status_css_class }}">
+                                    {{ registro.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                {% if registro.fecha %}
+                                    {{ registro.fecha|date:"Y-m-d" }}
+                                {% else %}
+                                    <span class="text-gray-400">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ registro.fecha_carga|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <!-- 
+                        Nota: Esta tabla aparecerá vacía si no hay registros TPM.
+                        El mensaje "empty" solo se muestra en la primera tabla si
+                        la lista 'registros_cargados' está totalmente vacía.
+                    -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+ </div>
 {% endblock %}
 
 {% block extra_js %}
