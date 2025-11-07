@@ -1,0 +1,455 @@
+{% extends 'EOATS/base.html' %}
+
+{% block title %}Bitácora de Mantenimiento{% endblock %}
+
+{% block content %}
+<!-- SECCIÓN 2: BITÁCORA DE MANTENIMIENTO -->
+<div>
+    <h2 class="text-3xl font-bold text-gray-800 mb-6">Bitácora de Mantenimiento</h2>
+    
+    <!-- Formulario para Nuevo Registro -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+        <h3 class="text-xl font-semibold mb-4">Registrar Nuevo Mantenimiento</h3>
+        <form action="#" method="POST" class="space-y-4">
+            
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                <!-- INICIO: Combobox de Molde (Corregido) -->
+                <!-- Este DIV contiene el combobox y su display de selección -->
+                <div class="w-full max-w-xl p-0">
+                    
+                    <div id="combobox-container" class="relative">
+                        <!-- 1. Etiqueta Corregida -->
+                        <label for="molde-search" class="block text-sm font-medium text-gray-700 mb-1">Buscar Molde por ID o Nombre</label>
+                        
+                        <!-- Campo de Búsqueda/Entrada -->
+                        <div class="relative">
+                            <!-- 2. ID Corregido: 'molde-search' -->
+                            <input
+                                id="molde-search"
+                                type="text"
+                                role="combobox"
+                                aria-expanded="false"
+                                aria-controls="molde-options"
+                                aria-autocomplete="list"
+                                placeholder="Ej. 21-12345 o Grande"
+                                class="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-150 ease-in-out"
+                                value=""
+                            >
+                            <!-- Botón de Toggle/Flecha -->
+                            <!-- 3. ID Corregido: 'molde-toggle' -->
+                            <button
+                                id="molde-toggle"
+                                type="button"
+                                aria-label="Toggle options"
+                                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 transition"
+                            >
+                                <!-- Icono SVG de flecha (Chevron Down) -->
+                                <!-- 4. ID Corregido: 'arrow-icon' -->
+                                <svg id="arrow-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform transition-transform duration-200" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Contenedor de Opciones (Dropdown) -->
+                        <!-- 5. ID Corregido: 'molde-options' -->
+                        <div
+                            id="molde-options"
+                            class="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden max-h-60 custom-scrollbar hidden"
+                            role="listbox"
+                        >
+                            <div class="p-3 text-gray-500 text-sm">Cargando opciones...</div>
+                        </div>
+
+                        <!-- Input oculto para el valor final (el ID del molde que se enviará) -->
+                        <!-- 6. ID y Name Corregidos: 'molde-value' y 'molde' -->
+                        <input type="hidden" id="molde-value" name="molde" value="">
+                    </div>
+
+                    <!-- 7. Display de Selección Corregido (para 'selected-id' y 'selected-status') -->
+                    <div class="mt-4 pt-4 border-t border-gray-100">
+                        <p class="text-sm text-gray-600 flex items-center mb-2">
+                            <span class="font-semibold">ID de Molde Seleccionado:</span>
+                            <code id="selected-id" class="ml-2 bg-gray-100 p-1 rounded text-blue-600 transition duration-300">Ninguno</code>
+                        </p>
+                        <p class="text-sm text-gray-600 flex items-center">
+                            <span class="font-semibold">Status Actual:</span>
+                            <span id="selected-status-wrapper" class="ml-2">
+                                <span id="selected-status" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 transition duration-300">
+                                    N/A
+                                </span>
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                <!-- FIN: Combobox de Molde -->
+
+                <!-- Este es el campo de Tipo de Mantenimiento que SÍ queremos (Preventivo, etc.) -->
+                <div>
+                    <label for="maint-type" class="block text-sm font-medium text-gray-700">Tipo de Mantenimiento</label>
+                    <select id="maint-type" name="maint-type" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option>Preventivo</option>
+                        <option>Correctivo</option>
+                        <option>Preparacion</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="maint-defect" class="block text-sm font-medium text-gray-700">Defecto</label>
+                    <input type="text" id="maint-defect" name="maint-defect"class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="maint-tech" class="block text-sm font-medium text-gray-700">Técnico Responsable</label>
+                    <input type="text" id="maint-tech" name="maint-tech" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+            <div>
+                <label for="maint-notes" class="block text-sm font-medium text-gray-700">Notas y Observaciones</label>
+                <textarea id="maint-notes" name="maint-notes" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+            <div class="text-right">
+                <button type="submit" class="px-6 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 shadow-md transition duration-150 ease-in-out">
+                    Guardar Registro
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Historial de Mantenimiento -->
+    <div class="max-w-2xl mb-4"> <!-- Añadido mb-4 para espacio -->
+        <form action="{% url 'bitacora' %}" method="GET">
+            <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                <input type="text" name="q" value="{{ query }}" placeholder="Buscar por Número de EOAT o Ubicación..." class="flex-1 p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button class="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 shadow-md">Buscar</button>
+                <a href="{% url 'bitacora' %}" class="px-6 py-3 bg-gray-500 text-white text-center font-medium rounded-md hover:bg-gray-600 shadow-md whitespace-nowrap">Clear</a>
+            </div>
+        </form>
+    </div> 
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <h3 class="text-xl font-semibold p-5 border-b border-gray-200">Historial Reciente</h3>
+        
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Orden</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Eoat</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo de Mantenimiento</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Locacion</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notas</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% if historial_preventivos %}
+                    {% for preventivo in historial_preventivos %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ preventivo.fecha_preventivo }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ preventivo.numero_orden }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ preventivo.eoat }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ preventivo.tipo}}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ preventivo.locacion }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-700 truncate max-w-xs">{{ preventivo.comentarios }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500"> <!-- Colspan 6 ahora -->
+                            {% if query %}
+                                No se encontraron resultados para "<strong class="font-medium">{{ query }}</strong>".
+                            {% else %}
+                                No hay registros en el historial reciente.
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        // --- DATA DE MOLDES (se cargará desde la API) ---
+        let MOLD_LIST = []; // ¡Esta variable se llenará dinámicamente desde Django!
+        
+        // Mapeo de Status a Clases CSS (Tu lógica de Django)
+        const STATUS_CSS_MAP = {
+            "PRODUCCION": { displayName: "Producción", css: 'bg-blue-100 text-blue-800' },
+            "MANTENIMIENTO": { displayName: "Mantenimiento", css: 'bg-yellow-100 text-yellow-800' },
+            "DISPONIBLE": { displayName: "Disponible", css: 'bg-green-100 text-green-800' },
+            "PREPARACION": { displayName: "Preparación", css: 'bg-red-100 text-red-800' },
+            "DEFAULT": { displayName: "Desconocido", css: 'bg-gray-100 text-gray-800' }
+        };
+
+        // --- Variables DOM y de estado ---
+        // ¡Estos IDs AHORA coinciden con el HTML de arriba!
+        const input = document.getElementById('molde-search');
+        const toggleButton = document.getElementById('molde-toggle');
+        const optionsContainer = document.getElementById('molde-options');
+        const hiddenInput = document.getElementById('molde-value');
+        const selectedIdDisplay = document.getElementById('selected-id');
+        const selectedStatusDisplay = document.getElementById('selected-status');
+        const arrowIcon = document.getElementById('arrow-icon');
+        let isDropdownOpen = false;
+        let activeOptionIndex = -1;
+
+        // --- Funciones de Estado y UI ---
+
+        const toggleDropdown = (open) => {
+            isDropdownOpen = typeof open === 'boolean' ? open : !isDropdownOpen;
+            // Solo intentar 'toggle' si el elemento existe
+            if (optionsContainer) {
+                optionsContainer.classList.toggle('hidden', !isDropdownOpen);
+            }
+            if (input) {
+                input.setAttribute('aria-expanded', isDropdownOpen);
+            }
+            if (arrowIcon) {
+                arrowIcon.classList.toggle('rotate-180', isDropdownOpen);
+            }
+            
+            if (!isDropdownOpen) {
+                activeOptionIndex = -1;
+            }
+            highlightActiveOption();
+        };
+
+        const updateSelection = (moldeId) => {
+            const selectedMolde = MOLD_LIST.find(m => m.id === moldeId);
+            
+            if (selectedMolde) {
+                const statusInfo = STATUS_CSS_MAP[selectedMolde.status] || STATUS_CSS_MAP.DEFAULT;
+                
+                // 1. Actualizar el input de texto para mostrar el ID seleccionado
+                if (input) input.value = `${selectedMolde.id}`;
+                
+                // 2. Actualizar el input oculto con la KEY real (ID del molde)
+                if (hiddenInput) hiddenInput.value = selectedMolde.id;
+
+                // 3. Actualizar el display de ID seleccionado
+                if (selectedIdDisplay) selectedIdDisplay.textContent = selectedMolde.id;
+
+                // 4. Actualizar el display de Status con la etiqueta de color
+                if (selectedStatusDisplay) {
+                    selectedStatusDisplay.textContent = statusInfo.displayName;
+                    selectedStatusDisplay.className = `inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition duration-300 ${statusInfo.css}`;
+                }
+            } else {
+                // Si se limpia o es un valor no válido
+                if (input) input.value = ''; 
+                if (hiddenInput) hiddenInput.value = '';
+                if (selectedIdDisplay) selectedIdDisplay.textContent = 'Ninguno';
+                if (selectedStatusDisplay) {
+                    selectedStatusDisplay.textContent = 'N/A';
+                    selectedStatusDisplay.className = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 transition duration-300';
+                }
+            }
+
+            toggleDropdown(false);
+            if (input) input.focus();
+        };
+
+        const highlightActiveOption = () => {
+            if (!optionsContainer) return; // Salir si el contenedor no existe
+            const options = Array.from(optionsContainer.querySelectorAll('[role="option"]'));
+            options.forEach((opt, index) => {
+                opt.classList.remove('bg-blue-100', 'text-blue-700', 'font-semibold');
+                opt.setAttribute('aria-selected', 'false');
+                if (index === activeOptionIndex) {
+                    opt.classList.add('bg-blue-100', 'text-gray-900', 'font-semibold'); // Dejamos el texto oscuro
+                    opt.setAttribute('aria-selected', 'true');
+                    opt.scrollIntoView({ block: 'nearest' });
+                }
+            });
+
+            if (activeOptionIndex !== -1 && options[activeOptionIndex]) {
+                if (input) input.setAttribute('aria-activedescendant', options[activeOptionIndex].id);
+            } else {
+                if (input) input.removeAttribute('aria-activedescendant');
+            }
+        };
+
+        const renderOptions = (query = '') => {
+            if (!optionsContainer) return; // Salir si el contenedor no existe
+
+            const lowerQuery = query.toLowerCase().trim();
+            
+            // Filtrar la lista de moldes por ID, Nombre o Máquina
+            // Añadimos comprobaciones (ej. molde.id &&) para evitar errores si un dato es nulo
+            const filteredMolds = MOLD_LIST.filter(molde =>
+                (molde.id && molde.id.toLowerCase().includes(lowerQuery)) ||
+                (molde.machine && molde.machine.toLowerCase().includes(lowerQuery))
+            );
+
+            optionsContainer.innerHTML = '';
+            activeOptionIndex = -1;
+
+            if (filteredMolds.length === 0 && lowerQuery) {
+                const noResult = document.createElement('div');
+                noResult.className = 'p-3 text-gray-500 text-sm italic';
+                noResult.textContent = `No se encontraron moldes para "${query}".`;
+                optionsContainer.appendChild(noResult);
+            } else {
+                filteredMolds.forEach((molde, index) => {
+                    const statusInfo = STATUS_CSS_MAP[molde.status] || STATUS_CSS_MAP.DEFAULT;
+                    
+                    const optionEl = document.createElement('div');
+                    optionEl.id = `option-${index}`;
+                    optionEl.className = 'p-3 cursor-pointer text-gray-800 hover:bg-blue-50 transition duration-100 rounded-lg mx-1 my-0.5 flex flex-col sm:flex-row sm:justify-between sm:items-center';
+                    optionEl.setAttribute('role', 'option');
+                    optionEl.setAttribute('aria-selected', 'false');
+                    optionEl.setAttribute('data-id', molde.id);
+                    
+                    // Contenido visual de la opción
+                    optionEl.innerHTML = `
+                        <div class="flex flex-col text-sm truncate">
+                            <span class="font-semibold text-gray-900">${molde.id}</span>
+                            <span class="text-xs text-gray-500">Máquina: ${molde.machine}</span>
+                        </div>
+                        <span class="${statusInfo.css} text-xs font-medium px-2 py-0.5 rounded-full mt-1 sm:mt-0 sm:ml-4 flex-shrink-0">
+                            ${statusInfo.displayName}
+                        </span>
+                    `;
+
+                    // Manejo del click en la opción
+                    optionEl.addEventListener('click', () => updateSelection(molde.id));
+
+                    optionsContainer.appendChild(optionEl);
+                });
+                
+                if (filteredMolds.length > 0 || !lowerQuery) {
+                    toggleDropdown(true);
+                }
+            }
+        };
+
+        // --- Manejo de Eventos ---
+        // Solo añadir listeners si el input existe
+        if (input) {
+            // 1. Click en el botón de toggle
+            toggleButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (isDropdownOpen) {
+                    toggleDropdown(false);
+                } else {
+                    renderOptions('');
+                    toggleDropdown(true);
+                    input.focus();
+                }
+            });
+
+            // 2. Evento de Input (filtrado en tiempo real)
+            input.addEventListener('input', () => {
+                const query = input.value;
+                renderOptions(query);
+                if (query) {
+                    activeOptionIndex = -1;
+                }
+                highlightActiveOption();
+                
+                // Si el input está vacío, limpiar la selección
+                if (!query) {
+                    updateSelection('');
+                }
+            });
+
+            // 3. Manejo de Teclado (navegación y selección)
+            input.addEventListener('keydown', (e) => {
+                if (!optionsContainer) return;
+                const options = Array.from(optionsContainer.querySelectorAll('[role="option"]'));
+                const maxIndex = options.length - 1;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    toggleDropdown(true);
+                    activeOptionIndex = (activeOptionIndex < maxIndex) ? activeOptionIndex + 1 : 0;
+                    highlightActiveOption();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    toggleDropdown(true);
+                    activeOptionIndex = (activeOptionIndex > 0) ? activeOptionIndex - 1 : maxIndex;
+                    highlightActiveOption();
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (isDropdownOpen && activeOptionIndex !== -1 && options[activeOptionIndex]) {
+                        // Seleccionar la opción destacada (usando data-id)
+                        const selectedId = options[activeOptionIndex].getAttribute('data-id');
+                        updateSelection(selectedId);
+                    } else if (!isDropdownOpen && input.value) {
+                        // Intenta hacer una selección si está cerrado
+                        const query = input.value.toLowerCase();
+                        const foundMolde = MOLD_LIST.find(molde => 
+                            (molde.id && molde.id.toLowerCase() === query) || 
+                            (molde.id && `${molde.id}`.toLowerCase() === query)
+                        );
+
+                        if (foundMolde) {
+                            updateSelection(foundMolde.id);
+                        } else {
+                            toggleDropdown(false);
+                        }
+                    } else {
+                         toggleDropdown(false);
+                    }
+                } else if (e.key === 'Escape') {
+                    toggleDropdown(false);
+                }
+            });
+        } // Fin del 'if (input)'
+
+        // 4. Cerrar el dropdown al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            const container = document.getElementById('combobox-container');
+            // Asegurarse de que el container existe y que el clic fue fuera
+            if (container && !container.contains(e.target)) {
+                toggleDropdown(false);
+            }
+        });
+        
+        // 5. Inicialización: Cargar datos de la API y luego inicializar el combobox
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Solo ejecutar si el combobox está en la página
+            if (document.getElementById('molde-search')) {
+                try {
+                    // ¡AQUÍ ESTÁ LA MAGIA!
+                    // Hacemos un 'fetch' a la URL que creaste en Django.
+                    // ¡M
+                    const response = await fetch("{% url 'api_get_moldes' %}");
+                    
+                    if (!response.ok) {
+                        throw new Error(`Error HTTP: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Transformamos los datos de Django (ej. 'molde') 
+                    // al formato que espera el JS (ej. 'id')
+                    MOLD_LIST = data.map(r => ({
+                        id: r.molde, // 'molde' (de Django) se convierte en 'id' (para JS)
+                        machine: r.maquina, // 'maquina' (de Django) se convierte en 'machine' (para JS)
+                        status: r.status
+                    }));
+
+                    // Ahora que MOLD_LIST tiene datos reales, inicializamos el combobox
+                    console.log("Datos de moldes cargados desde Django:", MOLD_LIST);
+                    renderOptions(''); // Renderizar con la lista completa
+                    toggleDropdown(false);
+                    updateSelection(''); // Inicializar en estado "Ninguno"
+
+                } catch (error) {
+                    console.error("Error al cargar los moldes desde la API:", error);
+                    // Mostrar un error en el combobox si la API falla
+                    if (optionsContainer) {
+                        optionsContainer.innerHTML = `<div class="p-3 text-red-600 text-sm">Error al cargar datos.</div>`;
+                    }
+                }
+            } // Fin del 'if (document.getElementById('molde-search'))'
+        });
+    </script>
+{% endblock %}

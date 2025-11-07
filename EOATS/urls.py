@@ -15,4 +15,5 @@ urlpatterns = [
     path('plan/upload', views.upload_plan_view, name='upload_plan_file'),
     path('desarrollo/', views.desarrollo_view,name='desarrollo'),
     path('api/eoat/<int:eoat_id>/fotos/', views.get_eoat_fotos, name='api_get_eoat_fotos'),
+    path('api/get_moldes/', views.get_moldes_api, name='api_get_moldes'),
 ]

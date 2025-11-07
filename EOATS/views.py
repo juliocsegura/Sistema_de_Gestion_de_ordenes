@@ -65,7 +65,7 @@ def bitacora_view(request):
 
 
     if request.method=='POST':
-        numero_eoat= request.POST.get('maint-eoat')
+        numero_eoat= request.POST.get('molde')
         comment=request.POST.get('maint-notes')
         types=request.POST.get('maint-type')
         
@@ -123,7 +123,7 @@ def bitacora_view(request):
     }
     
     
-    return render(request, 'EOATS/bitacora.html', context)
+    return render(request, 'EOATS/prueba.html', context)
 
 
 def refacciones_view(request):
@@ -403,3 +403,26 @@ def get_eoat_fotos(request, eoat_id):
         return JsonResponse({'status': 'ok', 'fotos': urls_fotos})
     except Eoats.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'EOAT no encontrado'}, status=404)
+def get_moldes_api(request):
+    """
+    Una vista de API simple que devuelve todos los registros 
+    del plan en formato JSON.
+    """
+    try:
+        # Obtenemos solo los campos que necesitamos del modelo
+        registros = RegistroPlanCargado.objects.values(
+            'molde', 
+            'maquina', 
+            'status'
+        )
+        
+        # Convertimos el QuerySet (que es como una lista) a una lista simple
+        data = list(registros)
+        
+        # Devolvemos la lista como JSON
+        # safe=False es necesario cuando se devuelve una lista
+        return JsonResponse(data, safe=False)
+    
+    except Exception as e:
+        # Manejo básico de errores
+        return JsonResponse({"error": str(e)}, status=500)
