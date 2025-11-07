@@ -46,7 +46,7 @@
                                data-estado="{{ eoat.get_status_display }}"
                                data-ultimo-mto="{{ eoat.ultimo_mantenimiento|date:'Y-m-d' }}"
                                data-proximo-mto="{{ eoat.proximo_mantenimiento|date:'Y-m-d' }}"
-                               data-imagen-url="{% if eoat.imagen %}{{ eoat.imagen.url }}{% endif %}">
+                               data-fotos-url="{% url 'api_get_eoat_fotos' eoat.pk %}">
                             Detalles</a>
                         </td>
                     </tr>
@@ -64,10 +64,10 @@
 
     <!-- ===== INICIO DE LA VENTANA MODAL (POP-UP) ===== -->
     <!-- Fondo oscuro (overlay) -->
-    <div id="eoat-modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-40 p-4">
+    <div id="eoat-modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-[9999] p-4">
         
         <!-- Contenedor del Modal -->
-        <div id="eoat-modal-content" class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg z-50">
+        <div id="eoat-modal-content" class="bg-white rounded-lg shadow-xl p-6 w-full max-w-3xl z-50 overflow-y-auto max-h-[90vh]">
             
             <!-- Cabecera del Modal -->
             <div class="flex justify-between items-center border-b border-gray-200 pb-3 mb-4">
@@ -78,8 +78,7 @@
 
             <!-- Cuerpo del Modal (contenido dinámico) -->
             <div class="space-y-4">
-                <div id="modal-eoat-imagen-container" class="mb-4">
-                    <img id="modal-eoat-imagen" src="" alt="Imagen del EOAT" class="w-full max-h-60 object-contain rounded-md shadow-inner bg-gray-100">
+                <div id="modal-eoat-galeria" class="grid grid-cols-3 gap-2 mb-4 bg-gray-100 rounded shadow-inner p-2 min-h-[200px]">
                 </div>
                 <div class="grid grid-cols-3 gap-4">
                     <strong class="text-gray-600 col-span-1">Nombre:</strong>
@@ -124,12 +123,10 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- Script para manejar el modal -->
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         // --- Elementos del DOM ---
         const modalOverlay = document.getElementById('eoat-modal-overlay');
-        const modalContent = document.getElementById('eoat-modal-content');
         const closeBtn = document.getElementById('modal-close-btn');
         const closeFooterBtn = document.getElementById('modal-close-footer-btn');
         const openModalLinks = document.querySelectorAll('.open-eoat-modal');
@@ -142,6 +139,10 @@
         const modalEoatEstado = document.getElementById('modal-eoat-estado');
         const modalEoatUltimoMto = document.getElementById('modal-eoat-ultimo-mto');
         const modalEoatProximoMto = document.getElementById('modal-eoat-proximo-mto');
+        
+        // El contenedor de la galería
+        const galeriaContainer = document.getElementById('modal-eoat-galeria');
+        // NOTA: 'modal-eoat-imagen' ya no se usa ni se define aquí.
 
         // --- Funciones ---
         function openModal() {
@@ -157,34 +158,58 @@
             link.addEventListener('click', (e) => {
                 e.preventDefault();
 
-                // 1. Obtener datos desde los atributos 'data-*' del enlace
+                // 1. Obtener datos estáticos y la URL de la API
                 const id = link.dataset.id;
-                const nombre = link.dataset.nombre;
-                const tipo = link.dataset.tipo;
-                const ubicacion = link.dataset.ubicacion;
-                const estado = link.dataset.estado;
-                const ultimoMto = link.dataset.ultimoMto;
-                const proximoMto = link.dataset.proximoMto;
+                const fotosUrl = link.dataset.fotosUrl; // ¡Capturamos la URL de la API!
 
-                // 2. Poblar el modal con los datos
+                // 2. Poblar el modal con los datos estáticos
                 modalEoatId.textContent = `Detalles de ${id}`;
-                modalEoatNombre.textContent = nombre;
-                modalEoatTipo.textContent = tipo;
-                modalEoatUbicacion.textContent = ubicacion;
-                modalEoatEstado.textContent = estado; // Aquí podrías añadir lógica para colorear el estado si quisieras
-                modalEoatUltimoMto.textContent = ultimoMto;
-                modalEoatProximoMto.textContent = proximoMto;
+                modalEoatNombre.textContent = link.dataset.nombre;
+                modalEoatTipo.textContent = link.dataset.tipo;
+                modalEoatUbicacion.textContent = link.dataset.ubicacion;
+                modalEoatEstado.textContent = link.dataset.estado;
+                modalEoatUltimoMto.textContent = link.dataset.ultimoMto;
+                modalEoatProximoMto.textContent = link.dataset.proximoMto;
                 
-                // 3. Abrir el modal
+                // 3. Preparar la galería y mostrar 'Cargando...'
+                galeriaContainer.innerHTML = '<span class="text-gray-500 col-span-3 text-center p-4">Cargando fotos...</span>';
+                
+                // 4. Llamada a la API de fotos
+                fetch(fotosUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Limpiamos el mensaje de 'Cargando...'
+                        galeriaContainer.innerHTML = '';
+
+                        // 5. Construir la galería
+                        if (data.status === 'ok' && data.fotos.length > 0) {
+                            
+                            data.fotos.forEach(url => {
+                                const img = document.createElement('img');
+                                img.src = url;
+                                img.alt = "Foto de EOAT";
+                                // Asegúrate de que esta clase coincida con tu diseño
+                                img.className = "w-full h-80 object-cover rounded-md shadow"; 
+                                galeriaContainer.appendChild(img);
+                            });
+                        } else {
+                            // Mostrar mensaje si la lista de fotos está vacía
+                            galeriaContainer.innerHTML = '<span class="text-gray-500 col-span-3 text-center p-4">No hay fotos registradas.</span>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al cargar fotos de la API:', error);
+                        galeriaContainer.innerHTML = '<span class="text-red-500 col-span-3 text-center p-4">Error al cargar fotos.</span>';
+                    });
+                
+                // 6. Abrir el modal
                 openModal();
             });
         });
 
-        // --- Event Listeners para Cerrar ---
+        // --- Event Listeners para Cerrar (sin cambios) ---
         closeBtn.addEventListener('click', closeModal);
         closeFooterBtn.addEventListener('click', closeModal);
-
-        // Cerrar al hacer clic fuera del contenido del modal (en el overlay)
         modalOverlay.addEventListener('click', (e) => {
             if (e.target === modalOverlay) {
                 closeModal();

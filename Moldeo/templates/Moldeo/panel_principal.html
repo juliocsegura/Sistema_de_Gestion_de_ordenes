@@ -5,6 +5,7 @@
 {% block title %}Dashboard - Panel de Órdenes{% endblock %}
 
 <!-- 3. Definimos el contenido específico para esta página -->
+<<<<<<< HEAD
  {% block content %}
         <!-- 2. BOTONES GRANDES -->
         <div class="container mx-auto max-w-4xl px-4 py-16">
@@ -100,3 +101,90 @@
      {% empty %}   
  {%endfor%}
 {%endblock%}
+=======
+{% block content %}
+    <!-- 2. BOTONES GRANDES -->
+    <div class="container mx-auto max-w-4xl px-4 py-16">
+    
+        <div class="flex flex-col sm:flex-row justify-center gap-6 sm:gap-10">
+            <a href="{% url 'registrar_orden' %}" 
+               class="flex-1 text-center bg-green-600 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-green-500">
+                Registrar Orden
+            </a>
+            
+            <!-- Botón En Curso -->
+            <a href="#" 
+               class="flex-1 text-center bg-red-600 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-red-500">
+                Orden en Curso
+            </a>
+        </div>
+    </div>
+
+    <!-- 3. TABLA DE ÓRDENES RECIENTES -->
+    <div class="container mx-auto max-w-6xl px-4 pb-16">
+        <h2 class="text-3xl font-semibold text-center text-gray-300 mb-8">
+            Órdenes Recientes
+        </h2>
+        
+        <!-- Contenedor de la tabla para overflow en móviles -->
+        <div class="overflow-x-auto bg-gray-800 rounded-lg shadow-xl">
+            <table class="w-full min-w-full">
+                <!-- Cabecera de la Tabla -->
+                <thead class="bg-gray-700 border-b border-gray-600">
+                    <tr>
+                        <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Mesa</th>
+                        <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Tecnico</th>
+                        <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Orden</th>
+                        <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Molde</th>
+                        <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Cavidades</th>
+                    </tr>
+                </thead>
+                <!-- Cuerpo de la Tabla -->
+                <tbody class="divide-y divide-gray-700">
+                    
+                    <!-- 
+                      AQUÍ ESTÁ EL CAMBIO:
+                      Iniciamos el bucle para mostrar las órdenes que pases desde tu vista.
+                    -->
+                    {% for orden in ordenes_recientes %}
+                    <tr class="{% cycle 'bg-gray-900' '' %} hover:bg-gray-700 transition">
+                        <td class="p-4 whitespace-nowrap">{{ orden.id_orden }}</td>
+                        <td class="p-4 whitespace-nowrap">{{ orden.cliente_nombre }}</td>
+                        <td class="p-4 whitespace-nowrap">
+                            <!-- Ejemplo de lógica para badges de estado -->
+                            {% if orden.estado == 'En Proceso' %}
+                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-600 text-blue-100">En Proceso</span>
+                            {% elif orden.estado == 'Completada' %}
+                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-600 text-green-100">Completada</span>
+                            {% elif orden.estado == 'Pendiente' %}
+                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-600 text-yellow-100">Pendiente</span>
+                            {% else %}
+                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-600 text-gray-100">{{ orden.estado }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-4 whitespace-nowrap">{{ orden.fecha_registro|date:"Y-m-d" }}</td>
+                        <td class="p-4 whitespace-nowrap">
+                            <a href="#" class="text-indigo-400 hover:text-indigo-300 font-medium">Ver Detalles</a>
+                        </td>
+                    </tr>
+                    
+                    <!-- 
+                      El error también mencionaba 'empty'. 
+                      Esto es para mostrar un mensaje si el bucle no tiene datos.
+                    -->
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="p-4 text-center text-gray-400">
+                            No hay órdenes recientes para mostrar.
+                        </td>
+                    </tr>
+
+        
+                    {% endfor %}
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock content %}
+>>>>>>> develop
