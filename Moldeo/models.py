@@ -6,7 +6,7 @@ class Actividades(models.Model):
     nombre_actividad = models.TextField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        
         db_table = 'Actividades'
 
 
@@ -16,7 +16,7 @@ class Defectos(models.Model):
     main_activity = models.TextField(db_column='Main_activity', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
+        
         db_table = 'Defectos'
 
 
@@ -25,7 +25,7 @@ class Estatus(models.Model):
     numero_estatus = models.TextField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        
         db_table = 'Estatus'
 
 
@@ -34,7 +34,7 @@ class Lideres(models.Model):
     nombre = models.TextField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        
         db_table = 'Lideres'
 
 
@@ -45,7 +45,7 @@ class Maquinas(models.Model):
     wc2 = models.TextField(db_column='WC2', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
+        
         db_table = 'Maquinas'
 
 
@@ -54,7 +54,7 @@ class Moldmakers(models.Model):
     nombre = models.TextField(db_column='Nombre', blank=True, null=True)  # Field name made lowercase.
     
     class Meta:
-        managed = False
+        
         db_table = 'MoldMakers'
 
 
@@ -63,7 +63,7 @@ class Moldes(models.Model):
     numero_molde = models.TextField(unique=True, blank=True, null=True)
 
     class Meta:
-        managed = False
+        
         db_table = 'Moldes'
 
 
@@ -77,7 +77,7 @@ class NumerosDeParte(models.Model):
     junto = models.TextField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        
         db_table = 'Numeros_de_parte'
 
 
@@ -86,7 +86,7 @@ class Retorno(models.Model):
     retorno_opcion = models.TextField(blank=True, null=True)
 
     class Meta:
-        managed = False
+       
         db_table = 'Retorno'
 
 
@@ -95,7 +95,7 @@ class RetornoInfo(models.Model):
     info_retorno = models.TextField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        
         db_table = 'Retorno_info'
 
 
@@ -105,7 +105,7 @@ class Semana(models.Model):
     semana_fiscal = models.TextField(blank=True, null=True)
 
     class Meta:
-        managed = False
+       
         db_table = 'Semana'
 
 
@@ -116,7 +116,7 @@ class Zonas(models.Model):
     mn = models.TextField(db_column='MN', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
+        
         db_table = 'Zonas'
 
 
@@ -161,5 +161,5 @@ class Bitacora(models.Model):
     comentarios = models.TextField()
 
     class Meta:
-        managed = False
+       
         db_table = 'bitacora_bitacora'

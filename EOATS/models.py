@@ -45,7 +45,7 @@ class Eoats(models.Model):
       )
     class Meta:
 
-        managed = False
+        
 
         db_table = 'eoats'
   
@@ -102,7 +102,7 @@ class Preventivos(models.Model):
 
     class Meta:
 
-        managed = False
+        
         ordering = ['-fecha_preventivo']
 
         db_table = 'preventivos'
@@ -139,8 +139,7 @@ class Refacciones(models.Model):
 
     class Meta:
 
-        managed = False
-
+        
         db_table = 'refacciones'
 
 class Movimientos(models.Model):

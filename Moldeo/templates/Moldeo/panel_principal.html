@@ -5,103 +5,6 @@
 {% block title %}Dashboard - Panel de Órdenes{% endblock %}
 
 <!-- 3. Definimos el contenido específico para esta página -->
-<<<<<<< HEAD
- {% block content %}
-        <!-- 2. BOTONES GRANDES -->
-        <div class="container mx-auto max-w-4xl px-4 py-16">
-            <div class="flex flex-col sm:flex-row justify-center gap-6 sm:gap-10">
-                <!-- Botón Registrar -->
-                <a href="#" 
-                class="flex-1 text-center bg-green-600 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-green-500">
-                    Registrar Orden
-                </a>
-                
-                <!-- Botón En Curso -->
-                <a href="#" 
-                class="flex-1 text-center bg-red-600 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-red-500">
-                    Orden en Curso
-                </a>
-            </div>
-        </div>
-
-        <!-- 3. TABLA DE ÓRDENES RECIENTES -->
-        <div class="container mx-auto max-w-6xl px-4 pb-16">
-            <h2 class="text-3xl font-semibold text-center text-gray-300 mb-8">
-                Órdenes Recientes
-            </h2>
-            
-            <!-- Contenedor de la tabla para overflow en móviles -->
-            <div class="overflow-x-auto bg-gray-800 rounded-lg shadow-xl">
-                <table class="w-full min-w-full">
-                    <!-- Cabecera de la Tabla -->
-                    <thead class="bg-gray-700 border-b border-gray-600">
-                        <tr>
-                            <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">ID Orden</th>
-                            <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Cliente</th>
-                            <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Estado</th>
-                            <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Fecha de Registro</th>
-                            <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Acciones</th>
-                        </tr>
-                    </thead>
-                    <!-- Cuerpo de la Tabla -->
-                    <tbody class="divide-y divide-gray-700">
-                        <!-- Fila 1 (Ejemplo estático) -->
-                        <!-- NOTA: En Django real, esto estaría en un bucle {% for orden in ordenes %} -->
-                        <tr class="hover:bg-gray-700 transition">
-                            <td class="p-4 whitespace-nowrap">ORD-1024</td>
-                            <td class="p-4 whitespace-nowrap">Cliente Ejemplo S.A.</td>
-                            <td class="p-4 whitespace-nowrap">
-                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-600 text-blue-100">En Proceso</span>
-                            </td>
-                            <td class="p-4 whitespace-nowrap">2025-11-03</td>
-                            <td class="p-4 whitespace-nowrap">
-                                <a href="#" class="text-indigo-400 hover:text-indigo-300 font-medium">Ver Detalles</a>
-                            </td>
-                        </tr>
-                        <!-- Fila 2 -->
-                        <tr class="bg-gray-900 hover:bg-gray-700 transition">
-                            <td class="p-4 whitespace-nowrap">ORD-1023</td>
-                            <td class="p-4 whitespace-nowrap">Ana Gómez</td>
-                            <td class="p-4 whitespace-nowrap">
-                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-600 text-green-100">Completada</span>
-                            </td>
-                            <td class="p-4 whitespace-nowrap">2025-11-02</td>
-                            <td class="p-4 whitespace-nowrap">
-                                <a href="#" class="text-indigo-400 hover:text-indigo-300 font-medium">Ver Detalles</a>
-                            </td>
-                        </tr>
-                        <!-- Fila 3 -->
-                        <tr class="hover:bg-gray-700 transition">
-                            <td class="p-4 whitespace-nowrap">ORD-1022</td>
-                            <td class="p-4 whitespace-nowrap">Juan Pérez</td>
-                            <td class="p-4 whitespace-nowrap">
-                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-600 text-yellow-100">Pendiente</span>
-                            </td>
-                            <td class="p-4 whitespace-nowrap">2025-11-02</td>
-                            <td class="p-4 whitespace-nowrap">
-                                <a href="#" class="text-indigo-400 hover:text-indigo-300 font-medium">Ver Detalles</a>
-                            </td>
-                        </tr>
-                        <!-- Fila 4 -->
-                        <tr class="bg-gray-900 hover:bg-gray-700 transition">
-                            <td class="p-4 whitespace-nowrap">ORD-1021</td>
-                            <td class="p-4 whitespace-nowrap">Industrias ABC</td>
-                            <td class="p-4 whitespace-nowrap">
-                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-600 text-green-100">Completada</span>
-                            </td>
-                            <td class="p-4 whitespace-nowrap">2025-11-01</td>
-                            <td class="p-4 whitespace-nowrap">
-                                <a href="#" class="text-indigo-400 hover:text-indigo-300 font-medium">Ver Detalles</a>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-     {% empty %}   
- {%endfor%}
-{%endblock%}
-=======
 {% block content %}
     <!-- 2. BOTONES GRANDES -->
     <div class="container mx-auto max-w-4xl px-4 py-16">
@@ -187,4 +90,3 @@
         </div>
     </div>
 {% endblock content %}
->>>>>>> develop
