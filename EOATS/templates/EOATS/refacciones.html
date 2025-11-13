@@ -25,6 +25,7 @@
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">N/P</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">N/P Proveedor</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
@@ -36,6 +37,7 @@
                     {% for refaccion in lista_de_refacciones %}
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ refaccion.numero_sap}}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ refaccion.numero_proveedor}}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ refaccion.descripcion}}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{  refaccion.disponible }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{  refaccion.locacion }}</td>

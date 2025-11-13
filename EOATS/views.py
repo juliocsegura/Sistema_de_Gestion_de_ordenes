@@ -68,7 +68,8 @@ def bitacora_view(request):
         numero_eoat= request.POST.get('molde')
         comment=request.POST.get('maint-notes')
         types=request.POST.get('maint-type')
-        
+        order= request.POST.get('maint-order')
+
         nuevo_status = ''
         if types == 'Preventivo' or 'Correctivo' or 'Preparacion':
             nuevo_status = STATUS_DISPONIBLE
@@ -89,7 +90,8 @@ def bitacora_view(request):
             Preventivos.objects.create(
                 eoat=numero_eoat,
                 comentarios = comment,
-                tipo = types
+                tipo = types,
+                numero_orden = order
                 
             )
         

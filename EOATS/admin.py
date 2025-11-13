@@ -10,7 +10,7 @@ class EoatsAdmin(admin.ModelAdmin):
 @admin.register(Preventivos)
 class PreventivosAdmin(admin.ModelAdmin):
     # Podemos mostrar campos del modelo relacionado (Eoats)
-    list_display = ( 'locacion','eoat', 'semana', 'fecha_preventivo', 'numero_orden')
+    list_display = ( 'locacion','eoat', 'semana','tipo', 'fecha_preventivo', 'numero_orden')
     list_filter = ('semana', 'fecha_preventivo')
 
     # Función para obtener la ubicación del EOAT relacionado

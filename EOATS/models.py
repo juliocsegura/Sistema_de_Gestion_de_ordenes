@@ -127,11 +127,15 @@ class Preventivos(models.Model):
 
     despues = models.TextField(blank=True, null=True)
 
-
-
+    maquina= models.CharField(max_length=100,blank=True, null=True)
+    retorno= models.CharField(max_length=100,blank=True, null=True)
+    retorno_info= models.CharField(max_length=100,blank=True, null=True)
+    tecnico = models.CharField(max_length=100,blank=True, null=True)
+    hora_paro = models.CharField(max_length=100,blank=True, null=True)
+    hora_entrega = models.CharField(max_length=100,blank=True, null=True)
     class Meta:
 
-        managed = False
+        managed = True
         ordering = ['-fecha_preventivo']
 
         db_table = 'preventivos'

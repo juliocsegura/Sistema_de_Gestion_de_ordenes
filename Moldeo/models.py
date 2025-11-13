@@ -163,3 +163,88 @@ class Bitacora(models.Model):
     class Meta:
         managed = False
         db_table = 'bitacora_bitacora'
+
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
+
+# --- 1. MODELO BASE ABSTRACTO ---
+# Campos comunes para TODAS las órdenes (MCM, CHO, TPM, etc.)
+class OrdenBase(models.Model):
+    fecha_creacion = models.DateTimeField(auto_now_add=True) 
+    numero_orden = models.CharField(max_length=50, unique=True)
+    molde = models.CharField(max_length=50)
+    
+
+    # --- RELACIONES GENÉRICAS INVERSAS ---
+    # Esto nos permite hacer "mi_orden.tecnicos.all()"
+    tecnicos = GenericRelation('ItemTecnico', related_query_name='orden')
+    mesas = GenericRelation('ItemMesa', related_query_name='orden')
+    cavidades = GenericRelation('ItemCavidad', related_query_name='orden')
+
+    class Meta:
+        abstract = True # No crea una tabla "OrdenBase" en la BD
+
+    def __str__(self):
+        return f"Orden {self.numero_orden}"
+
+# --- 2. MODELOS DE ÓRDENES ESPECÍFICAS ---
+# Heredan los campos comunes de OrdenBase y añaden los suyos
+
+class OrdenMCM(OrdenBase):
+    # Campo específico de MCM
+    defecto_sap = models.CharField(max_length=100)
+    defecto_real = models.TextField()
+    
+    def __str__(self):
+        return f"Orden MCM {self.numero_orden} - {self.molde}"
+
+# ¡Ahora puedes crear fácilmente otros tipos de órdenes!
+class OrdenCHO(OrdenBase):
+    # Campos específicos de CHO
+    tipo_cuchilla = models.CharField(max_length=50, blank=True)
+    # ... otros campos ...
+
+class OrdenTPM(OrdenBase):
+    # Campos específicos de TPM
+    equipo = models.CharField(max_length=100, blank=True)
+    # ... otros campos ...
+
+
+
+
+# --- 3. MODELOS GENÉRICOS RELACIONADOS ---
+# Estos reemplazan a TecnicoOrden, MesaOrden, etc.
+# Ahora pueden apuntar a OrdenMCM, OrdenCHO, o cualquier otro modelo.
+
+class ItemTecnico(models.Model):
+    nombre = models.CharField(max_length=100) # El nombre del técnico
+    
+    # Campos para la Relación Genérica
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    def __str__(self):
+        return f"{self.nombre} (Orden: {self.content_object})"
+
+class ItemMesa(models.Model):
+    nombre = models.CharField(max_length=50) # El nombre/número de la mesa
+    
+    # Campos para la Relación Genérica
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    def __str__(self):
+        return f"{self.nombre} (Orden: {self.content_object})"
+
+class ItemCavidad(models.Model):
+    nombre = models.CharField(max_length=50) # El nombre/número de la cavidad
+    
+    # Campos para la Relación Genérica
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    def __str__(self):
+        return f"{self.nombre} (Orden: {self.content_object})"

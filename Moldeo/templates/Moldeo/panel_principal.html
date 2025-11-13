@@ -6,16 +6,14 @@
 
 <!-- 3. Definimos el contenido específico para esta página -->
 {% block content %}
-    <!-- 2. BOTONES GRANDES -->
+    <!-- 2. BOTONES GRANDES (Sin cambios) -->
     <div class="container mx-auto max-w-4xl px-4 py-16">
-    
         <div class="flex flex-col sm:flex-row justify-center gap-6 sm:gap-10">
-            <a href="{% url 'registrar_orden' %}" 
+            <a href="{% url 'Moldeo:registrar_orden' %}" 
                class="flex-1 text-center bg-green-600 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-green-500">
                 Registrar Orden
             </a>
             
-            <!-- Botón En Curso -->
             <a href="#" 
                class="flex-1 text-center bg-red-600 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-red-500">
                 Orden en Curso
@@ -23,70 +21,172 @@
         </div>
     </div>
 
-    <!-- 3. TABLA DE ÓRDENES RECIENTES -->
+    <!-- 3. TABLA DE ÓRDENES RECIENTES (¡ACTUALIZADA!) -->
     <div class="container mx-auto max-w-6xl px-4 pb-16">
         <h2 class="text-3xl font-semibold text-center text-gray-300 mb-8">
             Órdenes Recientes
         </h2>
         
-        <!-- Contenedor de la tabla para overflow en móviles -->
         <div class="overflow-x-auto bg-gray-800 rounded-lg shadow-xl">
             <table class="w-full min-w-full">
-                <!-- Cabecera de la Tabla -->
+                <!-- Cabecera de la Tabla (¡ACTUALIZADA!) -->
                 <thead class="bg-gray-700 border-b border-gray-600">
                     <tr>
                         <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Mesa</th>
-                        <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Tecnico</th>
+                        <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Técnico</th>
                         <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Orden</th>
                         <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Molde</th>
-                        <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Cavidades</th>
+                        <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Cavidad</th>
+                        <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Tiempo Transcurrido</th>
                     </tr>
                 </thead>
-                <!-- Cuerpo de la Tabla -->
-                <tbody class="divide-y divide-gray-700">
-                    
-                    <!-- 
-                      AQUÍ ESTÁ EL CAMBIO:
-                      Iniciamos el bucle para mostrar las órdenes que pases desde tu vista.
-                    -->
-                    {% for orden in ordenes_recientes %}
-                    <tr class="{% cycle 'bg-gray-900' '' %} hover:bg-gray-700 transition">
-                        <td class="p-4 whitespace-nowrap">{{ orden.id_orden }}</td>
-                        <td class="p-4 whitespace-nowrap">{{ orden.cliente_nombre }}</td>
-                        <td class="p-4 whitespace-nowrap">
-                            <!-- Ejemplo de lógica para badges de estado -->
-                            {% if orden.estado == 'En Proceso' %}
-                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-600 text-blue-100">En Proceso</span>
-                            {% elif orden.estado == 'Completada' %}
-                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-600 text-green-100">Completada</span>
-                            {% elif orden.estado == 'Pendiente' %}
-                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-600 text-yellow-100">Pendiente</span>
-                            {% else %}
-                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-600 text-gray-100">{{ orden.estado }}</span>
-                            {% endif %}
-                        </td>
-                        <td class="p-4 whitespace-nowrap">{{ orden.fecha_registro|date:"Y-m-d" }}</td>
-                        <td class="p-4 whitespace-nowrap">
-                            <a href="#" class="text-indigo-400 hover:text-indigo-300 font-medium">Ver Detalles</a>
-                        </td>
-                    </tr>
-                    
-                    <!-- 
-                      El error también mencionaba 'empty'. 
-                      Esto es para mostrar un mensaje si el bucle no tiene datos.
-                    -->
-                    {% empty %}
+                <!-- 
+                  Cuerpo de la Tabla (¡ACTUALIZADO!)
+                  Ahora está vacío y tiene un ID. JavaScript lo llenará.
+                -->
+                <tbody id="ordenes-tbody" class="divide-y divide-gray-700">
+                    <!-- Fila de carga inicial -->
                     <tr>
-                        <td colspan="5" class="p-4 text-center text-gray-400">
-                            No hay órdenes recientes para mostrar.
+                        <td colspan="6" class="p-4 text-center text-gray-400">
+                            Cargando datos...
                         </td>
                     </tr>
-
-        
-                    {% endfor %}
-
                 </tbody>
             </table>
         </div>
     </div>
 {% endblock content %}
+
+{% block scripts %}
+<!-- ¡NUEVO SCRIPT PARA ACTUALIZACIÓN EN VIVO! -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const tbody = document.getElementById('ordenes-tbody');
+    // URL de la API que creamos en urls.py
+    const apiUrl = "{% url 'Moldeo:api_ordenes_recientes' %}";
+
+    /**
+     * Calcula el tiempo transcurrido desde una fecha ISO
+     */
+    function getTimeAgo(isoString) {
+        if (!isoString) return 'N/A';
+        
+        const date = new Date(isoString);
+        const now = new Date();
+        const seconds = Math.floor((now - date) / 1000);
+        
+        if (isNaN(seconds) || seconds < 0) {
+            return 'Calculando...';
+        }
+
+        // Calcular HH, MM, SS
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60; // El resto de segundos
+        
+        // Formatear a 00:00:00 usando padStart para añadir ceros
+        const paddedHours = String(hours).padStart(2, '0');
+        const paddedMinutes = String(minutes).padStart(2, '0');
+        const paddedSecs = String(secs).padStart(2, '0');
+        
+        return `${paddedHours}:${paddedMinutes}:${paddedSecs}`;
+        
+    }
+
+    /**
+     * Función para escapar HTML y prevenir XSS
+     */
+    function escapeHTML(str) {
+        if (!str) return 'N/A';
+        return str.toString()
+                  .replace(/&/g, '&amp;')
+                  .replace(/</g, '&lt;')
+                  .replace(/>/g, '&gt;')
+                  .replace(/"/g, '&quot;')
+                  .replace(/'/g, '&#39;');
+    }
+
+     /**
+     * (NUEVA FUNCIÓN)
+     * Actualiza todos los cronómetros en la tabla (se llama cada segundo)
+     */
+    function updateAllTimers() {
+        // Selecciona todos los 'td' que tengan la clase 'live-timer'
+        tbody.querySelectorAll('.live-timer').forEach(cell => {
+            const isoString = cell.dataset.isoString;
+            if (isoString) {
+                // Usar textContent previene XSS y es más eficiente
+                cell.textContent = getTimeAgo(isoString);
+            }
+        });
+    }
+
+    /**
+     * (MODIFICADA)
+     * Busca la LISTA de órdenes (se llama cada 5 segundos)
+     */
+    async function fetchOrdenes() {
+        try {
+            const response = await fetch(apiUrl);
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+            const data = await response.json();
+            
+            // Limpiar la tabla
+            tbody.innerHTML = ''; 
+
+            if (!data.ordenes || data.ordenes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-400">No hay órdenes recientes para mostrar.</td></tr>';
+                return;
+            }
+
+            // Volver a dibujar cada fila
+            data.ordenes.forEach((orden, index) => {
+                // Calculamos el tiempo inicial al momento de dibujar
+                const timeAgo = getTimeAgo(orden.fecha_creacion_iso);
+                const row = document.createElement('tr');
+                
+                row.className = (index % 2 === 0) ? 'hover:bg-gray-700 transition' : 'bg-gray-900 hover:bg-gray-700 transition';
+                
+                row.innerHTML = `
+                    <td class="p-4 whitespace-nowrap">${escapeHTML(orden.mesa)}</td>
+                    <td class="p-4 whitespace-nowrap">${escapeHTML(orden.tecnico)}</td>
+                    <td class="p-4 whitespace-nowrap">${escapeHTML(orden.numero_orden)}</td>
+                    <td class="p-4 whitespace-nowrap">${escapeHTML(orden.molde)}</td>
+                    <td class="p-4 whitespace-nowrap">${escapeHTML(orden.cavidad)}</td>
+                    
+                    <!-- 
+                      ¡MODIFICADO! 
+                      Añadimos la clase 'live-timer' y el 'data-iso-string'
+                      para que la función updateAllTimers() lo encuentre.
+                    -->
+                    <td class="p-4 whitespace-nowrap live-timer" 
+                        data-iso-string="${escapeHTML(orden.fecha_creacion_iso)}">
+                        ${escapeHTML(timeAgo)}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+        } catch (error) {
+            console.error('Error al actualizar la tabla:', error);
+            tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-400">Error al cargar datos. Intente de nuevo.</td></tr>';
+        }
+    }
+
+    // Carga inicial e inicio del temporizador
+    
+    // 1. Cargar la lista de órdenes inmediatamente al cargar la página
+    fetchOrdenes(); 
+    
+    // 2. Temporizador para ACTUALIZAR LA LISTA (cada 5 segundos)
+    setInterval(fetchOrdenes, 5000); 
+
+    // 3. Temporizador para ACTUALIZAR EL CRONÓMETRO (cada 1 segundo)
+    setInterval(updateAllTimers, 1000); 
+
+});
+</script>
+{% endblock scripts %}

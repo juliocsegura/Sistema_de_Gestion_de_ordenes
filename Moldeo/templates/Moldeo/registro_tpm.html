@@ -2,35 +2,18 @@
 {% extends 'Moldeo/base.html' %}
 
 <!-- 2. (Opcional) Cambiamos el título de la pestaña del navegador -->
-{% block title %}Registrar Orden - MCM{% endblock %}
+{% block title %}Registrar Orden - TPM{% endblock %}
 
 <!-- 3. Definimos el contenido específico para esta página -->
 {% block content %}
 <div class="container mx-auto max-w-3xl px-4 py-12">
     <h1 class="text-4xl font-bold text-center text-gray-100 mb-8">
-        Registrar Orden (MCM)
+        Registrar Orden (TPM)
     </h1>
 
     <!-- Formulario con fondo oscuro -->
-    <!-- CORRECCIÓN: El formulario ahora apunta a 'registrar_mcm' -->
-    <form action="{% url 'Moldeo:registrar_mcm' %}" method="POST" class="bg-gray-800 p-8 rounded-lg shadow-xl space-y-6">
+    <form action="" method="POST" class="bg-gray-800 p-8 rounded-lg shadow-xl space-y-6">
         {% csrf_token %}
-
-        <!-- Mostrar mensajes de error -->
-        {% if messages %}
-            <div class="mb-4">
-                {% for message in messages %}
-                    <div class{% if message.tags %}="p-4 rounded-md 
-                        {% if message.tags == 'error' %}bg-red-800 text-red-100
-                        {% elif message.tags == 'success' %}bg-green-800 text-green-100
-                        {% else %}bg-blue-800 text-blue-100{% endif %}"
-                        {% else %}"p-4 bg-gray-700 text-gray-200 rounded-md"{% endif %} 
-                        role="alert">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
 
         <!-- Clases comunes para inputs y labels -->
         {% comment %} 
@@ -45,29 +28,10 @@
                 <input type="text" id="numero_orden" name="numero_orden" required
                        class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-indigo-500 focus:border-indigo-500">
             </div>
-            <div>
-                <label for="defecto_sap" class="block text-sm font-medium text-gray-300 mb-1">Defecto SAP</label>
-                <input type="text" id="defecto_sap" name="defecto_sap" required
-                       class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-indigo-500 focus:border-indigo-500">
-            </div>
-        </div>
-
-        <!-- ¡CAMPO 'MOLDE' AÑADIDO! -->
-        <div>
-            <label for="molde" class="block text-sm font-medium text-gray-300 mb-1">Molde</label>
-            <input type="text" id="molde" name="molde" required
-                   class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-indigo-500 focus:border-indigo-500">
-        </div>
-
-        <div>
-            <label for="defecto_real" class="block text-sm font-medium text-gray-300 mb-1">Defecto Real</label>
-            <textarea id="defecto_real" name="defecto_real" rows="3" required
-                      class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-indigo-500 focus:border-indigo-500"></textarea>
-        </div>
-
-
+            
         <!-- CAMPOS DINÁMICOS: TÉCNICOS -->
         <div class="border-t border-gray-700 pt-6">
+            <!-- Encabezado y botón "Añadir" -->
             <div class="flex justify-between items-center mb-2">
                 <label class="text-lg font-semibold text-white">Técnicos</label>
                 <button type="button" id="add-tecnico-btn" 
@@ -75,10 +39,13 @@
                     + Añadir
                 </button>
             </div>
+            <!-- Contenedor para los inputs de técnicos -->
             <div id="tecnicos-wrapper" class="space-y-2">
+                <!-- Input inicial (Técnico 1) -->
                 <div class="flex items-center space-x-2">
                     <input type="text" name="tecnicos" placeholder="Técnico 1" required
                            class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-indigo-500 focus:border-indigo-500">
+                    <!-- El primer campo no se puede eliminar para asegurar al menos uno -->
                 </div>
             </div>
         </div>
@@ -122,54 +89,65 @@
         <div class="pt-6">
             <button type="submit" 
                     class="w-full bg-green-600 hover:bg-green-500 text-white text-xl font-bold py-3 px-6 rounded-lg shadow-lg transform transition hover:scale-105">
-                Guardar Orden
+                Guardar e Iniciar Orden
             </button>
         </div>
     </form>
 </div>
 
-<!-- SCRIPT PARA CAMPOS DINÁMICOS (Sin cambios) -->
+<!-- SCRIPT PARA CAMPOS DINÁMICOS -->
 <script>
     document.addEventListener('DOMContentLoaded', () => {
 
+        /**
+         * Función genérica para añadir campos dinámicos
+         * @param {string} wrapperId - ID del div que contendrá los inputs
+         * @param {string} buttonId - ID del botón "Añadir"
+         * @param {string} fieldName - El atributo 'name' para el input (ej. 'tecnicos')
+         * @param {string} placeholderPrefix - El texto base del placeholder (ej. 'Técnico')
+         */
         function setupDynamicFields(wrapperId, buttonId, fieldName, placeholderPrefix) {
-            let count = 1; 
+            let count = 1; // Ya existe 1 campo por defecto
             const wrapper = document.getElementById(wrapperId);
             const button = document.getElementById(buttonId);
-
-            if (!wrapper || !button) {
-                console.warn(`Elementos no encontrados para ${wrapperId}`);
-                return;
-            }
 
             button.addEventListener('click', () => {
                 count++;
                 
+                // Crear el contenedor (div)
                 const newFieldRow = document.createElement('div');
                 newFieldRow.className = 'flex items-center space-x-2';
 
+                // Crear el nuevo input
                 const newInput = document.createElement('input');
                 newInput.type = 'text';
-                newInput.name = fieldName;
+                newInput.name = fieldName; // Todos los inputs usan el mismo name
                 newInput.placeholder = `${placeholderPrefix} ${count}`;
                 newInput.required = true;
                 newInput.className = 'w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-indigo-500 focus:border-indigo-500';
 
+                // Crear el botón de eliminar
                 const removeButton = document.createElement('button');
                 removeButton.type = 'button';
                 removeButton.className = 'flex-shrink-0 bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-3 rounded-md text-xs';
                 removeButton.textContent = 'X';
                 
+                // Acción para eliminar la fila
                 removeButton.addEventListener('click', () => {
                     newFieldRow.remove();
+                    // No es necesario re-indexar, el backend recibirá la lista
                 });
 
+                // Añadir input y botón al contenedor
                 newFieldRow.appendChild(newInput);
                 newFieldRow.appendChild(removeButton);
+
+                // Añadir la nueva fila al wrapper
                 wrapper.appendChild(newFieldRow);
             });
         }
 
+        // Configurar los 3 campos dinámicos
         setupDynamicFields('tecnicos-wrapper', 'add-tecnico-btn', 'tecnicos', 'Técnico');
         setupDynamicFields('mesas-wrapper', 'add-mesa-btn', 'mesas', 'Mesa');
         setupDynamicFields('cavidades-wrapper', 'add-cavidad-btn', 'cavidades', 'Cavidad');
