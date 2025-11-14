@@ -7,6 +7,16 @@
 <!-- 3. Definimos el contenido específico para esta página -->
 {% block content %}
 <div class="container mx-auto max-w-3xl px-4 py-12">
+    <div class="mb-6">
+        <a href="{% url 'Moldeo:registrar_orden' %}" 
+           class="inline-flex items-center bg-gray-600 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+            <!-- Icono de flecha izquierda -->
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Regresar
+        </a>
+    </div>
     <h1 class="text-4xl font-bold text-center text-gray-100 mb-8">
         Registrar Orden (MCM)
     </h1>
@@ -102,18 +112,38 @@
         </div>
 
         <!-- CAMPOS DINÁMICOS: CAVIDADES -->
-        <div class="border-t border-gray-700 pt-6">
-            <div class="flex justify-between items-center mb-2">
-                <label class="text-lg font-semibold text-white">Cavidades</label>
-                <button type="button" id="add-cavidad-btn" 
-                        class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-1 px-3 rounded-md transition">
-                    + Añadir
-                </button>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-1 gap-6">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-lg font-semibold text-white">Cavidades</label>
+                    <button type="button" id="add-cavidad-btn" 
+                            class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-1 px-3 rounded-md transition">
+                        + Añadir
+                    </button>
+                </div>
+                <div id="cavidades-wrapper" class="space-y-2">
+                    <div class="flex items-center space-x-2">
+                         <input type="text" name="cavidades" placeholder="Cavidad 1" required
+                                class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                        
+                </div> 
             </div>
-            <div id="cavidades-wrapper" class="space-y-2">
-                <div class="flex items-center space-x-2">
-                    <input type="text" name="cavidades" placeholder="Cavidad 1" required
-                           class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-indigo-500 focus:border-indigo-500">
+            <div class="grid grid-cols-1 sm:grid-cols-1 gap-6">
+              
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-lg font-semibold text-white">Circuitos</label>
+                    <button type="button" id="add-circuito-btn" 
+                            class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-1 px-3 rounded-md transition">
+                        + Añadir
+                    </button>
+                </div>
+            
+                <div id="circuitos-wrapper" class="space-y-2">
+                    <div class="flex items-center space-x-2">
+                        <input type="text" name="circuitos" placeholder="Circuito 1" required
+                            class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
                 </div>
             </div>
         </div>
@@ -173,6 +203,7 @@
         setupDynamicFields('tecnicos-wrapper', 'add-tecnico-btn', 'tecnicos', 'Técnico');
         setupDynamicFields('mesas-wrapper', 'add-mesa-btn', 'mesas', 'Mesa');
         setupDynamicFields('cavidades-wrapper', 'add-cavidad-btn', 'cavidades', 'Cavidad');
+        setupDynamicFields('circuitos-wrapper', 'add-circuito-btn', 'circuitos', 'Circuito');
     });
 </script>
 

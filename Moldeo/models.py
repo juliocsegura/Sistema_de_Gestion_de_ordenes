@@ -1,4 +1,6 @@
 from django.db import models
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
 
 # Create your models here.
 class Actividades(models.Model):
@@ -170,11 +172,24 @@ from django.contrib.contenttypes.models import ContentType
 # --- 1. MODELO BASE ABSTRACTO ---
 # Campos comunes para TODAS las órdenes (MCM, CHO, TPM, etc.)
 class OrdenBase(models.Model):
+    ESTADO_ACTIVA = 'Activa'
+    ESTADO_PAUSADA = 'Pausada'
+    ESTADO_FINALIZADA = 'Finalizada'
+    ESTADO_CHOICES = [
+        (ESTADO_ACTIVA, 'Activa'),
+        (ESTADO_PAUSADA, 'Pausada'),
+        (ESTADO_FINALIZADA, 'Finalizada'),
+    ]
     fecha_creacion = models.DateTimeField(auto_now_add=True) 
     numero_orden = models.CharField(max_length=50, unique=True)
     molde = models.CharField(max_length=50)
     
-
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADO_CHOICES,
+        default=ESTADO_ACTIVA
+    )
+    comentarios = models.TextField(blank=True, default='')
     # --- RELACIONES GENÉRICAS INVERSAS ---
     # Esto nos permite hacer "mi_orden.tecnicos.all()"
     tecnicos = GenericRelation('ItemTecnico', related_query_name='orden')
@@ -186,40 +201,30 @@ class OrdenBase(models.Model):
 
     def __str__(self):
         return f"Orden {self.numero_orden}"
-
 # --- 2. MODELOS DE ÓRDENES ESPECÍFICAS ---
-# Heredan los campos comunes de OrdenBase y añaden los suyos
-
 class OrdenMCM(OrdenBase):
-    # Campo específico de MCM
     defecto_sap = models.CharField(max_length=100)
     defecto_real = models.TextField()
     
     def __str__(self):
         return f"Orden MCM {self.numero_orden} - {self.molde}"
 
-# ¡Ahora puedes crear fácilmente otros tipos de órdenes!
 class OrdenCHO(OrdenBase):
-    # Campos específicos de CHO
     tipo_cuchilla = models.CharField(max_length=50, blank=True)
     # ... otros campos ...
 
 class OrdenTPM(OrdenBase):
-    # Campos específicos de TPM
     equipo = models.CharField(max_length=100, blank=True)
     # ... otros campos ...
 
-
+class OrdenPREP(OrdenBase):
+    material = models.CharField(max_length=100, blank=True)
+    # ... otros campos ...
 
 
 # --- 3. MODELOS GENÉRICOS RELACIONADOS ---
-# Estos reemplazan a TecnicoOrden, MesaOrden, etc.
-# Ahora pueden apuntar a OrdenMCM, OrdenCHO, o cualquier otro modelo.
-
 class ItemTecnico(models.Model):
-    nombre = models.CharField(max_length=100) # El nombre del técnico
-    
-    # Campos para la Relación Genérica
+    nombre = models.CharField(max_length=100) 
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
@@ -228,9 +233,7 @@ class ItemTecnico(models.Model):
         return f"{self.nombre} (Orden: {self.content_object})"
 
 class ItemMesa(models.Model):
-    nombre = models.CharField(max_length=50) # El nombre/número de la mesa
-    
-    # Campos para la Relación Genérica
+    nombre = models.CharField(max_length=50) 
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
@@ -239,9 +242,7 @@ class ItemMesa(models.Model):
         return f"{self.nombre} (Orden: {self.content_object})"
 
 class ItemCavidad(models.Model):
-    nombre = models.CharField(max_length=50) # El nombre/número de la cavidad
-    
-    # Campos para la Relación Genérica
+    nombre = models.CharField(max_length=50)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')

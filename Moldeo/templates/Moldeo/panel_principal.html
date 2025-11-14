@@ -6,10 +6,11 @@
 
 <!-- 3. Definimos el contenido específico para esta página -->
 {% block content %}
-    <!-- 2. BOTONES GRANDES (Sin cambios) -->
+    <!-- 2. BOTONES GRANDES (Corregido) -->
     <div class="container mx-auto max-w-4xl px-4 py-16">
         <div class="flex flex-col sm:flex-row justify-center gap-6 sm:gap-10">
-            <a href="{% url 'Moldeo:registrar_orden' %}" 
+            <!-- CORRECCIÓN: Apuntar a la vista de registro correcta -->
+            <a href="{% url 'Moldeo:registrar_mcm' %}" 
                class="flex-1 text-center bg-green-600 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-green-500">
                 Registrar Orden
             </a>
@@ -21,7 +22,7 @@
         </div>
     </div>
 
-    <!-- 3. TABLA DE ÓRDENES RECIENTES (¡ACTUALIZADA!) -->
+    <!-- 3. TABLA DE ÓRDENES RECIENTES -->
     <div class="container mx-auto max-w-6xl px-4 pb-16">
         <h2 class="text-3xl font-semibold text-center text-gray-300 mb-8">
             Órdenes Recientes
@@ -29,7 +30,7 @@
         
         <div class="overflow-x-auto bg-gray-800 rounded-lg shadow-xl">
             <table class="w-full min-w-full">
-                <!-- Cabecera de la Tabla (¡ACTUALIZADA!) -->
+                <!-- Cabecera de la Tabla -->
                 <thead class="bg-gray-700 border-b border-gray-600">
                     <tr>
                         <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Mesa</th>
@@ -40,10 +41,7 @@
                         <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Tiempo Transcurrido</th>
                     </tr>
                 </thead>
-                <!-- 
-                  Cuerpo de la Tabla (¡ACTUALIZADO!)
-                  Ahora está vacío y tiene un ID. JavaScript lo llenará.
-                -->
+                <!-- Cuerpo de la Tabla -->
                 <tbody id="ordenes-tbody" class="divide-y divide-gray-700">
                     <!-- Fila de carga inicial -->
                     <tr>
@@ -55,43 +53,127 @@
             </table>
         </div>
     </div>
+
+    <!-- 
+    ======================================
+    --- HTML DEL MODAL (Movido aquí) ---
+    ======================================
+    -->
+    <div id="orden-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 hidden">
+        <div class="bg-gray-800 text-gray-200 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            
+            <!-- Cabecera del Modal -->
+            <div class="flex justify-between items-center border-b border-gray-700 p-4">
+                <h3 class="text-2xl font-bold" id="modal-titulo">Orden: </h3>
+                <button id="modal-close-btn" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+            </div>
+
+            <!-- Contenido del Modal (con scroll) -->
+            <div class="p-6 space-y-4 overflow-y-auto">
+                <!-- ¡NUEVO! Token CSRF para la API de actualización -->
+                {% csrf_token %}
+                
+                <!-- ID Oculto para referencia -->
+                <input type="hidden" id="modal-orden-id">
+
+                <!-- Info Estática -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">Defecto SAP</label>
+                        <p id="modal-defecto-sap" class="text-lg bg-gray-700 p-2 rounded"></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">Estado Actual</label>
+                        <p id="modal-estado" class="text-lg bg-gray-700 p-2 rounded"></p>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400">Defecto Real</label>
+                    <p id="modal-defecto-real" class="text-lg bg-gray-700 p-2 rounded min-h-[50px]"></p>
+                </div>
+
+                <!-- Comentarios -->
+                <div>
+                    <label for="modal-comentarios" class="block text-sm font-medium text-gray-400">Comentarios</label>
+                    <textarea id="modal-comentarios" rows="4" class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                    <button id="modal-guardar-comentarios" class="mt-2 w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg transition">
+                        Guardar Comentarios
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pie del Modal (Acciones) -->
+            <div class="flex justify-end space-x-4 bg-gray-900 p-4 border-t border-gray-700">
+                <button id="modal-pausar-btn" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg transition">
+                    Pausar Orden
+                </button>
+                <button id="modal-finalizar-btn" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-lg transition">
+                    Finalizar Orden
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- --- FIN DEL MODAL --- -->
+
 {% endblock content %}
 
+
 {% block scripts %}
-<!-- ¡NUEVO SCRIPT PARA ACTUALIZACIÓN EN VIVO! -->
+<!-- 
+======================================
+--- SCRIPT ÚNICO (Corregido) ---
+======================================
+-->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
     const tbody = document.getElementById('ordenes-tbody');
-    // URL de la API que creamos en urls.py
     const apiUrl = "{% url 'Moldeo:api_ordenes_recientes' %}";
+    
+    // --- Elementos del Modal ---
+    const modal = document.getElementById('orden-modal');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    const modalTitulo = document.getElementById('modal-titulo');
+    const modalOrdenId = document.getElementById('modal-orden-id');
+    const modalDefectoSap = document.getElementById('modal-defecto-sap');
+    const modalDefectoReal = document.getElementById('modal-defecto-real');
+    const modalEstado = document.getElementById('modal-estado');
+    const modalComentarios = document.getElementById('modal-comentarios');
+    const modalGuardarComentariosBtn = document.getElementById('modal-guardar-comentarios');
+    const modalPausarBtn = document.getElementById('modal-pausar-btn');
+    const modalFinalizarBtn = document.getElementById('modal-finalizar-btn');
+    // --- Fin de elementos del Modal ---
 
     /**
-     * Calcula el tiempo transcurrido desde una fecha ISO
+     * (CORREGIDO)
+     * Calcula el tiempo transcurrido en formato HH:MM:SS
      */
     function getTimeAgo(isoString) {
         if (!isoString) return 'N/A';
         
+        // CORRECCIÓN: No añadir 'Z' si la fecha ya es un ISO string completo.
+        // new Date() puede manejar el formato ISO de Django directamente.
         const date = new Date(isoString);
         const now = new Date();
-        const seconds = Math.floor((now - date) / 1000);
         
-        if (isNaN(seconds) || seconds < 0) {
-            return 'Calculando...';
+        let seconds = Math.floor((now - date) / 1000);
+        
+        if (isNaN(seconds)) { 
+            return 'Calculando...'; // La fecha era inválida
+        }
+        if (seconds < 0) { 
+            seconds = 0; // El reloj del servidor está adelantado, mostrar 0
         }
 
-        // Calcular HH, MM, SS
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
-        const secs = seconds % 60; // El resto de segundos
+        const secs = seconds % 60;
         
-        // Formatear a 00:00:00 usando padStart para añadir ceros
         const paddedHours = String(hours).padStart(2, '0');
         const paddedMinutes = String(minutes).padStart(2, '0');
         const paddedSecs = String(secs).padStart(2, '0');
         
         return `${paddedHours}:${paddedMinutes}:${paddedSecs}`;
-        
     }
 
     /**
@@ -100,31 +182,27 @@ document.addEventListener('DOMContentLoaded', () => {
     function escapeHTML(str) {
         if (!str) return 'N/A';
         return str.toString()
-                  .replace(/&/g, '&amp;')
-                  .replace(/</g, '&lt;')
-                  .replace(/>/g, '&gt;')
-                  .replace(/"/g, '&quot;')
-                  .replace(/'/g, '&#39;');
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
     }
 
-     /**
-     * (NUEVA FUNCIÓN)
+    /**
      * Actualiza todos los cronómetros en la tabla (se llama cada segundo)
      */
     function updateAllTimers() {
-        // Selecciona todos los 'td' que tengan la clase 'live-timer'
         tbody.querySelectorAll('.live-timer').forEach(cell => {
             const isoString = cell.dataset.isoString;
             if (isoString) {
-                // Usar textContent previene XSS y es más eficiente
                 cell.textContent = getTimeAgo(isoString);
             }
         });
     }
 
     /**
-     * (MODIFICADA)
-     * Busca la LISTA de órdenes (se llama cada 5 segundos)
+     * Busca la LISTA de órdenes y añade listeners
      */
     async function fetchOrdenes() {
         try {
@@ -134,7 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const data = await response.json();
             
-            // Limpiar la tabla
             tbody.innerHTML = ''; 
 
             if (!data.ordenes || data.ordenes.length === 0) {
@@ -142,49 +219,160 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Volver a dibujar cada fila
             data.ordenes.forEach((orden, index) => {
-                // Calculamos el tiempo inicial al momento de dibujar
                 const timeAgo = getTimeAgo(orden.fecha_creacion_iso);
                 const row = document.createElement('tr');
                 
-                row.className = (index % 2 === 0) ? 'hover:bg-gray-700 transition' : 'bg-gray-900 hover:bg-gray-700 transition';
+                let rowClass = (index % 2 === 0) ? 'hover:bg-gray-700 transition' : 'bg-gray-900 hover:bg-gray-700 transition';
                 
+                if (orden.estado === 'Finalizada') {
+                    rowClass += ' opacity-50 line-through';
+                } else if (orden.estado === 'Pausada') {
+                    rowClass += ' opacity-75';
+                } else {
+                    rowClass += ' cursor-pointer';
+                }
+                row.className = rowClass;
+
                 row.innerHTML = `
                     <td class="p-4 whitespace-nowrap">${escapeHTML(orden.mesa)}</td>
                     <td class="p-4 whitespace-nowrap">${escapeHTML(orden.tecnico)}</td>
                     <td class="p-4 whitespace-nowrap">${escapeHTML(orden.numero_orden)}</td>
                     <td class="p-4 whitespace-nowrap">${escapeHTML(orden.molde)}</td>
                     <td class="p-4 whitespace-nowrap">${escapeHTML(orden.cavidad)}</td>
-                    
-                    <!-- 
-                      ¡MODIFICADO! 
-                      Añadimos la clase 'live-timer' y el 'data-iso-string'
-                      para que la función updateAllTimers() lo encuentre.
-                    -->
                     <td class="p-4 whitespace-nowrap live-timer" 
                         data-iso-string="${escapeHTML(orden.fecha_creacion_iso)}">
                         ${escapeHTML(timeAgo)}
                     </td>
                 `;
+                
+                // Guardamos todos los datos de la orden en el elemento 'row'
+                row.dataset.ordenData = JSON.stringify(orden); 
+                
+                if (orden.estado !== 'Finalizada') {
+                    // (CORREGIDO) Usar event.currentTarget para obtener la fila correcta
+                    row.addEventListener('click', (event) => {
+                        const clickedRow = event.currentTarget;
+                        const ordenData = JSON.parse(clickedRow.dataset.ordenData);
+                        showModal(ordenData);
+                    });
+                }
+                
                 tbody.appendChild(row);
             });
 
         } catch (error) {
-            console.error('Error al actualizar la tabla:', error);
-            tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-400">Error al cargar datos. Intente de nuevo.</td></tr>';
+            console.error('Error al actualizar la lista de órdenes:', error);
+            tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-400">Error al cargar datos.</td></tr>';
         }
     }
 
-    // Carga inicial e inicio del temporizador
-    
-    // 1. Cargar la lista de órdenes inmediatamente al cargar la página
-    fetchOrdenes(); 
-    
-    // 2. Temporizador para ACTUALIZAR LA LISTA (cada 5 segundos)
-    setInterval(fetchOrdenes, 5000); 
+    // --- FUNCIONES DEL MODAL ---
 
-    // 3. Temporizador para ACTUALIZAR EL CRONÓMETRO (cada 1 segundo)
+    /**
+     * Muestra y puebla el modal con los datos de una orden
+     */
+    function showModal(orden) {
+        modalTitulo.textContent = `Orden: ${escapeHTML(orden.numero_orden)}`;
+        modalOrdenId.value = orden.id;
+        modalDefectoSap.textContent = escapeHTML(orden.defecto_sap);
+        modalDefectoReal.textContent = escapeHTML(orden.defecto_real);
+        modalEstado.textContent = escapeHTML(orden.estado);
+        modalComentarios.value = orden.comentarios || '';
+
+        const isFinalizada = orden.estado === 'Finalizada';
+        const isPausada = orden.estado === 'Pausada';
+
+        modalPausarBtn.disabled = isFinalizada;
+        modalFinalizarBtn.disabled = isFinalizada;
+        modalGuardarComentariosBtn.disabled = isFinalizada;
+
+        if (isPausada) {
+            modalPausarBtn.textContent = 'Reanudar Orden';
+            modalPausarBtn.classList.replace('bg-yellow-600', 'bg-green-600');
+            modalPausarBtn.classList.replace('hover:bg-yellow-500', 'hover:bg-green-500');
+        } else {
+            modalPausarBtn.textContent = 'Pausar Orden';
+            modalPausarBtn.classList.replace('bg-green-600', 'bg-yellow-600');
+            modalPausarBtn.classList.replace('hover:bg-green-500', 'hover:bg-yellow-500');
+        }
+
+        [modalPausarBtn, modalFinalizarBtn, modalGuardarComentariosBtn].forEach(btn => {
+            if (isFinalizada) {
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+
+        modal.classList.remove('hidden');
+    }
+
+    /**
+     * Oculta el modal
+     */
+    function hideModal() {
+        modal.classList.add('hidden');
+    }
+
+    /**
+     * (CORREGIDO)
+     * Función genérica para actualizar la orden (Pausar, Finalizar, Comentar)
+     */
+    async function updateOrden(ordenId, payload) {
+        // (CORREGIDO) Leer el token CSRF desde el input que añadimos al modal
+        const csrfToken = document.querySelector('#orden-modal [name=csrfmiddlewaretoken]').value;
+        
+        try {
+            const response = await fetch(`/moldeo/api/orden/${ordenId}/actualizar/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error al actualizar la orden');
+            }
+
+            await response.json();
+            hideModal();
+            fetchOrdenes(); // Recargar la tabla
+
+        } catch (error) {
+            console.error('Error en updateOrden:', error);
+            alert(`Error: ${error.message}`);
+        }
+    }
+
+    // --- Listeners de los botones del modal ---
+    modalCloseBtn.addEventListener('click', hideModal);
+    
+    modalPausarBtn.addEventListener('click', () => {
+        const ordenId = modalOrdenId.value;
+        const nuevoEstado = (modalEstado.textContent === 'Pausada') ? 'Activa' : 'Pausada';
+        updateOrden(ordenId, { estado: nuevoEstado });
+    });
+    
+    modalFinalizarBtn.addEventListener('click', () => {
+        const ordenId = modalOrdenId.value;
+        updateOrden(ordenId, { estado: 'Finalizada' });
+    });
+
+    modalGuardarComentariosBtn.addEventListener('click', () => {
+        const ordenId = modalOrdenId.value;
+        const comentarios = modalComentarios.value;
+        updateOrden(ordenId, { comentarios: comentarios });
+    });
+
+    // --- FIN DE FUNCIONES DEL MODAL ---
+
+    // --- Temporizadores ---
+    fetchOrdenes(); 
+    setInterval(fetchOrdenes, 5000); 
     setInterval(updateAllTimers, 1000); 
 
 });

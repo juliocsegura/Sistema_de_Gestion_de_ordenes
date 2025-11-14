@@ -1,27 +1,28 @@
 from django.shortcuts import render , redirect
 from django.contrib import messages
-from django.db import transaction
+from django.db import transaction, models
 from .models import OrdenMCM, ItemTecnico, ItemMesa, ItemCavidad
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_http_methods 
-from django.db.models import Prefetch 
-# Create your views here.
+import json
+
+# --- VISTA DEL PANEL PRINCIPAL (Dashboard) ---
 def panel_view(request):
-  ordenes_recientes = OrdenMCM.objects.all().order_by('-fecha_creacion').prefetch_related(
-        'tecnicos', 
-        'mesas', 
-        'cavidades'
-  )
-    
-  context = {
-        # Ahora tu dashboard.html recibirá las órdenes reales
-        'ordenes_recientes': ordenes_recientes
-    }
-  return render(request,'Moldeo/panel_principal.html')
+    """
+    Renderiza el template principal. El template se encargará
+    de llamar a la API para obtener los datos.
+    """
+    return render(request, 'Moldeo/panel_principal.html')
+
+# --- VISTAS DE REGISTRO ---
 
 def Registrar_Orden_view(request):
-  
-  return render(request,'Moldeo/Registrar_orden.html')
+    """
+    Vista genérica de registro. Redirige al formulario MCM
+    o podría mostrar una página para elegir qué tipo de orden registrar.
+    Por ahora, apunta al formulario MCM.
+    """
+    return render(request, 'Moldeo/registrar_orden.html')
 
 @require_http_methods(["GET", "POST"])
 def mcm_view(request):
@@ -42,11 +43,11 @@ def mcm_view(request):
         lista_mesas = request.POST.getlist('mesas')
         lista_cavidades = request.POST.getlist('cavidades')
         
-        # Validación básica de campos obligatorios
+        # Validación básica
         if not (numero_orden and defecto_sap and defecto_real and molde_form):
-             messages.error(request, 'Error: Faltan campos obligatorios. Asegúrate de rellenar todos los campos estáticos.')
-             # CORRECCIÓN DE RUTA: Si falla, renderizar 'registrar_orden.html'
-             return render(request, 'Moldeo/registrar_orden.html')
+            messages.error(request, 'Error: Faltan campos obligatorios.')
+            # Devolver al formulario con los datos ya llenos (pendiente)
+            return render(request, 'Moldeo/registrar_orden.html')
 
         try:
             with transaction.atomic():
@@ -56,10 +57,10 @@ def mcm_view(request):
                     defecto_sap=defecto_sap,
                     defecto_real=defecto_real,
                     molde=molde_form
+                    # El estado se pone 'Activa' por defecto (definido en el modelo)
                 )
 
-                # Guardar items relacionados (Técnicos, Mesas, Cavidades)
-                # Solo guarda si el campo no está vacío
+                # Guardar items relacionados
                 for nombre_tecnico in lista_tecnicos:
                     if nombre_tecnico and nombre_tecnico.strip():
                         ItemTecnico.objects.create(content_object=nueva_orden, nombre=nombre_tecnico)
@@ -73,62 +74,125 @@ def mcm_view(request):
                         ItemCavidad.objects.create(content_object=nueva_orden, nombre=nombre_cavidad)
             
             messages.success(request, f'Orden {numero_orden} registrada con éxito.')
-            # Redirigir al dashboard (usando el nombre 'inicio' de urls.py)
+            # Redirigir al dashboard (panel_principal)
             return redirect('Moldeo:panel_principal')
 
         except Exception as e:
             messages.error(request, f'Error al guardar la orden: {e}')
-            # CORRECCIÓN DE RUTA: Si hay error, renderizar 'registrar_orden.html'
             return render(request, 'Moldeo/prueba.html')
 
     # --- PETICIÓN GET (Mostrar Formulario) ---
-    # CORRECCIÓN DE RUTA: Renderizar 'registrar_orden.html'
     return render(request, 'Moldeo/prueba.html')
 
 
 def registro_cho_view(request):
-    # CORRECCIÓN DE RUTA: (Asumiendo que no has creado este template, usamos el de registro como base)
-    # Cambia 'Moldeo/registro_cho.html' por el nombre de tu template si existe.
-    return render (request, 'Moldeo/registro_cho.html', {'tipo_orden': 'CHO'})
-
+    return render (request, 'Moldeo/registro_cho.html') # Asumiendo que tienes este template
 def registro_tpm_view(request):
-    # CORRECCIÓN DE RUTA: (Asumiendo que no has creado este template, usamos el de registro como base)
-    # Cambia 'Moldeo/registro_tpm.html' por el nombre de tu template si existe.
-    return render (request, 'Moldeo/registro_tpm.html', {'tipo_orden': 'TPM'})
+    return render (request, 'Moldeo/registro_tpm.html') # Asumiendo que tienes este template
 
+# --- VISTAS DE API ---
+
+@require_http_methods(["GET"])
 def api_ordenes_recientes_view(request):
     """
-    Esta vista devuelve los datos de las órdenes en formato JSON
-    para que JavaScript pueda consumirlos.
-    
-    CORRECCIÓN: Esta versión es robusta y previene crashes
-    si una orden no tiene items (técnicos, mesas, etc.)
+    API que devuelve las órdenes activas/recientes en formato JSON.
+    Esta es la versión robusta y eficiente.
     """
     
-    # Usamos Prefetch para optimizar la consulta y cargar solo el primer item
-    tecnicos_prefetch = Prefetch('tecnicos', queryset=ItemTecnico.objects.order_by('id'), to_attr='first_tecnico')
-    mesas_prefetch = Prefetch('mesas', queryset=ItemMesa.objects.order_by('id'), to_attr='first_mesa')
-    cavidades_prefetch = Prefetch('cavidades', queryset=ItemCavidad.objects.order_by('id'), to_attr='first_cavidad')
+    # Prefetch para cargar solo el primer item de cada relación
+    tecnicos_prefetch = models.Prefetch(
+        'tecnicos', 
+        queryset=ItemTecnico.objects.order_by('id'), 
+        to_attr='first_tecnico'
+    )
+    mesas_prefetch = models.Prefetch(
+        'mesas', 
+        queryset=ItemMesa.objects.order_by('id'), 
+        to_attr='first_mesa'
+    )
+    cavidades_prefetch = models.Prefetch(
+        'cavidades', 
+        queryset=ItemCavidad.objects.order_by('id'), 
+        to_attr='first_cavidad'
+    )
     
-    ordenes = OrdenMCM.objects.all().order_by('-fecha_creacion').prefetch_related(
+    # Obtenemos las órdenes (ej. las últimas 20)
+    ordenes = OrdenMCM.objects.order_by('-fecha_creacion').prefetch_related(
         tecnicos_prefetch, mesas_prefetch, cavidades_prefetch
-    )[:20] # Limitamos a las últimas 20
+    )[:20]
     
     data = []
     for orden in ordenes:
-        # Lógica robusta para evitar fallos si no hay items
-        # 'first_tecnico' es una lista gracias a to_attr, tomamos el [0] si existe
+        # Lógica segura para obtener el primer item o 'N/A'
         tecnico_obj = orden.first_tecnico[0] if orden.first_tecnico else None
         mesa_obj = orden.first_mesa[0] if orden.first_mesa else None
         cavidad_obj = orden.first_cavidad[0] if orden.first_cavidad else None
         
         data.append({
+            'id': orden.id, # ¡NUEVO! Necesario para el modal
             'numero_orden': orden.numero_orden,
             'molde': orden.molde,
+            'defecto_sap': orden.defecto_sap, # ¡NUEVO!
+            'defecto_real': orden.defecto_real, # ¡NUEVO!
+            'estado': orden.estado, # ¡NUEVO!
+            'comentarios': orden.comentarios, # ¡NUEVO!
+            
             'tecnico': tecnico_obj.nombre if tecnico_obj else 'N/A',
             'mesa': mesa_obj.nombre if mesa_obj else 'N/A',
             'cavidad': cavidad_obj.nombre if cavidad_obj else 'N/A',
+            
             'fecha_creacion_iso': orden.fecha_creacion.isoformat(),
         })
     
     return JsonResponse({'ordenes': data})
+
+
+@require_http_methods(["POST"])
+@transaction.atomic
+def api_actualizar_orden_view(request, orden_id):
+    """
+    API para manejar las actualizaciones del modal (Pausar, Finalizar, Comentar).
+    """
+    try:
+        orden = OrdenMCM.objects.get(id=orden_id)
+        
+        # Seguridad: no permitir cambios en órdenes finalizadas
+        if orden.estado == OrdenMCM.ESTADO_FINALIZADA:
+             return JsonResponse({'message': 'Error: La orden ya está finalizada.'}, status=400)
+
+        data = json.loads(request.body)
+        
+        campos_actualizados = []
+
+        # Actualizar estado si se proporcionó
+        if 'estado' in data:
+            nuevo_estado = data['estado']
+            if nuevo_estado in [OrdenMCM.ESTADO_ACTIVA, OrdenMCM.ESTADO_PAUSADA, OrdenMCM.ESTADO_FINALIZADA]:
+                orden.estado = nuevo_estado
+                campos_actualizados.append('estado')
+            else:
+                return JsonResponse({'message': f'Error: Estado "{nuevo_estado}" no válido.'}, status=400)
+        
+        # Actualizar comentarios si se proporcionaron
+        if 'comentarios' in data:
+            orden.comentarios = data['comentarios']
+            campos_actualizados.append('comentarios')
+            
+        if not campos_actualizados:
+             return JsonResponse({'message': 'Error: No se proporcionaron datos para actualizar.'}, status=400)
+
+        orden.save()
+        
+        return JsonResponse({
+            'success': True, 
+            'message': f'Orden actualizada ({", ".join(campos_actualizados)}).',
+            'orden_id': orden.id,
+            'nuevo_estado': orden.estado
+        })
+
+    except OrdenMCM.DoesNotExist:
+        return JsonResponse({'message': 'Error: Orden no encontrada.'}, status=404)
+    except json.JSONDecodeError:
+        return JsonResponse({'message': 'Error: JSON inválido.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'message': f'Error interno del servidor: {e}'}, status=500)

@@ -9,7 +9,7 @@ urlpatterns = [
     path('registro_cho/', views.registro_cho_view, name='registrar_cho'),
     path('registro_tpm/', views.registro_tpm_view, name='registrar_tpm'),
     path('api/ordenes-recientes/', views.api_ordenes_recientes_view, name='api_ordenes_recientes'),
-
+    path('api/orden/<int:orden_id>/actualizar/', views.api_actualizar_orden_view, name='api_actualizar_orden'),
     # --- Rutas Placeholder ---
     # (Añade las vistas para estas rutas que ya tienes en base.html)
     path('ordenes/', views.panel_view, name='ordenes_lista'), # Temporal

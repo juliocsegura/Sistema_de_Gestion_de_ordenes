@@ -114,7 +114,7 @@ class OrdenAdminBase(admin.ModelAdmin):
 @admin.register(OrdenMCM)
 class OrdenMCMAdmin(OrdenAdminBase):
     # Aquí puedes añadir personalizaciones SOLO para OrdenMCM
-    list_display = ('numero_orden', 'fecha_creacion', 'molde') # Añadimos molde
+    list_display = ('numero_orden', 'fecha_creacion', 'molde',ItemTecnico,ItemMesa,ItemCavidad) # Añadimos molde
     search_fields = ('numero_orden', 'molde')
 
 @admin.register(OrdenCHO)
