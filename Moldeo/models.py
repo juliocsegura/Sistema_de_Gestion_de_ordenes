@@ -1,6 +1,10 @@
 from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from itertools import chain 
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
+
 
 # Create your models here.
 class Actividades(models.Model):
@@ -63,11 +67,28 @@ class Moldmakers(models.Model):
 class Moldes(models.Model):
     id_molde = models.AutoField(db_column='id_Molde', primary_key=True, blank=True, null=False)  # Field name made lowercase.
     numero_molde = models.TextField(unique=True, blank=True, null=True)
+    
 
     class Meta:
         managed = False
         db_table = 'Moldes'
+    def __str__(self):
+            # Devuelve el numero_molde. Si es nulo, devuelve una cadena vacía.
+            return str(self.numero_molde) if self.numero_molde else "Sin Nombre"
 
+    @property
+    def ordenes(self):
+        """
+        Esta propiedad une todas las órdenes (MCM, CHO, TPM) en una sola lista.
+        Uso: mi_molde.ordenes
+        """
+        # Obtenemos las listas de cada tabla usando los nombres únicos del Paso 1
+        lista_mcm = self.ordenes_mcm.all()
+        lista_cho = self.ordenes_cho.all()
+        lista_tpm = self.ordenes_tpm.all()
+        
+        # Las unimos en una sola lista
+        return list(chain(lista_mcm, lista_cho, lista_tpm))
 
 class NumerosDeParte(models.Model):
     id_np = models.AutoField(primary_key=True, blank=True, null=False)
@@ -166,8 +187,6 @@ class Bitacora(models.Model):
         managed = False
         db_table = 'bitacora_bitacora'
 
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
-from django.contrib.contenttypes.models import ContentType
 
 # --- 1. MODELO BASE ABSTRACTO ---
 # Campos comunes para TODAS las órdenes (MCM, CHO, TPM, etc.)
@@ -182,8 +201,6 @@ class OrdenBase(models.Model):
     ]
     fecha_creacion = models.DateTimeField(auto_now_add=True) 
     numero_orden = models.CharField(max_length=50, unique=True)
-    molde = models.CharField(max_length=50)
-    
     estado = models.CharField(
         max_length=20,
         choices=ESTADO_CHOICES,
@@ -195,7 +212,7 @@ class OrdenBase(models.Model):
     tecnicos = GenericRelation('ItemTecnico', related_query_name='orden')
     mesas = GenericRelation('ItemMesa', related_query_name='orden')
     cavidades = GenericRelation('ItemCavidad', related_query_name='orden')
-
+    circuitos = GenericRelation('ItemCircuito', related_query_name='orden')
     class Meta:
         abstract = True # No crea una tabla "OrdenBase" en la BD
 
@@ -205,23 +222,20 @@ class OrdenBase(models.Model):
 class OrdenMCM(OrdenBase):
     defecto_sap = models.CharField(max_length=100)
     defecto_real = models.TextField()
-    
+    molde =models.ForeignKey(Moldes, on_delete=models.SET_NULL,null=True,blank=True,related_name='ordenes_mcm',db_constraint=False)
     def __str__(self):
-        return f"Orden MCM {self.numero_orden} - {self.molde}"
+        return f"Orden MCM {self.numero_orden}"
 
 class OrdenCHO(OrdenBase):
-    tipo_cuchilla = models.CharField(max_length=50, blank=True)
-    # ... otros campos ...
-
+   
+  molde =models.ForeignKey(Moldes, on_delete=models.SET_NULL,null=True,blank=True,related_name='ordenes_cho',db_constraint=False)
+ 
 class OrdenTPM(OrdenBase):
-    equipo = models.CharField(max_length=100, blank=True)
-    # ... otros campos ...
+    molde =models.ForeignKey(Moldes, on_delete=models.SET_NULL,null=True,blank=True,related_name='ordenes_tpm',db_constraint=False)
 
 class OrdenPREP(OrdenBase):
-    material = models.CharField(max_length=100, blank=True)
-    # ... otros campos ...
-
-
+    molde =models.ForeignKey(Moldes, on_delete=models.SET_NULL,null=True,blank=True,related_name='ordenes_prep',db_constraint=False)
+   
 # --- 3. MODELOS GENÉRICOS RELACIONADOS ---
 class ItemTecnico(models.Model):
     nombre = models.CharField(max_length=100) 
@@ -230,7 +244,7 @@ class ItemTecnico(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
 
     def __str__(self):
-        return f"{self.nombre} (Orden: {self.content_object})"
+        return f"{self.nombre}"
 
 class ItemMesa(models.Model):
     nombre = models.CharField(max_length=50) 
@@ -239,7 +253,7 @@ class ItemMesa(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
 
     def __str__(self):
-        return f"{self.nombre} (Orden: {self.content_object})"
+        return f"{self.nombre}"
 
 class ItemCavidad(models.Model):
     nombre = models.CharField(max_length=50)
@@ -248,4 +262,18 @@ class ItemCavidad(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
 
     def __str__(self):
-        return f"{self.nombre} (Orden: {self.content_object})"
+        return f"{self.nombre}"
+    
+class ItemCircuito(models.Model):
+    nombre = models.CharField(max_length=50)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    def __str__(self):
+        return f"{self.nombre}"
+    
+
+
+
+    

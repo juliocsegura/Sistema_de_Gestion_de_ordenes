@@ -10,7 +10,7 @@
     <div class="container mx-auto max-w-4xl px-4 py-16">
         <div class="flex flex-col sm:flex-row justify-center gap-6 sm:gap-10">
             <!-- CORRECCIÓN: Apuntar a la vista de registro correcta -->
-            <a href="{% url 'Moldeo:registrar_mcm' %}" 
+            <a href="{% url 'Moldeo:registrar_orden' %}" 
                class="flex-1 text-center bg-green-600 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-green-500">
                 Registrar Orden
             </a>
@@ -20,9 +20,18 @@
                 Orden en Curso
             </a>
         </div>
+        <div class="flex justify-end mb-4 px-4">
+            <a href="{% url 'Moldeo:exportar_excel' %}" 
+            class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow transition transform hover:scale-105">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        Descargar Excel
+    </a>
+</div>
     </div>
-
-    <!-- 3. TABLA DE ÓRDENES RECIENTES -->
+    
+   
     <div class="container mx-auto max-w-6xl px-4 pb-16">
         <h2 class="text-3xl font-semibold text-center text-gray-300 mb-8">
             Órdenes Recientes
@@ -38,14 +47,15 @@
                         <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Orden</th>
                         <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Molde</th>
                         <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Cavidad</th>
-                        <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Tiempo Transcurrido</th>
+                        <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Circuito</th>
+                        <th class="p-4 text-center text-sm font-semibold text-gray-200 uppercase tracking-wider">Tiempo Transcurrido</th>
                     </tr>
                 </thead>
                 <!-- Cuerpo de la Tabla -->
                 <tbody id="ordenes-tbody" class="divide-y divide-gray-700">
                     <!-- Fila de carga inicial -->
                     <tr>
-                        <td colspan="6" class="p-4 text-center text-gray-400">
+                        <td colspan="7" class="p-4 text-center text-gray-400">
                             Cargando datos...
                         </td>
                     </tr>
@@ -54,11 +64,7 @@
         </div>
     </div>
 
-    <!-- 
-    ======================================
-    --- HTML DEL MODAL (Movido aquí) ---
-    ======================================
-    -->
+   
     <div id="orden-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 hidden">
         <div class="bg-gray-800 text-gray-200 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
             
@@ -159,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let seconds = Math.floor((now - date) / 1000);
         
         if (isNaN(seconds)) { 
-            return 'Calculando...'; // La fecha era inválida
+            return 'Calculando...';
         }
         if (seconds < 0) { 
             seconds = 0; // El reloj del servidor está adelantado, mostrar 0
@@ -215,44 +221,63 @@ document.addEventListener('DOMContentLoaded', () => {
             tbody.innerHTML = ''; 
 
             if (!data.ordenes || data.ordenes.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-400">No hay órdenes recientes para mostrar.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-400"> No hay órdenes recientes para mostrar.</td></tr>';
                 return;
             }
 
             data.ordenes.forEach((orden, index) => {
-                const timeAgo = getTimeAgo(orden.fecha_creacion_iso);
+                // 1. LÓGICA DE ESTADO:
+                // Solo consideramos "viva" la orden si no está ni finalizada ni pausada.
+                const isActiva = orden.estado !== 'Finalizada' && orden.estado !== 'Pausada';
+                
+                // 2. CALCULAR TIEMPO INICIAL:
+                // Si tu backend envía 'fecha_cierre' o 'duracion_total' úsalo aquí. 
+                // Por ahora, getTimeAgo usa fecha_creacion vs Ahora.
+                let displayTime = getTimeAgo(orden.fecha_creacion_iso);
+
+                // Si está finalizada, podrías querer mostrar un texto fijo si el backend te manda la duración final
+                // if (orden.estado === 'Finalizada' && orden.duracion_final) { displayTime = orden.duracion_final; }
+
                 const row = document.createElement('tr');
                 
+                // Estilos de fila según estado
                 let rowClass = (index % 2 === 0) ? 'hover:bg-gray-700 transition' : 'bg-gray-900 hover:bg-gray-700 transition';
                 
                 if (orden.estado === 'Finalizada') {
                     rowClass += ' opacity-50 line-through';
                 } else if (orden.estado === 'Pausada') {
-                    rowClass += ' opacity-75';
+                    rowClass += ' opacity-75 text-yellow-500'; // Color amarillo para resaltar pausa
                 } else {
                     rowClass += ' cursor-pointer';
                 }
                 row.className = rowClass;
 
+                // 3. CLASE DE TEMPORIZADOR (CORRECCIÓN CLAVE):
+                // Solo agregamos 'live-timer' si la orden está ACTIVA.
+                // Si está pausada o finalizada, no tendrá la clase, por lo tanto updateAllTimers la ignorará.
+                const timerClass = isActiva ? 'live-timer' : '';
+
                 row.innerHTML = `
                     <td class="p-4 whitespace-nowrap">${escapeHTML(orden.mesa)}</td>
                     <td class="p-4 whitespace-nowrap">${escapeHTML(orden.tecnico)}</td>
-                    <td class="p-4 whitespace-nowrap">${escapeHTML(orden.numero_orden)}</td>
+                    <td class="p-4 whitespace-nowrap font-bold">${escapeHTML(orden.numero_orden)}</td>
                     <td class="p-4 whitespace-nowrap">${escapeHTML(orden.molde)}</td>
                     <td class="p-4 whitespace-nowrap">${escapeHTML(orden.cavidad)}</td>
-                    <td class="p-4 whitespace-nowrap live-timer" 
+                    <td class="p-4 whitespace-nowrap">${escapeHTML(orden.circuito)}</td>
+                    
+                    <td class="p-4 whitespace-nowrap ${timerClass} font-mono text-lg" 
                         data-iso-string="${escapeHTML(orden.fecha_creacion_iso)}">
-                        ${escapeHTML(timeAgo)}
+                        ${escapeHTML(displayTime)} 
+                        ${!isActiva ? '<span class="text-xs ml-1">(Detenido)</span>' : ''}
                     </td>
                 `;
                 
-                // Guardamos todos los datos de la orden en el elemento 'row'
                 row.dataset.ordenData = JSON.stringify(orden); 
                 
                 if (orden.estado !== 'Finalizada') {
-                    // (CORREGIDO) Usar event.currentTarget para obtener la fila correcta
                     row.addEventListener('click', (event) => {
-                        const clickedRow = event.currentTarget;
+                        // Aseguramos capturar la fila y no un hijo
+                        const clickedRow = event.currentTarget; 
                         const ordenData = JSON.parse(clickedRow.dataset.ordenData);
                         showModal(ordenData);
                     });
@@ -266,6 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-400">Error al cargar datos.</td></tr>';
         }
     }
+    
 
     // --- FUNCIONES DEL MODAL ---
 
