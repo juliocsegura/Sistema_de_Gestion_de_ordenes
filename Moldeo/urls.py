@@ -12,6 +12,8 @@ urlpatterns = [
     path('api/orden/<int:orden_id>/actualizar/', views.api_actualizar_orden_view, name='api_actualizar_orden'),
     path('exportar-excel/', views.exportar_ordenes_excel, name='exportar_excel'),
     path('api/get-moldes/', views.api_get_moldes, name='api_get_moldes'),
+    path('Ordenes_en_curso', views.Orden_en_curso_view, name='ordenes_en_curso'),
+    path('Status_Ordenes', views.btn_status_ordenmcm_view, name='status_ordenes'),
     # --- Rutas Placeholder ---
     # (Añade las vistas para estas rutas que ya tienes en base.html)
     path('ordenes/', views.panel_view, name='ordenes_lista'), # Temporal

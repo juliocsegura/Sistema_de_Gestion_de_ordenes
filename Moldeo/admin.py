@@ -106,7 +106,7 @@ class OrdenAdminBase(admin.ModelAdmin):
 
 @admin.register(OrdenMCM)
 class OrdenMCMAdmin(OrdenAdminBase):
-    list_display = ('numero_orden', 'fecha_creacion', 'ver_tecnicos', 'ver_mesas', 'ver_cavidades','ver_circuitos')
+    list_display = ('numero_orden', 'fecha_creacion','status', 'ver_tecnicos', 'ver_mesas', 'ver_cavidades','ver_circuitos','tipo_mntn')
     search_fields = ('numero_orden', )
 
     

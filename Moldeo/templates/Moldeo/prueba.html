@@ -8,7 +8,7 @@
 {% block content %}
 <div class="container mx-auto max-w-7xl px-4 py-12">
     <div class="mb-6">
-        <a href="{% url 'Moldeo:registrar_orden' %}" 
+        <a href="{% url 'Moldeo:status_ordenes' %}" 
            class="inline-flex items-center bg-gray-600 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg transition-colors">
             <!-- Icono de flecha izquierda -->
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -63,41 +63,64 @@
         </div>
 
         <!-- ¡CAMPO 'MOLDE' AÑADIDO! -->
-      <div class="w-full max-w-xl p-0">
-            <div id="combobox-container" class="relative">
-                <label for="molde-search" class="block text-sm font-medium text-gray-300 mb-1">Buscar Molde</label>
-                
-                <div class="relative">
-                    <input
-                        id="molde-search"
-                        type="text"
-                        role="combobox"
-                        aria-expanded="false"
-                        placeholder="Escribe para buscar..."
-                        class="w-full pl-3 pr-10 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        autocomplete="off"
-                    >
-                    <button
-                        id="molde-toggle"
-                        type="button"
-                        class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-white"
-                    >
-                        <svg id="arrow-icon" class="h-5 w-5 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
-                </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div id="combobox-container" class="relative">
+                        <label for="molde-search" class="block text-sm font-medium text-gray-300 mb-1">Molde</label>
+                        
+                        <div class="relative">
+                            <input
+                                id="molde-search"
+                                type="text"
+                                role="combobox"
+                                aria-expanded="false"
+                                placeholder="Escribe para buscar..."
+                                class="w-full pl-3 pr-10 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                autocomplete="off"
+                            >
+                            <button
+                                id="molde-toggle"
+                                type="button"
+                                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-white"
+                            >
+                                <svg id="arrow-icon" class="h-5 w-5 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                        </div>
 
-                <div
-                    id="molde-options"
-                    class="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-2xl overflow-hidden max-h-60 overflow-y-auto hidden"
-                >
-                    <div class="p-3 text-gray-400 text-sm">Escribe para buscar...</div>
-                </div>
+                        <div
+                            id="molde-options"
+                            class="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-2xl overflow-hidden max-h-60 overflow-y-auto hidden"
+                        >
+                            <div class="p-3 text-gray-400 text-sm">Escribe para buscar...</div>
+                        </div>
 
-                <input type="hidden" id="molde-value" name="molde">
-            </div>
+                        <input type="hidden" id="molde-value" name="molde">
+                    </div>
+                    <div>
+               
+                    <div>
+                        <label for="statusmcm" class="block text-sm font-medium text-gray-300 mb-1">
+                            Status
+                        </label>
+                        <div class="relative">
+                            
+                            <input 
+                                type="text" 
+                                id="statusmcm" 
+                                name="statusmcm" 
+                                value="{{ status_actual }}" 
+                                readonly
+                                class="block w-full bg-gray-600 border border-gray-500 text-gray-300 rounded-md shadow-sm py-2 pl-3 pr-10 focus:outline-none font-bold cursor-not-allowed"
+                            >
+                            
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+            </div>          
         </div>
-            
-
         <div>
             <label for="defecto_real" class="block text-sm font-medium text-gray-300 mb-1">Defecto Real</label>
             <textarea id="defecto_real" name="defecto_real" rows="3" required

@@ -206,6 +206,7 @@ class OrdenBase(models.Model):
         choices=ESTADO_CHOICES,
         default=ESTADO_ACTIVA
     )
+    tipo_mntn=models.CharField(max_length=50, null=True,blank=True)
     comentarios = models.TextField(blank=True, default='')
     # --- RELACIONES GENÉRICAS INVERSAS ---
     # Esto nos permite hacer "mi_orden.tecnicos.all()"
@@ -213,16 +214,19 @@ class OrdenBase(models.Model):
     mesas = GenericRelation('ItemMesa', related_query_name='orden')
     cavidades = GenericRelation('ItemCavidad', related_query_name='orden')
     circuitos = GenericRelation('ItemCircuito', related_query_name='orden')
+    duracion_segundos = models.IntegerField(default=0) 
+    ultima_actualizacion = models.DateTimeField(auto_now_add=True)
     class Meta:
         abstract = True # No crea una tabla "OrdenBase" en la BD
 
     def __str__(self):
-        return f"Orden {self.numero_orden}"
+        return f"Orden {self.numero_orden,self.tipo_mntn}"
 # --- 2. MODELOS DE ÓRDENES ESPECÍFICAS ---
 class OrdenMCM(OrdenBase):
     defecto_sap = models.CharField(max_length=100)
     defecto_real = models.TextField()
     molde =models.ForeignKey(Moldes, on_delete=models.SET_NULL,null=True,blank=True,related_name='ordenes_mcm',db_constraint=False)
+    status=models.CharField(max_length=5,blank=True, null=True)
     def __str__(self):
         return f"Orden MCM {self.numero_orden}"
 

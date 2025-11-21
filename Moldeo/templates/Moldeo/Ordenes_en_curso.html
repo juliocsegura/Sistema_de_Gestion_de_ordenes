@@ -1,0 +1,363 @@
+<!-- 1. Heredamos TODO de 'base.html' -->
+{% extends 'Moldeo/base.html' %}
+
+<!-- 2. (Opcional) Cambiamos el título de la pestaña del navegador -->
+{% block title %}Dashboard - Panel de Órdenes{% endblock %}
+
+<!-- 3. Definimos el contenido específico para esta página -->
+{% block content %}
+    
+    <div class="container mx-auto max-w-6xl px-4 pb-16">
+        <h2 class="text-3xl font-semibold text-center text-gray-300 mb-8 mt-10">
+            Órdenes en curso
+        </h2>
+          <!-- Descargar excel -->
+        <div class="flex justify-end mb-4 px-4">
+                <a href="{% url 'Moldeo:exportar_excel' %}" 
+                class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg shadow transition transform hover:scale-105">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Descargar Excel
+                </a>
+        </div>
+        <div class="mb-6">
+                <a href="{% url 'Moldeo:panel_principal' %}" 
+                class="inline-flex items-center bg-gray-600 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                    <!-- Icono de flecha izquierda -->
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Regresar
+                </a>
+            </div>
+        <div class="overflow-x-auto bg-gray-800 rounded-lg shadow-xl">
+            <table class="w-full min-w-full">
+                <!-- Cabecera de la Tabla -->
+                <thead class="bg-gray-700 border-b border-gray-600">
+                    <tr>
+                        <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Fecha Inicio</th>
+                        <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Mesa</th>
+                        <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Técnico</th>
+                        <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Tipo</th>
+                        <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Orden</th>
+                        <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Estatus</th>
+                        <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Molde</th>
+                        <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Cavidad</th>
+                        <th class="p-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Circuito</th>
+                        <th class="p-4 text-center text-sm font-semibold text-gray-200 uppercase tracking-wider">Tiempo Transcurrido</th>
+                    </tr>
+                </thead>
+                <!-- Cuerpo de la Tabla -->
+                <tbody id="ordenes-tbody" class="divide-y divide-gray-700">
+                    <!-- Fila de carga inicial -->
+                    <tr>
+                        <td colspan="7" class="p-4 text-center text-gray-400">
+                            Cargando datos...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+   
+    <div id="orden-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 hidden">
+        <div class="bg-gray-800 text-gray-200 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            
+            <!-- Cabecera del Modal -->
+            <div class="flex justify-between items-center border-b border-gray-700 p-4">
+                <h3 class="text-2xl font-bold" id="modal-titulo">Orden: </h3>
+                <button id="modal-close-btn" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+            </div>
+
+            <!-- Contenido del Modal (con scroll) -->
+            <div class="p-6 space-y-4 overflow-y-auto">
+                <!-- ¡NUEVO! Token CSRF para la API de actualización -->
+                {% csrf_token %}
+                
+                <!-- ID Oculto para referencia -->
+                <input type="hidden" id="modal-orden-id">
+
+                <!-- Info Estática -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">Defecto SAP</label>
+                        <p id="modal-defecto-sap" class="text-lg bg-gray-700 p-2 rounded"></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">Estado Actual</label>
+                        <p id="modal-estado" class="text-lg bg-gray-700 p-2 rounded"></p>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400">Defecto Real</label>
+                    <p id="modal-defecto-real" class="text-lg bg-gray-700 p-2 rounded min-h-[50px]"></p>
+                </div>
+
+                <!-- Comentarios -->
+                <div>
+                    <label for="modal-comentarios" class="block text-sm font-medium text-gray-400">Comentarios</label>
+                    <textarea id="modal-comentarios" rows="4" class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                    <button id="modal-guardar-comentarios" class="mt-2 w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg transition">
+                        Guardar Comentarios
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pie del Modal (Acciones) -->
+            <div class="flex justify-end space-x-4 bg-gray-900 p-4 border-t border-gray-700">
+                <button id="modal-pausar-btn" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg transition">
+                    Pausar Orden
+                </button>
+                <button id="modal-finalizar-btn" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-lg transition">
+                    Finalizar Orden
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- --- FIN DEL MODAL --- -->
+
+{% endblock content %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const tbody = document.getElementById('ordenes-tbody');
+    const apiUrl = "{% url 'Moldeo:api_ordenes_recientes' %}";
+    
+    // --- Elementos del Modal ---
+    const modal = document.getElementById('orden-modal');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    const modalTitulo = document.getElementById('modal-titulo');
+    const modalOrdenId = document.getElementById('modal-orden-id');
+    const modalDefectoSap = document.getElementById('modal-defecto-sap');
+    const modalDefectoReal = document.getElementById('modal-defecto-real');
+    const modalEstado = document.getElementById('modal-estado');
+    const modalComentarios = document.getElementById('modal-comentarios');
+    const modalGuardarComentariosBtn = document.getElementById('modal-guardar-comentarios');
+    const modalPausarBtn = document.getElementById('modal-pausar-btn');
+    const modalFinalizarBtn = document.getElementById('modal-finalizar-btn');
+
+    // --- 1. LÓGICA DE TIEMPO (CRONÓMETRO) ---
+
+    function formatSeconds(seconds) {
+        if (seconds < 0) seconds = 0;
+        const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+        const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+        return `${h}:${m}:${s}`;
+    }
+
+    // Se ejecuta cada segundo para actualizar visualmente los relojes activos
+    function updateAllTimers() {
+        document.querySelectorAll('.live-timer').forEach(cell => {
+            // Leemos los datos base guardados en el HTML
+            const acumulado = parseInt(cell.dataset.acumulado) || 0;
+            const inicioStr = cell.dataset.inicio;
+            
+            let total = acumulado;
+
+            // Si hay fecha de inicio (significa que está activa), sumamos el tiempo transcurrido
+            if (inicioStr && inicioStr !== 'null') {
+                const inicioDate = new Date(inicioStr);
+                const ahora = new Date();
+                const delta = Math.floor((ahora - inicioDate) / 1000);
+                if (delta > 0) total += delta;
+            }
+
+            // Buscamos el span del texto y lo actualizamos
+            const textSpan = cell.querySelector('.timer-text');
+            if (textSpan) textSpan.textContent = formatSeconds(total);
+        });
+    }
+
+    function escapeHTML(str) {
+        if (!str) return 'N/A';
+        return str.toString()
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    // --- 2. CARGA DE DATOS (API) ---
+
+    async function fetchOrdenes() {
+        try {
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            
+            tbody.innerHTML = ''; 
+
+            if (!data.ordenes || data.ordenes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="p-4 text-center text-gray-400">No hay órdenes recientes.</td></tr>';
+                return;
+            }
+
+            data.ordenes.forEach((orden, index) => {
+                // Calculamos el tiempo inicial para renderizar
+                let tiempoInicial = orden.duracion_segundos || 0;
+                const isActiva = orden.estado === 'Activa';
+                
+                if (isActiva && orden.ultima_actualizacion_iso) {
+                    const inicio = new Date(orden.ultima_actualizacion_iso);
+                    const ahora = new Date();
+                    const extra = Math.floor((ahora - inicio) / 1000);
+                    if (extra > 0) tiempoInicial += extra;
+                }
+
+                // Clases de estilo
+                let rowClass = (index % 2 === 0) ? 'hover:bg-gray-700' : 'bg-gray-900 hover:bg-gray-700';
+                if (orden.estado === 'Finalizada') rowClass += ' opacity-50 line-through';
+                if (orden.estado === 'Pausada') rowClass += ' opacity-75 text-yellow-500';
+                
+                const row = document.createElement('tr');
+                row.className = `${rowClass} transition cursor-pointer`;
+
+                // Clase para activar el cronómetro JS solo si está Activa
+                const timerClass = isActiva ? 'live-timer' : '';
+
+                // --- CONSTRUCCIÓN DE LA FILA ---
+                // OJO AQUÍ: Usamos orden.tipo y orden.status como pediste
+                row.innerHTML = `
+                    <td class="p-4 whitespace-nowrap">${escapeHTML(orden.fecha_creacion)}</td>
+                    <td class="p-4 whitespace-nowrap">${escapeHTML(orden.mesa)}</td>
+                    <td class="p-4 whitespace-nowrap">${escapeHTML(orden.tecnico)}</td>
+                    
+                    <td class="p-4 whitespace-nowrap font-bold text-blue-400">
+                        ${escapeHTML(orden.tipo)}
+                    </td>
+                    
+                    <td class="p-4 whitespace-nowrap font-bold">${escapeHTML(orden.numero_orden)}</td>
+                    
+                    <td class="p-4 whitespace-nowrap">
+                        <span class="bg-gray-700 text-gray-200 py-1 px-2 rounded text-sm border border-gray-600">
+                            ${escapeHTML(orden.status)}
+                        </span>
+                    </td>
+
+                    <td class="p-4 whitespace-nowrap">${escapeHTML(orden.molde)}</td>
+                    <td class="p-4 whitespace-nowrap">${escapeHTML(orden.cavidad)}</td>
+                    <td class="p-4 whitespace-nowrap">${escapeHTML(orden.circuito)}</td>
+                    
+                    <td class="p-4 whitespace-nowrap text-center font-mono text-lg ${timerClass}"
+                        data-acumulado="${orden.duracion_segundos}"
+                        data-inicio="${orden.ultima_actualizacion_iso || ''}">
+                        
+                        <span class="timer-text">${formatSeconds(tiempoInicial)}</span>
+                        
+                        ${orden.estado === 'Pausada' ? '<span class="text-xs ml-1">(Pausa)</span>' : ''}
+                        ${orden.estado === 'Finalizada' ? '<span class="text-xs ml-1 text-red-400">(Fin)</span>' : ''}
+                    </td>
+                `;
+                
+                // Guardamos datos para el modal
+                row.dataset.ordenData = JSON.stringify(orden);
+                
+                // Click para abrir modal (si no está finalizada)
+                if (orden.estado !== 'Finalizada') {
+                    row.addEventListener('click', (e) => {
+                        const data = JSON.parse(e.currentTarget.dataset.ordenData);
+                        showModal(data);
+                    });
+                }
+                
+                tbody.appendChild(row);
+            });
+
+        } catch (error) {
+            console.error('Error fetchOrdenes:', error);
+            tbody.innerHTML = '<tr><td colspan="9" class="p-4 text-center text-red-400">Error de conexión.</td></tr>';
+        }
+    }
+
+    // --- 3. LÓGICA DEL MODAL ---
+
+    function showModal(orden) {
+        modalTitulo.textContent = `Orden ${escapeHTML(orden.tipo)}: ${escapeHTML(orden.numero_orden)}`;
+        modalOrdenId.value = orden.id;
+        modalDefectoSap.textContent = escapeHTML(orden.defecto_sap);
+        modalDefectoReal.textContent = escapeHTML(orden.defecto_real);
+        modalEstado.textContent = escapeHTML(orden.estado);
+        modalComentarios.value = orden.comentarios || '';
+
+        const isPausada = orden.estado === 'Pausada';
+        
+        // Configurar botón de Pausa/Reanudar
+        if (isPausada) {
+            modalPausarBtn.textContent = 'Reanudar Orden';
+            modalPausarBtn.className = 'bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg transition';
+        } else {
+            modalPausarBtn.textContent = 'Pausar Orden';
+            modalPausarBtn.className = 'bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg transition';
+        }
+
+        modal.classList.remove('hidden');
+    }
+
+    function hideModal() {
+        modal.classList.add('hidden');
+    }
+
+    async function updateOrden(ordenId, payload) {
+        // Token CSRF del formulario oculto en el modal
+        const csrfToken = document.querySelector('input[name=csrfmiddlewaretoken]').value;
+        
+        try {
+            // Nota: La URL debe coincidir con tu urls.py
+            const response = await fetch(`/moldeo/api/orden/${ordenId}/actualizar/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.message || 'Error al actualizar');
+            }
+
+            await response.json();
+            hideModal();
+            fetchOrdenes(); // Recargar la tabla inmediatamente
+
+        } catch (error) {
+            alert(`Error: ${error.message}`);
+        }
+    }
+
+    // --- LISTENERS DEL MODAL ---
+    modalCloseBtn.addEventListener('click', hideModal);
+    
+    modalPausarBtn.addEventListener('click', () => {
+        const ordenId = modalOrdenId.value;
+        // Toggle inteligente: Si dice "Pausada" cambiamos a "Activa", si no a "Pausada"
+        const estadoActual = modalEstado.textContent; 
+        const nuevoEstado = (estadoActual === 'Pausada') ? 'Activa' : 'Pausada';
+        updateOrden(ordenId, { estado: nuevoEstado });
+    });
+    
+    modalFinalizarBtn.addEventListener('click', () => {
+        if(confirm('¿Seguro que deseas finalizar esta orden?')) {
+            updateOrden(modalOrdenId.value, { estado: 'Finalizada' });
+        }
+    });
+
+    modalGuardarComentariosBtn.addEventListener('click', () => {
+        updateOrden(modalOrdenId.value, { comentarios: modalComentarios.value });
+    });
+
+    // --- INICIALIZACIÓN ---
+    fetchOrdenes(); // Primera carga
+    setInterval(fetchOrdenes, 5000); // Recarga automática cada 5s
+    setInterval(updateAllTimers, 1000); // Cronómetro visual cada 1s
+
+});
+</script>
+{% endblock scripts %}
