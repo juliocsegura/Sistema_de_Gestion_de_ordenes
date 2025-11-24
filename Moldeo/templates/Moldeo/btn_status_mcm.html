@@ -9,7 +9,7 @@
         <!-- 2. BOTONES GRANDES -->
         <div class="container mx-auto max-w-5xl px-4 py-16">
             <div class="mb-6">
-                <a href="{% url 'Moldeo:registrar_orden' %}" 
+                <a href="javascript:history.back()" 
                 class="inline-flex items-center bg-gray-600 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg transition-colors">
                     <!-- Icono de flecha izquierda -->
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -18,11 +18,18 @@
                     Regresar
                 </a>
             </div>
+            {% if pre_orden %}
+                <div class="bg-blue-900/50 border border-blue-500 text-blue-100 p-4 rounded-lg mb-8 text-center shadow-lg">
+                    <p class="font-bold text-lg">Iniciando Orden SAP: {{ pre_orden }}</p>
+                    <p class="text-sm text-blue-300">Selecciona el área para continuar con los datos cargados.</p>
+                </div>
+            {% endif %}
+
             <div class="grid grid-cols-1 sm:grid-cols-2 justify-center gap-6 sm:gap-10">
                 <!-- Botón Registrar -->
                 <a 
                 id="btn-203"
-                href="{% url 'Moldeo:registrar_mcm' %}?status=203" 
+                href="{% url 'Moldeo:registrar_mcm' %}?status=203&numero_orden={{ pre_orden }}&defecto_sap={{ pre_defecto }}&molde={{ pre_molde }}" 
                 class="flex-1 text-center bg-red-600 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-red-500">
                     203
                 </a>
@@ -30,24 +37,24 @@
                 <!-- Botón En Curso -->
                 <a 
                 id="btn-204"
-                href="{% url 'Moldeo:registrar_mcm' %}?status=204" 
+                href="{% url 'Moldeo:registrar_mcm' %}?status=204&numero_orden={{ pre_orden }}&defecto_sap={{ pre_defecto }}&molde={{ pre_molde }}" 
                 class="flex-1 text-center bg-red-600 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-red-500">
                     204
                 </a>
                 <!-- Botón Registrar -->
                 <a
                 id="btn-206" 
-                href="{% url 'Moldeo:registrar_mcm' %}?status=206" 
+                href="{% url 'Moldeo:registrar_mcm' %}?status=208&numero_orden={{ pre_orden }}&defecto_sap={{ pre_defecto }}&molde={{ pre_molde }}" 
                 class="flex-1 text-center bg-red-600 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-red-500">
-                    206
+                    208
                 </a>
                 
                 <!-- Botón En Curso -->
                 <a
-                id="btn-208" 
-                href="{% url 'Moldeo:registrar_mcm' %}?status=208" 
+                id="btn-212" 
+                href="{% url 'Moldeo:registrar_mcm' %}?status=212&numero_orden={{ pre_orden }}&defecto_sap={{ pre_defecto }}&molde={{ pre_molde }}" 
                 class="flex-1 text-center bg-red-600 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-red-500">
-                    208
+                    212
                 </a>
             </div>
         </div>

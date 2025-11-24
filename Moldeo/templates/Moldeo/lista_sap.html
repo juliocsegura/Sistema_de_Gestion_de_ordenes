@@ -1,0 +1,149 @@
+{% extends 'Moldeo/base.html' %}
+
+{% block title %}Catálogo SAP{% endblock %}
+
+{% block content %}
+<div class="container mx-auto max-w-6xl px-4 py-12">
+    
+    <div class="flex justify-between items-center mb-8 mt-4">
+        <a href="{% url 'Moldeo:panel_principal' %}" class="inline-flex items-center bg-gray-600 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Regresar
+        </a>
+        <h2 class="text-3xl font-semibold text-gray-200">Base de Datos SAP</h2>
+        <a href="{% url 'Moldeo:importar_sap' %}" class="inline-flex items-center bg-purple-600 hover:bg-purple-500 text-white font-medium py-2 px-4 rounded-lg transition-colors shadow-lg">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+            Subir Nuevo Excel
+        </a>
+    </div>
+
+    <form method="GET" class="mb-6">
+        <div class="relative">
+            <input type="text" name="q" value="{{ busqueda }}" placeholder="Buscar por Orden, Molde o Descripción..." 
+                   class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg pl-4 pr-10 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-md">
+            <button type="submit" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </button>
+        </div>
+    </form>
+
+    <div class="overflow-x-auto bg-gray-800 rounded-lg shadow-xl border border-gray-700">
+        <table class="w-full min-w-full">
+            <thead class="bg-gray-900 border-b border-gray-700">
+                <tr>
+                    <th class="p-4 text-left text-sm font-bold text-gray-300 uppercase tracking-wider">Orden (SAP)</th>
+                    <th class="p-4 text-left text-sm font-bold text-gray-300 uppercase tracking-wider">Descripción / Defecto</th>
+                    <th class="p-4 text-left text-sm font-bold text-gray-300 uppercase tracking-wider">Numero De SAP</th>
+                    <th class="p-4 text-left text-sm font-bold text-gray-300 uppercase tracking-wider">Molde</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-700">
+                {% for orden in ordenes %}
+                <tr class="hover:bg-gray-700 transition cursor-pointer"
+                    onclick="openModal({
+                        orden: '{{ orden.order }}',
+                        desc: '{{ orden.description|escapejs }}',
+                        equipo: '{{ orden.equipment|default:'-' }}',
+                        centro: '{{ orden.work_center|default:'-' }}'
+                    })">
+                    
+                    <td class="p-4 whitespace-nowrap font-bold text-blue-400">
+                        {{ orden.order }}
+                    </td>
+                    <td class="p-4 text-gray-300">
+                        {{ orden.description }}
+                    </td>
+                    <td class="p-4 whitespace-nowrap font-mono text-yellow-500">
+                        {{ orden.equipment|default:"-" }}
+                    </td>
+                    <td class="p-4 whitespace-nowrap text-gray-400">
+                        {{ orden.work_center }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="p-8 text-center text-gray-500 text-lg">
+                        No se encontraron órdenes cargadas.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="mt-4 text-right text-gray-500 text-xs">Mostrando los primeros resultados.</div>
+
+    <div id="modal-detalle" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 hidden backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-gray-800 text-white rounded-xl shadow-2xl w-full max-w-2xl border border-gray-700 transform transition-all scale-100">
+            
+            <div class="flex justify-between items-center p-6 border-b border-gray-700">
+                <h3 class="text-2xl font-bold text-white">Detalle de Orden <span id="md-orden" class="text-blue-400"></span></h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-gray-700/50 p-4 rounded-lg">
+                        <p class="text-xs text-gray-400 uppercase tracking-wider font-bold">Defecto</p>
+                        <p id="md-defecto" class="text-lg text-gray-100 mt-1"></p>
+                    </div>
+                    <div class="bg-gray-700/50 p-4 rounded-lg">
+                        <p class="text-xs text-gray-400 uppercase tracking-wider font-bold">Molde</p>
+                        <p id="md-molde" class="text-lg text-gray-100 mt-1"></p>
+                    </div>
+                    <div class="bg-gray-700/50 p-4 rounded-lg md:col-span-2 border border-yellow-600/30">
+                        <p class="text-xs text-yellow-500 uppercase tracking-wider font-bold">Numero De SAP</p>
+                        <p id="md-n_sap" class="text-2xl font-mono text-yellow-400 mt-1 font-bold"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 border-t border-gray-700 flex justify-end gap-3">
+                <button onclick="closeModal()" class="px-5 py-3 rounded-lg text-gray-300 hover:bg-gray-700 font-semibold transition">Cancelar</button>
+                <button id="btn-iniciar-orden" class="px-8 py-3 rounded-lg bg-green-600 hover:bg-green-500 text-white font-bold text-lg shadow-lg transition transform hover:-translate-y-0.5">
+                    Iniciar Orden
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const modalDetalle = document.getElementById('modal-detalle');
+    const btnIniciar = document.getElementById('btn-iniciar-orden');
+    const txtOrden = document.getElementById('md-orden');
+    const txtDesc = document.getElementById('md-defecto');
+    const txtCentro = document.getElementById('md-molde');
+    const txtEquipo = document.getElementById('md-n_sap');
+
+    function openModal(data) {
+        txtOrden.textContent = data.orden;
+        txtDesc.textContent = data.desc;
+        txtCentro.textContent = data.centro;
+        txtEquipo.textContent = data.equipo;
+
+        btnIniciar.onclick = function() {
+        // Codificamos los textos para que puedan viajar en la URL (por si tienen espacios o tildes)
+        const params = new URLSearchParams({
+            orden_sap: data.orden,
+            defecto: data.desc,
+            molde: data.centro
+        }).toString();
+
+        // Redirigir al menú de botones pasando los datos
+        // Asegúrate que '/moldeo/registro/' sea la URL de tu vista Registrar_Orden_view
+        window.location.href = `/moldeo/registro/?${params}`; 
+    };
+
+    modalDetalle.classList.remove('hidden');
+ }
+
+    function closeModal() {
+        modalDetalle.classList.add('hidden');
+    }
+
+    // Cerrar al dar clic fuera o Escape
+    window.addEventListener('click', (e) => { if (e.target === modalDetalle) closeModal(); });
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+</script>
+{% endblock %}

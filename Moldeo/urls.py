@@ -14,6 +14,9 @@ urlpatterns = [
     path('api/get-moldes/', views.api_get_moldes, name='api_get_moldes'),
     path('Ordenes_en_curso', views.Orden_en_curso_view, name='ordenes_en_curso'),
     path('Status_Ordenes', views.btn_status_ordenmcm_view, name='status_ordenes'),
+    path('configuracion/importar-sap/', views.importar_sap_view, name='importar_sap'),
+    path('catalogo-sap/', views.lista_sap_view, name='lista_sap'),
+    path('orden/<int:orden_id>/<str:tipo>/imprimir/', views.imprimir_formato_view, name='imprimir_formato'),
     # --- Rutas Placeholder ---
     # (Añade las vistas para estas rutas que ya tienes en base.html)
     path('ordenes/', views.panel_view, name='ordenes_lista'), # Temporal

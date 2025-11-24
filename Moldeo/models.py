@@ -276,7 +276,14 @@ class ItemCircuito(models.Model):
 
     def __str__(self):
         return f"{self.nombre}"
-    
+class OrdenSAP(models.Model):
+    order = models.CharField(max_length=50, unique=True)      
+    description = models.TextField(blank=True, null=True)    
+    work_center = models.CharField(max_length=50, blank=True, null=True) 
+    equipment = models.CharField(max_length=50, blank=True, null=True)   
+
+    def __str__(self):
+        return self.order  
 
 
 

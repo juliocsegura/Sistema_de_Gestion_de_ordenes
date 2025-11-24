@@ -1,8 +1,9 @@
 from django.shortcuts import render , redirect
 from django.contrib import messages
 import openpyxl
+from django.db.models import Q
 from django.db import transaction, models
-from .models import OrdenMCM, OrdenCHO,OrdenTPM,OrdenPREP, ItemTecnico, ItemMesa, ItemCavidad,ItemCircuito,Moldes
+from .models import OrdenMCM, OrdenCHO,OrdenTPM,OrdenPREP, ItemTecnico, ItemMesa, ItemCavidad,ItemCircuito,Moldes,OrdenSAP
 from django.http import JsonResponse, HttpResponseBadRequest,HttpResponse
 from django.views.decorators.http import require_http_methods 
 from django.utils import timezone
@@ -21,20 +22,44 @@ def panel_view(request):
 # --- VISTAS DE REGISTRO ---
 
 def Registrar_Orden_view(request):
+   ctx = {
+        'pre_orden': request.GET.get('orden_sap', ''),
+        'pre_defecto': request.GET.get('defecto', ''),
+        'pre_molde': request.GET.get('molde', '')
+    }
    
-    return render(request, 'Moldeo/registrar_orden.html')
+   return render(request, 'Moldeo/registrar_orden.html', ctx)
 
 def Orden_en_curso_view(request):
    
     return render(request, 'Moldeo/Ordenes_en_curso.html')
 def btn_status_ordenmcm_view(request):
-   
-    return render(request, 'Moldeo/btn_status_mcm.html')
+   context = {
+        'pre_orden': request.GET.get('numero_orden', ''),
+        'pre_defecto': request.GET.get('defecto_sap', ''),
+        'pre_molde': request.GET.get('molde', '')
+    }
+    # Renderizamos el template de los botones
+   return render(request, 'Moldeo/btn_status_mcm.html', context)
+
 
 @require_http_methods(["GET", "POST"])
 def mcm_view(request):
     status_actual = request.POST.get('statusmcm') or request.GET.get('status', '')
     tipo_mntn= 'MCM'
+    pre_orden = request.GET.get('numero_orden', '')
+    pre_defecto = request.GET.get('defecto_sap', '')
+    pre_molde_nombre = request.GET.get('molde', '')
+    
+    pre_molde_pk = ''
+    # Si viene un nombre de molde (ej: 21-5045), buscamos su ID real para el input oculto
+    if pre_molde_nombre:
+        try:
+            m = Moldes.objects.filter(numero_molde=pre_molde_nombre).first()
+            if m:
+                pre_molde_pk = m.id_molde
+        except:
+            pass
     if request.method == 'POST':
         numero_orden = request.POST.get('numero_orden')
         defecto_sap = request.POST.get('defecto_sap')
@@ -96,14 +121,17 @@ def mcm_view(request):
         
         except Exception as e:
             messages.error(request, f'Error al guardar la orden: {e}')
-            return render(request, 'Moldeo/registrar_orden.html') # Regresa al form correcto, no a prueba.html
+            return render(request, 'Moldeo/prueba.html') 
     context = {
         'status_actual': status_actual,
         'tipo_mntn' : tipo_mntn,
-        
+        'pre_orden': pre_orden,
+        'pre_defecto': pre_defecto,
+        'pre_molde_nombre': pre_molde_nombre,
+        'pre_molde_pk': pre_molde_pk
         }
     # GET
-    return render(request, 'Moldeo/prueba.html',context)
+    return render(request, 'Moldeo/prueba.html',context) # html temporal
 
 
 def registro_cho_view(request):
@@ -147,8 +175,6 @@ def api_ordenes_recientes_view(request):
         data.append({
             'id': orden.id,
             'numero_orden': orden.numero_orden,
-            
-            # USAMOS TUS NOMBRES AQUÍ TAMBIÉN
             'status': orden.status,         # 203, 204
             'tipo': orden.tipo_mntn,        # MCM, CHO            
             'fecha_creacion': fecha_str,
@@ -222,7 +248,7 @@ def api_get_moldes(request):
 
         data.append({
 
-            # Mapeamos los datos de tu DB a lo que espera el JS
+            # Mapea los datos de tu DB a lo que espera el JS
 
             'molde': m['numero_molde'],   # El nombre visual (ej. 21-12345)
 
@@ -276,10 +302,10 @@ def exportar_ordenes_excel(request):
         fecha_str = fecha_local.strftime('%Y-%m-%d %H:%M')
 
         ws.append([
-            orden.tipo_mntn,            # <--- TU VARIABLE: 'MCM', 'CHO'
+            orden.tipo_mntn,            
             orden.id,
             orden.numero_orden,
-            orden.status,               # <--- TU VARIABLE: '203', '204'
+            orden.status,               
             nombre_molde,
             getattr(orden, 'defecto_sap', '-'),
             getattr(orden, 'defecto_real', '-'),
@@ -294,3 +320,100 @@ def exportar_ordenes_excel(request):
 
     wb.save(response)
     return response
+
+def importar_sap_view(request):
+    if request.method == 'POST' and request.FILES.get('archivo_sap'):
+        excel_file = request.FILES['archivo_sap']
+        
+        # Validación simple de extensión
+        if not excel_file.name.endswith('.xlsx'):
+            messages.error(request, 'Error: El archivo debe ser un Excel (.xlsx)')
+            return render(request, 'Moldeo/importar_sap.html')
+
+        try:
+            wb = openpyxl.load_workbook(excel_file, data_only=True)
+            
+            # Buscamos "Sheet1" o usamos la primera hoja activa
+            if 'Sheet1' in wb.sheetnames:
+                ws = wb['Sheet1']
+            else:
+                ws = wb.active
+
+            # Obtener encabezados de la fila 1 para saber en qué columna está cada dato
+            headers = {}
+            for cell in ws[1]: # Iterar la primera fila
+                if cell.value:
+                    headers[str(cell.value).strip()] = cell.column - 1 # Guardamos el índice (0, 1, 2...)
+
+            # Verificar que existan las columnas necesarias
+            required_cols = ['Order', 'Description', 'Work center', 'Equipment']
+            if not all(col in headers for col in required_cols):
+                messages.error(request, f'Error: Faltan columnas requeridas. Se busca: {required_cols}')
+                return render(request, 'Moldeo/importar_sap.html')
+
+            # Leer los datos (desde la fila 2)
+            count = 0
+            registros_nuevos = []
+            
+            # Iteramos las filas
+            for row in ws.iter_rows(min_row=2, values_only=True):
+                order_val = row[headers['Order']]
+                
+                # Si no hay número de orden, saltamos la fila
+                if not order_val:
+                    continue
+
+                # Usamos update_or_create para actualizar si ya existe o crear si es nuevo
+                OrdenSAP.objects.update_or_create(
+                    order=str(order_val),
+                    defaults={
+                        'description': row[headers['Description']],
+                        'work_center': row[headers['Work center']],
+                        'equipment': str(row[headers['Equipment']]) if row[headers['Equipment']] else ''
+                    }
+                )
+                count += 1
+
+            messages.success(request, f'Éxito: Se procesaron {count} órdenes de SAP correctamente.')
+            return redirect('Moldeo:panel_principal') # O a donde prefieras regresar
+
+        except Exception as e:
+            messages.error(request, f'Error al procesar el archivo: {e}')
+
+    return render(request, 'Moldeo/importar_sap.html')
+def lista_sap_view(request):
+    # Capturamos lo que el usuario escribe en el buscador
+    busqueda = request.GET.get('q', '')
+    
+    if busqueda:
+        # Filtramos por Orden, Descripción o Equipo
+        ordenes = OrdenSAP.objects.filter(
+            Q(order__icontains=busqueda) |
+            Q(description__icontains=busqueda) |
+            Q(equipment__icontains=busqueda) |
+            Q(work_center__icontains=busqueda)
+        )[:100] # Limitamos a 100 resultados para que sea rápido
+    else:
+        # Si no busca nada, mostramos las primeras 50
+        ordenes = OrdenSAP.objects.all()[:50]
+
+    context = {
+        'ordenes': ordenes,
+        'busqueda': busqueda
+    }
+    return render(request, 'Moldeo/lista_sap.html', context)
+def imprimir_formato_view(request, orden_id, tipo):
+    # Buscamos la orden según el tipo
+    orden = None
+    if tipo == 'MCM':
+        orden = OrdenMCM.objects.get(id=orden_id)
+    elif tipo == 'TPM':
+        orden = OrdenTPM.objects.get(id=orden_id)
+    # ... agregar otros tipos si es necesario ...
+
+    context = {
+        'orden': orden,
+        # Pasamos la fecha actual para la impresión si se requiere
+        'fecha_impresion': timezone.now()
+    }
+    return render(request, 'Moldeo/imprimir_formato.html', context)
