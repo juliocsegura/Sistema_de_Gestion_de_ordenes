@@ -1,0 +1,279 @@
+{% extends 'Moldeo/base.html' %}
+
+{% block title %}Historial - Órdenes Finalizadas{% endblock %}
+
+{% block content %}
+<div class="container mx-auto max-w-full px-2 sm:px-4 pb-16">
+    
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6 mt-8 gap-4">
+        <div class="flex items-center gap-4">
+            <h2 class="text-3xl font-bold text-gray-200">Historial Finalizadas</h2>
+        </div>
+        
+        <div class="relative w-full md:w-96">
+             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </span>
+            <input type="text" id="searchInput" onkeyup="filtrarTabla()" 
+                   placeholder="Buscar orden, molde, técnico..." 
+                   class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-colors placeholder-gray-400">
+        </div>
+    </div>
+
+    <div class="mb-6 flex items-center gap-4">
+        <a href="javascript:history.back()" class="inline-flex items-center bg-gray-600 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Regresar
+        </a>
+        <a href="{% url 'Moldeo:ordenes_en_curso' %}" class="inline-flex items-center bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            Ver En Curso
+        </a>
+    </div>
+
+    <div class="overflow-x-auto bg-gray-800 rounded-lg shadow-xl border border-gray-700">
+        <table class="w-full min-w-full table-fixed" id="tablaFinalizadas">
+            <thead class="bg-gray-700 border-b border-gray-600">
+                <tr>
+                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-24">Orden</th>
+                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-32">Molde</th>
+                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-40">Defecto</th>
+                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-32">Técnico</th>
+                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-32">Inicio</th>
+                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-32">Fin</th>
+                    <th class="px-3 py-4 text-center text-sm font-bold text-gray-200 uppercase tracking-wider w-32">Duración</th>
+                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-48">Comentarios</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-700">
+                {% for orden in ordenes %}
+                <tr class="hover:bg-gray-750 transition duration-150 border-b border-gray-700 last:border-0 cursor-pointer fila-orden" 
+                    data-index="{{ forloop.counter0 }}">
+                    
+                    <td class="px-3 py-4 font-bold text-white text-base">{{ orden.numero_orden }}</td>
+                    <td class="px-3 py-4 text-gray-300 truncate max-w-[120px]" title="{{ orden.molde }}">{{ orden.molde }}</td>
+                    <td class="px-3 py-4 text-gray-400 truncate max-w-[150px]" title="{{ orden.defecto }}">{{ orden.defecto }}</td>
+                    <td class="px-3 py-4 text-blue-300 font-medium truncate max-w-[120px]" title="{{ orden.tecnico }}">{{ orden.tecnico }}</td>
+                    <td class="px-3 py-4 text-sm text-gray-400">{{ orden.fecha_inicio|date:"d/m H:i" }}</td>
+                    <td class="px-3 py-4 text-sm text-green-400">{{ orden.fecha_fin|date:"d/m H:i" }}</td>
+                    <td class="px-3 py-4 text-center">
+                        <span class="bg-gray-900 text-emerald-400 font-mono font-bold px-3 py-1 rounded border border-gray-600 shadow-sm text-sm">
+                            {{ orden.duracion_fmt }}
+                        </span>
+                    </td>
+                    <td class="px-3 py-4 text-sm text-gray-500 italic truncate max-w-[200px]" title="{{ orden.comentarios }}">
+                        {{ orden.comentarios|default:"-" }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="p-8 text-center text-gray-500 text-lg">No hay historial disponible.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="modal-detalle" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 hidden backdrop-blur-sm transition-opacity">
+    <div class="bg-gray-800 text-gray-200 rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col border border-gray-600 transform transition-all scale-100">
+        
+        <div class="flex justify-between items-center border-b border-gray-700 p-5 bg-gray-900">
+            <div>
+                <h3 class="text-2xl font-bold text-white" id="md-titulo">Orden Finalizada</h3>
+                <span class="text-xs text-green-400 font-mono uppercase tracking-widest">Estado: COMPLETADA</span>
+            </div>
+            <button onclick="cerrarModal()" class="text-gray-400 hover:text-white text-3xl transition">&times;</button>
+        </div>
+
+        <div class="p-6 space-y-6 overflow-y-auto bg-gray-800 custom-scrollbar">
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-gray-700/40 p-3 rounded border border-gray-600">
+                    <label class="text-xs text-blue-400 uppercase font-bold tracking-wider">Defecto SAP</label>
+                    <p id="md-defecto-sap" class="text-white font-medium text-lg mt-1"></p>
+                </div>
+                <div class="bg-gray-700/40 p-3 rounded border border-gray-600">
+                    <label class="text-xs text-blue-400 uppercase font-bold tracking-wider">Molde</label>
+                    <p id="md-molde" class="text-white font-medium text-lg mt-1"></p>
+                </div>
+                <div class="bg-gray-700/40 p-3 rounded border border-gray-600">
+                    <label class="text-xs text-blue-400 uppercase font-bold tracking-wider">Duración Total</label>
+                    <p id="md-duracion" class="text-emerald-400 font-mono font-bold text-lg mt-1"></p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs text-gray-500 uppercase font-bold">Defecto Real Reportado</label>
+                    <div id="md-defecto-real" class="bg-gray-900 p-3 rounded text-gray-300 text-sm border border-gray-700 mt-1 min-h-[40px]"></div>
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 uppercase font-bold">Comentarios Finales</label>
+                    <div id="md-comentarios" class="bg-gray-900 p-3 rounded text-gray-300 text-sm border border-gray-700 mt-1 italic min-h-[40px]"></div>
+                </div>
+            </div>
+
+            <div>
+                <label class="text-xs text-gray-500 uppercase font-bold mb-2 block">Historial de Técnicos (Turnos)</label>
+                <div class="overflow-hidden rounded-lg border border-gray-700">
+                    <table class="w-full text-sm text-left text-gray-400">
+                        <thead class="text-xs text-gray-300 uppercase bg-gray-700">
+                            <tr>
+                                <th class="px-4 py-2">Técnico</th>
+                                <th class="px-4 py-2">Hora Entrada</th>
+                                <th class="px-4 py-2">Hora Salida</th>
+                            </tr>
+                        </thead>
+                        <tbody id="md-tabla-tecnicos" class="bg-gray-800 divide-y divide-gray-700">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="flex justify-between text-xs text-gray-500 border-t border-gray-700 pt-4">
+                <p>Fecha Inicio: <span id="md-fecha-inicio" class="text-gray-300 font-mono"></span></p>
+                <p>Fecha Cierre: <span id="md-fecha-fin" class="text-gray-300 font-mono"></span></p>
+            </div>
+        </div>
+
+        <div class="bg-gray-900 p-4 border-t border-gray-700 flex justify-end gap-3">
+            <button onclick="cerrarModal()" class="px-5 py-2 rounded-lg text-gray-300 hover:bg-gray-700 font-semibold transition text-sm">
+                Cerrar
+            </button>
+            <a id="md-btn-imprimir" href="#" target="_blank" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow flex items-center gap-2 transition hover:scale-105">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                Imprimir Reporte
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script i>
+const ordenesData = [
+        {% for orden in ordenes %}
+        {
+            id: "{{ orden.id }}",
+            tipo: "{{ orden.tipo }}",
+            numero_orden: "{{ orden.numero_orden }}",
+            molde: "{{ orden.molde|escapejs }}",
+            defecto_sap: "{{ orden.defecto|escapejs }}",
+            defecto_real: "{{ orden.defecto_real|escapejs|default:'-' }}",
+            duracion: "{{ orden.duracion_fmt }}",
+            comentarios: "{{ orden.comentarios|escapejs|default:'' }}",
+            inicio: "{{ orden.fecha_inicio|date:'d/m H:i' }}",
+            fin: "{{ orden.fecha_fin|date:'d/m H:i' }}",
+            
+            // Aquí iteramos manualmente la lista de técnicos para asegurarnos que el formato sea correcto
+            lista_tecnicos: [
+                {% for t in orden.lista_tecnicos %}
+                {
+                    nombre: "{{ t.nombre|escapejs }}",
+                    inicio: "{{ t.inicio }}",
+                    fin: "{{ t.fin }}"
+                },
+                {% endfor %}
+            ]
+        },
+        {% endfor %}
+    ];
+
+    // Variables globales
+    const modal = document.getElementById('modal-detalle');
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Asignar eventos click a las filas usando el índice
+        const rows = document.querySelectorAll('.fila-orden');
+        rows.forEach(row => {
+            row.addEventListener('click', () => {
+                const index = row.getAttribute('data-index');
+                // Buscamos los datos en nuestro array seguro
+                if(ordenesData[index]) {
+                    populateModal(ordenesData[index]);
+                }
+            });
+        });
+    });
+
+    // Función para llenar el modal con datos
+    function populateModal(data) {
+        document.getElementById('md-titulo').textContent = `Orden ${data.numero_orden} (${data.tipo})`;
+        document.getElementById('md-defecto-sap').textContent = data.defecto_sap;
+        document.getElementById('md-molde').textContent = data.molde;
+        document.getElementById('md-duracion').textContent = data.duracion;
+        
+        document.getElementById('md-defecto-real').textContent = data.defecto_real;
+        document.getElementById('md-comentarios').textContent = data.comentarios || 'Sin comentarios adicionales.';
+        
+        document.getElementById('md-fecha-inicio').textContent = data.inicio;
+        document.getElementById('md-fecha-fin').textContent = data.fin;
+        
+        // URL para imprimir
+        const btnImprimir = document.getElementById('md-btn-imprimir');
+        if(btnImprimir) {
+            btnImprimir.href = `/moldeo/orden/${data.id}/${data.tipo}/imprimir/`;
+        }
+
+        // Llenar tabla de historial de técnicos
+        const tbodyTec = document.getElementById('md-tabla-tecnicos');
+        tbodyTec.innerHTML = '';
+        
+        if (data.lista_tecnicos && data.lista_tecnicos.length > 0) {
+            data.lista_tecnicos.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-gray-700 hover:bg-gray-700/50 transition';
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-medium text-white">${t.nombre}</td>
+                    <td class="px-4 py-3 text-gray-400 text-xs">${t.inicio}</td>
+                    <td class="px-4 py-3 text-gray-400 text-xs">${t.fin}</td>
+                `;
+                tbodyTec.appendChild(tr);
+            });
+        } else {
+            tbodyTec.innerHTML = '<tr><td colspan="3" class="px-4 py-4 text-center italic text-gray-500">No hay registro de técnicos.</td></tr>';
+        }
+
+        modal.classList.remove('hidden');
+    }
+
+    function cerrarModal() {
+        modal.classList.add('hidden');
+    }
+
+    // Filtrado de tabla
+    window.filtrarTabla = function() {
+        const input = document.getElementById('searchInput');
+        const filter = input.value.toUpperCase();
+        const table = document.getElementById('tablaFinalizadas');
+        const tr = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < tr.length; i++) { 
+            let visible = false;
+            const tds = tr[i].getElementsByTagName('td');
+            for (let j = 0; j < tds.length; j++) {
+                if (tds[j]) {
+                    const txtValue = tds[j].textContent || tds[j].innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        visible = true;
+                        break; 
+                    }
+                }
+            }
+            tr[i].style.display = visible ? "" : "none";
+        }
+    };
+
+    // Cerrar con tecla Escape
+    window.addEventListener('keydown', (e) => {
+        if(e.key === 'Escape') cerrarModal();
+    });
+    
+    // Cerrar al hacer clic fuera del modal
+    modal.addEventListener('click', (e) => {
+        if(e.target === modal) cerrarModal();
+    });
+
+</script>
+{% endblock scripts %}

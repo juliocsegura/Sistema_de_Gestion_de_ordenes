@@ -246,7 +246,9 @@ class ItemTecnico(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
-
+    activo = models.BooleanField(default=True) # True = Trabajando, False = Ya salió
+    fecha_inicio = models.DateTimeField(auto_now_add=True)
+    fecha_fin = models.DateTimeField(null=True, blank=True)
     def __str__(self):
         return f"{self.nombre}"
 

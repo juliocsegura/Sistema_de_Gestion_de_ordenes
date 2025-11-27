@@ -17,6 +17,8 @@ urlpatterns = [
     path('configuracion/importar-sap/', views.importar_sap_view, name='importar_sap'),
     path('catalogo-sap/', views.lista_sap_view, name='lista_sap'),
     path('orden/<int:orden_id>/<str:tipo>/imprimir/', views.imprimir_formato_view, name='imprimir_formato'),
+    path('ordenes/finalizadas/', views.historial_finalizadas_view, name='ordenes_finalizadas'),   
+    path('api/orden/<int:orden_id>/tecnicos/', views.api_gestionar_tecnicos, name='api_gestionar_tecnicos'),
     # --- Rutas Placeholder ---
     # (Añade las vistas para estas rutas que ya tienes en base.html)
     path('ordenes/', views.panel_view, name='ordenes_lista'), # Temporal

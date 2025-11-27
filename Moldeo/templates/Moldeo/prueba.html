@@ -5,7 +5,9 @@
 {% block title %}Registrar Orden - MCM{% endblock %}
 
 <!-- 3. Definimos el contenido específico para esta página -->
+
 {% block content %}
+
 <div class="container mx-auto max-w-7xl px-4 py-12">
     <div class="mb-6">
         <a href="javascript:history.back()" 
@@ -23,7 +25,7 @@
 
     <!-- Formulario con fondo oscuro -->
     <!-- CORRECCIÓN: El formulario ahora apunta a 'registrar_mcm' -->
-    <form action="{% url 'Moldeo:registrar_mcm' %}" method="POST" class="w-full max-w-4xl mx-auto bg-gray-800 p-8 rounded-lg shadow-xl space-y-6">
+    <form action="{% url 'Moldeo:registrar_mcm' %}" method="POST" class="w-full max-w-7xl mx-auto bg-gray-800 p-8 rounded-lg shadow-xl space-y-6">
         {% csrf_token %}
 
         <!-- Mostrar mensajes de error -->
@@ -145,12 +147,8 @@
                         + Añadir
                     </button>
                 </div>
-                <div id="tecnicos-wrapper" class="space-y-3">
-                    <div class="flex items-center">
-                        <input type="text" name="tecnicos" placeholder="Técnico 1" required
-                            class="w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white focus:ring-blue-500 focus:border-blue-500">
+                <div id="tecnicos-wrapper" class="space-y-4">
                     </div>
-                </div>
             </div>
 
             <div class="border-t border-gray-700 pt-6">
@@ -214,52 +212,191 @@
  </div>
 {% endblock content %}
 {% block scripts %}
-    <!-- SCRIPT PARA CAMPOS DINÁMICOS (Sin cambios) -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
+<script>
+    // 1. CARGAMOS DATOS
+    const tecnicosData = [
+        {% if moldmakers %}
+            {% for t in moldmakers %}
+                { id: "{{ t.id_mold_m }}", nombre: "{{ t.nombre|escapejs }}" },
+            {% endfor %}
+        {% else %}
+            { id: "", nombre: "No hay datos" } 
+        {% endif %}
+    ];
 
-            function setupDynamicFields(wrapperId, buttonId, fieldName, placeholderPrefix) {
-                let count = 1; 
-                const wrapper = document.getElementById(wrapperId);
-                const button = document.getElementById(buttonId);
+    document.addEventListener('DOMContentLoaded', () => {
 
-                if (!wrapper || !button) {
-                    console.warn(`Elementos no encontrados para ${wrapperId}`);
-                    return;
-                }
+        let tecnicoCount = 0;
 
-                button.addEventListener('click', () => {
-                    count++;
-                    
-                    const newFieldRow = document.createElement('div');
-                    newFieldRow.className = 'flex items-center space-x-2';
+        // Modificamos la función para aceptar el parámetro 'esInicial'
+        function crearComboboxTecnico(esInicial = false) {
+            tecnicoCount++;
+            const wrapper = document.getElementById('tecnicos-wrapper');
+            const rowId = `tecnico-row-${tecnicoCount}`;
 
-                    const newInput = document.createElement('input');
-                    newInput.type = 'text';
-                    newInput.name = fieldName;
-                    newInput.placeholder = `${placeholderPrefix} ${count}`;
-                    newInput.required = true;
-                    newInput.className = 'w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-indigo-500 focus:border-indigo-500';
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'flex items-start space-x-2 relative'; // 'items-end' si quieres alinearlo abajo
+            rowDiv.id = rowId;
 
-                    const removeButton = document.createElement('button');
-                    removeButton.type = 'button';
-                    removeButton.className = 'flex-shrink-0 bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-3 rounded-md text-xs';
-                    removeButton.textContent = 'X';
-                    
-                    removeButton.addEventListener('click', () => {
-                        newFieldRow.remove();
+            // Lógica para mostrar u ocultar el botón de eliminar
+            const botonEliminarHTML = esInicial ? '' : `
+                <button type="button" class="btn-remove-row flex-shrink-0 bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-3 rounded-md text-xs mt-2">
+                    X
+                </button>
+            `;
+
+            /* CAMBIOS REALIZADOS EN EL HTML:
+               1. Lista de opciones: 'absolute bottom-full mb-1' (Hacia arriba)
+               2. Colores: bg-gray-700, text-white
+            */
+            rowDiv.innerHTML = `
+                <div class="w-full relative combobox-container max-w-xl">
+                    <div class="tecnico-options-list absolute bottom-full mb-1 z-50 w-full bg-gray-700 rounded-lg shadow-xl border border-gray-600 overflow-hidden max-h-60 overflow-y-auto hidden">
+                        </div>
+
+                    <div class="relative">
+                        <input type="text" 
+                            class="tecnico-search-input w-full bg-gray-700 border border-gray-600 text-white rounded-md shadow-sm py-2 pl-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
+                            placeholder="Buscar Técnico..."
+                            autocomplete="off">
+                        
+                        <button type="button" class="tecnico-toggle-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-white transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <input type="hidden" name="tecnicos" class="tecnico-hidden-value">
+                </div>
+
+                ${botonEliminarHTML}
+            `;
+
+            wrapper.appendChild(rowDiv);
+
+            // Referencias
+            const searchInput = rowDiv.querySelector('.tecnico-search-input');
+            const optionsList = rowDiv.querySelector('.tecnico-options-list');
+            const hiddenInput = rowDiv.querySelector('.tecnico-hidden-value');
+            const toggleBtn = rowDiv.querySelector('.tecnico-toggle-btn');
+            
+            // Solo buscamos el botón si no es el inicial
+            const removeBtn = esInicial ? null : rowDiv.querySelector('.btn-remove-row');
+
+            function renderOptions(filterText = '') {
+                optionsList.innerHTML = '';
+                const lowerFilter = filterText.toLowerCase();
+
+                const filtrados = tecnicosData.filter(t => 
+                    t.nombre.toLowerCase().includes(lowerFilter)
+                );
+
+                if (filtrados.length === 0) {
+                    // Texto gris claro para "No hay resultados"
+                    optionsList.innerHTML = '<div class="p-3 text-gray-400 text-sm">No hay resultados</div>';
+                } else {
+                    filtrados.forEach(t => {
+                        const option = document.createElement('div');
+                        // CAMBIO DE COLOR: Texto blanco (text-gray-200), hover oscuro (hover:bg-gray-600)
+                        option.className = 'cursor-pointer p-2 hover:bg-gray-600 text-gray-200 border-b border-gray-600 last:border-0 transition-colors';
+                        option.textContent = t.nombre;
+                        
+                        option.addEventListener('click', () => {
+                            searchInput.value = t.nombre;
+                            hiddenInput.value = t.id;
+                            optionsList.classList.add('hidden');
+                        });
+                        optionsList.appendChild(option);
                     });
-
-                    newFieldRow.appendChild(newInput);
-                    newFieldRow.appendChild(removeButton);
-                    wrapper.appendChild(newFieldRow);
-                });
+                }
             }
 
-            setupDynamicFields('tecnicos-wrapper', 'add-tecnico-btn', 'tecnicos', 'Técnico');
-            setupDynamicFields('mesas-wrapper', 'add-mesa-btn', 'mesas', 'Mesa');
-            setupDynamicFields('cavidades-wrapper', 'add-cavidad-btn', 'cavidades', 'Cavidad');
-            setupDynamicFields('circuitos-wrapper', 'add-circuito-btn', 'circuitos', 'Circuito');
-        });
-    </script>
+            searchInput.addEventListener('input', (e) => {
+                renderOptions(e.target.value);
+                optionsList.classList.remove('hidden');
+            });
+
+            searchInput.addEventListener('focus', () => {
+                renderOptions(searchInput.value);
+                optionsList.classList.remove('hidden');
+            });
+
+            toggleBtn.addEventListener('click', () => {
+                const isHidden = optionsList.classList.contains('hidden');
+                if (isHidden) {
+                    renderOptions(searchInput.value);
+                    optionsList.classList.remove('hidden');
+                    searchInput.focus();
+                } else {
+                    optionsList.classList.add('hidden');
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!rowDiv.contains(e.target)) {
+                    optionsList.classList.add('hidden');
+                }
+            });
+
+            // Solo agregamos el evento si el botón existe (es decir, no es el inicial)
+            if (removeBtn) {
+                removeBtn.addEventListener('click', () => {
+                    rowDiv.remove();
+                });
+            }
+        }
+
+        // --- Lógica campos simples ---
+        function setupSimpleField(wrapperId, buttonId, placeholderPrefix) {
+            const wrapper = document.getElementById(wrapperId);
+            const button = document.getElementById(buttonId);
+            if (!wrapper || !button) return;
+
+            button.addEventListener('click', () => {
+                const firstRow = wrapper.querySelector('div'); 
+                let clone;
+                
+                if (firstRow) {
+                    clone = firstRow.cloneNode(true);
+                    const input = clone.querySelector('input');
+                    input.value = '';
+                    const count = wrapper.children.length + 1;
+                    input.placeholder = `${placeholderPrefix} ${count}`;
+                    
+                    // Asegurarnos que el clon tenga botón de eliminar (incluso si copiamos del primero que podría no tenerlo)
+                    let btn = clone.querySelector('button');
+                    
+                    if (!btn) {
+                        btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'flex-shrink-0 bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-3 rounded-md text-xs ml-2';
+                        btn.textContent = 'X';
+                        clone.appendChild(btn);
+                    } else {
+                        // Si ya tiene botón (porque copiamos uno que no era el primero), necesitamos recrearlo para el listener
+                        const newBtn = btn.cloneNode(true);
+                        btn.replaceWith(newBtn);
+                        btn = newBtn;
+                    }
+                    
+                    // Agregar listener
+                    btn.addEventListener('click', () => clone.remove());
+                    
+                    wrapper.appendChild(clone);
+                }
+            });
+        }
+
+        // Inicializar el PRIMER técnico (Pasamos true para que NO tenga botón de borrar)
+        crearComboboxTecnico(true);
+
+        // Botón añadir técnicos (Pasamos false implícitamente, SÍ tendrá botón)
+        document.getElementById('add-tecnico-btn').addEventListener('click', () => crearComboboxTecnico(false));
+
+        setupSimpleField('mesas-wrapper', 'add-mesa-btn', 'Mesa');
+        setupSimpleField('cavidades-wrapper', 'add-cavidad-btn', 'Cavidad');
+        setupSimpleField('circuitos-wrapper', 'add-circuito-btn', 'Circuito');
+    });
+</script>
 {% endblock scripts %}
