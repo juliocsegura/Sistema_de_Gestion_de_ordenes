@@ -17,12 +17,15 @@
     </div>
 
     <div class="mb-6 flex items-center gap-4">
-        <a href="{% url 'Moldeo:panel_principal' %}" class="inline-flex items-center bg-gray-600 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm">
+        <a href="javascript:history.back()" class="inline-flex items-center bg-gray-600 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             Regresar
         </a>
         <a href="{% url 'Moldeo:ordenes_finalizadas' %}" class="inline-flex items-center bg-red-600 hover:bg-red-500 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm">
             Ver Finalizadas
+        </a>
+        <a href="{% url 'Moldeo:lista_sap' %}" class="inline-flex items-center bg-green-600 hover:bg-green-500 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm">
+            Iniciar Orden
         </a>
     </div>
 
@@ -49,76 +52,137 @@
     </div>
 </div>
 
-<div id="orden-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 hidden backdrop-blur-sm">
-    <div class="bg-gray-800 text-gray-200 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border border-gray-700">
+<div id="orden-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 hidden backdrop-blur-sm transition-opacity duration-300">
+    <div class="bg-gray-800 text-gray-200 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border border-gray-700">
         
         <div class="flex justify-between items-center border-b border-gray-700 p-4 bg-gray-900">
-            <h3 class="text-xl font-bold text-white" id="modal-titulo">Orden</h3>
-            <button id="modal-close-btn" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            <div>
+                <h3 class="text-xl font-bold text-white" id="modal-titulo">Cargando...</h3>
+                <span id="modal-subtitulo" class="text-xs text-gray-400">Detalle de asignaciones</span>
+            </div>
+            <button id="modal-close-btn" class="text-gray-400 hover:text-white text-3xl transition focus:outline-none">&times;</button>
         </div>
 
-        <div class="p-6 space-y-5 overflow-y-auto bg-gray-800">
+        <div class="p-6 space-y-6 overflow-y-auto bg-gray-800 custom-scrollbar flex-1">
             {% csrf_token %}
             <input type="hidden" id="modal-orden-id">
 
-            <div class="grid grid-cols-2 gap-4">
-                <div class="bg-gray-700/50 p-3 rounded">
-                    <label class="text-xs text-gray-400 uppercase font-bold">Defecto SAP</label>
-                    <p id="modal-defecto-sap" class="font-medium text-white text-lg"></p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-gray-700/50 p-3 rounded border border-gray-600">
+                    <label class="text-[10px] text-blue-400 uppercase font-bold tracking-wider">Defecto SAP</label>
+                    <p id="modal-defecto-sap" class="font-medium text-white text-sm mt-1"></p>
                 </div>
-                <div class="bg-gray-700/50 p-3 rounded">
-                    <label class="text-xs text-gray-400 uppercase font-bold">Estado</label>
-                    <p id="modal-estado" class="font-medium text-white text-lg"></p>
+                <div class="bg-gray-700/50 p-3 rounded border border-gray-600">
+                    <label class="text-[10px] text-blue-400 uppercase font-bold tracking-wider">Molde / Máquina</label>
+                    <p id="modal-molde" class="font-medium text-white text-sm mt-1"></p>
+                </div>
+                <div class="bg-gray-700/50 p-3 rounded border border-gray-600">
+                    <label class="text-[10px] text-blue-400 uppercase font-bold tracking-wider">Estado Actual</label>
+                    <p id="modal-estado" class="font-bold text-white text-sm mt-1"></p>
                 </div>
             </div>
 
-            <div class="border border-gray-600 rounded-lg p-4 bg-gray-900/30">
-                <h4 class="text-sm font-bold text-blue-400 uppercase mb-3 border-b border-gray-600 pb-1">Técnicos en Turno</h4>
+            <div class="border border-gray-600 rounded-lg bg-gray-900/40 overflow-hidden mb-4">
+                <div class="p-3 bg-gray-900 border-b border-gray-600 flex justify-between items-center">
+                    <h4 class="text-sm font-bold text-emerald-400 uppercase">Personal y Defectos Asignados</h4>
+                    <span class="text-[10px] text-gray-500">Vista Detallada</span>
+                </div>
                 
-                <div id="modal-lista-tecnicos" class="space-y-2 mb-4 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
-                    </div>
+                <div id="modal-lista-tecnicos" class="max-h-80 overflow-y-auto custom-scrollbar p-3 space-y-3 bg-gray-800">
+                </div>
+            </div>
 
-                <div class="flex gap-2 pt-3 border-t border-gray-700 relative">
-                    
-                    <div class="relative w-full">
-                        <input type="text" 
-                               id="modal-combo-input"
-                               class="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 placeholder-gray-400" 
-                               placeholder="Buscar técnico..." 
-                               autocomplete="off">
+            <div class="bg-gray-700/30 p-3 rounded border border-gray-600 mb-4">
+                <label class="text-[10px] text-emerald-400 uppercase font-bold tracking-wider mb-2 block border-b border-gray-600 pb-1">
+                    + Asignar Técnico Adicional
+                </label>
+                
+                <div class="grid grid-cols-12 gap-2 mb-2">
+                    <div class="col-span-8 relative">
+                        <input type="text" id="add-nombre" placeholder="Nombre Técnico" class="w-full bg-gray-700 border border-gray-500 rounded px-2 py-1 text-xs text-white placeholder-gray-400 focus:ring-1 focus:ring-emerald-500">
+                        <div id="add-combo-list" class="hidden bg-gray-600 border border-gray-500 z-50 max-h-32 overflow-y-auto"></div>
+                    </div>
+                    <div class="col-span-4">
+                        <input type="text" id="add-mesa" placeholder="Mesa" class="w-full bg-gray-700 border border-gray-500 rounded px-2 py-1 text-xs text-white text-center focus:ring-1 focus:ring-emerald-500">
+                    </div>
+                </div>
+
+                <div class="bg-gray-800/50 p-2 rounded border border-gray-600/50">
+                    <label class="text-[9px] text-gray-400 uppercase mb-1 block">Agregar Detalles:</label>
+                    <div class="grid grid-cols-12 gap-2 items-end mb-2">
                         
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        <div class="col-span-5 relative">
+                            <input type="text" id="temp-defecto" placeholder="Defecto" class="w-full bg-gray-700 border border-gray-500 rounded px-2 py-1 text-xs text-white focus:ring-1 focus:ring-emerald-500">
+                            <div id="temp-defecto-list" class="hidden bg-gray-600 border border-gray-500 z-50 max-h-32 overflow-y-auto"></div>
                         </div>
 
-                        <div id="modal-combo-list" class="absolute bottom-full mb-1 z-50 w-full bg-gray-700 border border-gray-600 rounded-lg shadow-xl max-h-48 overflow-y-auto hidden custom-scrollbar">
-                            </div>
+                        <div class="col-span-3">
+                            <input type="text" id="temp-cav" placeholder="Cav" class="w-full bg-gray-700 border border-gray-500 rounded px-2 py-1 text-xs text-white text-center focus:ring-1 focus:ring-emerald-500">
+                        </div>
+                        <div class="col-span-3">
+                            <input type="text" id="temp-circ" placeholder="Circ" class="w-full bg-gray-700 border border-gray-500 rounded px-2 py-1 text-xs text-white text-center focus:ring-1 focus:ring-emerald-500">
+                        </div>
+                        <div class="col-span-1">
+                            <button id="btn-add-detalle-temp" class="bg-blue-600 text-white w-full rounded text-xs font-bold py-1 hover:bg-blue-500 shadow transition">
+                                +
+                            </button>
+                        </div>
                     </div>
-                    <button id="btn-agregar-tecnico" class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold px-4 py-2 rounded shadow-lg transition transform hover:scale-105">
-                        + Agregar
+                    
+                    <ul id="lista-detalles-temp" class="space-y-1 pl-1 max-h-24 overflow-y-auto custom-scrollbar">
+                    </ul>
+                </div>
+
+                <div class="text-right mt-2">
+                    <button id="btn-guardar-extra" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1.5 px-4 rounded shadow transition hover:scale-105">
+                        Guardar Asignación
                     </button>
                 </div>
             </div>
 
             <div>
-                <label class="text-xs text-gray-400 uppercase font-bold">Defecto Real</label>
-                <p id="modal-defecto-real" class="bg-gray-700 p-3 rounded text-base min-h-[50px]"></p>
-            </div>
-
-            <div>
-                <label class="text-xs text-gray-400 uppercase font-bold">Comentarios</label>
-                <textarea id="modal-comentarios" rows="3" class="w-full bg-gray-700 border-gray-600 rounded text-base text-white p-3"></textarea>
-                <button id="modal-guardar-comentarios" class="mt-2 text-sm text-blue-400 hover:text-blue-300 underline">Guardar nota</button>
+                <label class="text-xs text-gray-400 uppercase font-bold">Bitácora / Comentarios</label>
+                <div class="mt-1 relative">
+                    <textarea id="modal-comentarios" rows="2" class="w-full bg-gray-700 border-gray-600 rounded text-sm text-white p-3 pr-10 focus:ring-blue-500"></textarea>
+                    <button id="modal-guardar-comentarios" class="absolute bottom-2 right-2 text-blue-400 hover:text-white" title="Guardar">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                    </button>
+                </div>
             </div>
         </div>
 
-        <div class="flex justify-end gap-3 bg-gray-900 p-4 border-t border-gray-700">
-            <button id="modal-pausar-btn" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-5 rounded text-base transition">Pausar</button>
-            <button id="modal-finalizar-btn" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-5 rounded text-base transition">Finalizar</button>
-            <a id="btn-imprimir-formato" href="#" target="_blank" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-5 rounded text-base transition flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                Imprimir
-            </a>
+        <div class="flex justify-between gap-3 bg-gray-900 p-4 border-t border-gray-700">
+            <div class="flex items-center gap-4">
+                <a id="btn-imprimir-formato" href="#" target="_blank" class="text-gray-400 hover:text-white text-sm flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Imprimir
+                </a>
+                <div id="info-lider-modal" class="text-xs text-gray-500 italic">
+                    Líder: <span id="modal-lider" class="text-gray-300 not-italic font-bold"></span>
+                    <button id="btn-tomar-orden" class="hidden ml-2 text-blue-400 hover:text-blue-300 underline font-bold">Tomar Orden</button>
+                </div>
+            </div>
+            
+            <div class="flex gap-2">
+                <button id="modal-pausar-btn" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-6 rounded text-sm shadow-lg">Pausar</button>
+                <button id="modal-finalizar-btn" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded text-sm shadow-lg">Finalizar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="relevo-dialog" class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-90 hidden">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-2xl border border-yellow-600 w-full max-w-sm">
+        <h4 class="text-lg font-bold text-yellow-500 mb-2">🔄 Cambio de Turno</h4>
+        <p class="text-sm text-gray-300 mb-4">El técnico <span id="relevo-saliente-nombre" class="font-bold text-white"></span> saldrá. Selecciona entrante:</p>
+        <input type="hidden" id="relevo-id-saliente">
+        <div class="relative w-full mb-4">
+            <input type="text" id="relevo-input" class="w-full bg-gray-700 border border-gray-500 text-white rounded p-2 text-sm" placeholder="Buscar entrante..." autocomplete="off">
+            <div id="relevo-list" class="absolute top-full left-0 w-full bg-gray-700 border border-gray-600 rounded shadow-xl max-h-40 overflow-y-auto hidden z-50"></div>
+        </div>
+        <div class="flex justify-end gap-2">
+            <button onclick="document.getElementById('relevo-dialog').classList.add('hidden')" class="px-4 py-2 bg-gray-600 text-white rounded text-sm">Cancelar</button>
+            <button id="btn-confirmar-relevo" class="px-4 py-2 bg-yellow-600 text-white font-bold rounded text-sm hover:bg-yellow-500">Confirmar</button>
         </div>
     </div>
 </div>
@@ -126,78 +190,20 @@
 
 {% block scripts %}
 <script>
-    // 1. OBTENER DATOS DE LA BD (Igual que en registro)
-    const tecnicosData = [
-        {% if moldmakers %}
-            {% for t in moldmakers %}
-                { id: "{{ t.id_mold_m }}", nombre: "{{ t.nombre|escapejs }}" },
-            {% endfor %}
-        {% else %}
-            { id: "", nombre: "Sin datos" }
-        {% endif %}
-    ];
-
 document.addEventListener('DOMContentLoaded', () => {
-    
+    // 1. VARIABLES
+    const soyLider = {{ es_lider_logueado|yesno:"true,false" }};
+    const tecnicosData = [{% for t in moldmakers %}{ nombre: "{{ t.nombre|escapejs }}" },{% endfor %}];
+    const defectosData = [{% if lista_defectos %}{% for d in lista_defectos %}{ nombre: "{{ d.nombre_defecto|escapejs }}" },{% endfor %}{% endif %}];
+
     let currentOrdenId = null;
+    let currentOrdenTipo = null; 
     let ordenesCache = [];
-    const tbody = document.getElementById('ordenes-tbody');
-    
-    // --- NUEVO: Referencias del Combobox del Modal ---
-    const comboInput = document.getElementById('modal-combo-input');
-    const comboList = document.getElementById('modal-combo-list');
+    let tempDetalles = []; 
 
-    // --- LÓGICA DEL COMBOBOX (Buscador) ---
-    function setupModalCombobox() {
-        
-        // Función para renderizar la lista filtrada
-        function renderOptions(query = '') {
-            comboList.innerHTML = '';
-            const lowerQuery = query.toLowerCase();
-            
-            const filtered = tecnicosData.filter(t => t.nombre.toLowerCase().includes(lowerQuery));
-
-            if (filtered.length === 0) {
-                comboList.innerHTML = '<div class="p-2 text-gray-400 text-xs italic">No encontrado</div>';
-            } else {
-                filtered.forEach(t => {
-                    const div = document.createElement('div');
-                    div.className = 'p-2 hover:bg-gray-600 cursor-pointer text-gray-200 text-sm border-b border-gray-600 last:border-0';
-                    div.textContent = t.nombre;
-                    div.onclick = () => {
-                        comboInput.value = t.nombre; // Llenar input
-                        comboList.classList.add('hidden'); // Cerrar lista
-                    };
-                    comboList.appendChild(div);
-                });
-            }
-        }
-
-        // Evento al escribir
-        comboInput.addEventListener('input', (e) => {
-            renderOptions(e.target.value);
-            comboList.classList.remove('hidden');
-        });
-
-        // Evento al hacer focus (mostrar todos)
-        comboInput.addEventListener('focus', () => {
-            renderOptions(comboInput.value); // Mostrar lista basada en lo que haya escrito (o todo)
-            comboList.classList.remove('hidden');
-        });
-
-        // Cerrar al hacer click fuera
-        document.addEventListener('click', (e) => {
-            if (!comboInput.contains(e.target) && !comboList.contains(e.target)) {
-                comboList.classList.add('hidden');
-            }
-        });
-    }
-
-    // Inicializar el combobox
-    setupModalCombobox();
-
-
-    // --- UTILS ---
+    // ---------------------------------------------------------
+    // 2. TIMER CORREGIDO (Detecta Pausa)
+    // ---------------------------------------------------------
     function formatSeconds(seconds) {
         if (seconds < 0) seconds = 0;
         const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
@@ -206,220 +212,227 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${h}:${m}:${s}`;
     }
 
-    function escapeHTML(str) {
-        if (!str) return '';
-        return str.toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
+    function updateAllTimers() {
+        const timers = document.querySelectorAll('.live-timer');
+        const ahora = new Date(); 
 
-    // --- RENDER TABLA ---
-    function renderTabla(ordenes) {
-        tbody.innerHTML = '';
-        if (!ordenes || ordenes.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="10" class="p-6 text-center text-gray-500 text-lg">No hay órdenes activas.</td></tr>';
-            return;
-        }
+        timers.forEach(cell => {
+            const span = cell.querySelector('.timer-text');
+            if (!span) return;
 
-        ordenes.forEach((orden, idx) => {
-            let tiempoInicial = orden.duracion_segundos || 0;
-            if (orden.estado === 'Activa' && orden.ultima_actualizacion_iso) {
-                const inicio = new Date(orden.ultima_actualizacion_iso);
-                const extra = Math.floor((new Date() - inicio) / 1000);
-                if (extra > 0) tiempoInicial += extra;
+            let total = parseInt(cell.dataset.acumulado) || 0;
+            const inicioIso = cell.dataset.inicio; // Si está vacía, es que está pausada
+
+            // Solo sumamos tiempo si hay fecha de inicio (Activa)
+            if (inicioIso && inicioIso !== 'None' && inicioIso !== '' && inicioIso !== 'null') {
+                const fechaInicio = new Date(inicioIso);
+                if (!isNaN(fechaInicio)) {
+                    const diff = Math.floor((ahora - fechaInicio) / 1000);
+                    if (diff > 0) total += diff;
+                }
             }
-
-            const tr = document.createElement('tr');
-            
-            // --- LÓGICA DE COLORES DE FILA ---
-            let rowClasses = 'cursor-pointer transition border-b border-gray-700 last:border-0 ';
-            
-            if (orden.estado === 'Pausada') {
-                // CAMBIO AQUÍ: Si está pausada, fondo amarillo oscuro/ámbar con texto más claro
-                rowClasses += 'bg-yellow-900/40 hover:bg-yellow-900/60 border-yellow-800'; 
-            } else {
-                // Si es normal (Activa), alternamos gris oscuro
-                rowClasses += (idx % 2 === 0 ? 'bg-gray-800' : 'bg-gray-750') + ' hover:bg-gray-700';
-            }
-            
-            tr.className = rowClasses;
-            
-            // Renderizado de celdas
-            tr.innerHTML = `
-                <td class="px-3 py-4 text-white font-medium whitespace-nowrap">${escapeHTML(orden.fecha_creacion).split(' ')[1] || '-'}</td>
-                <td class="px-3 py-4 text-blue-300 font-bold whitespace-nowrap">${escapeHTML(orden.mesa)}</td>
-                <td class="px-3 py-4 text-gray-200 truncate max-w-[150px]" title="${escapeHTML(orden.tecnico)}">${escapeHTML(orden.tecnico)}</td>
-                <td class="px-3 py-4 font-bold ${orden.tipo === 'MCM' ? 'text-purple-400' : 'text-blue-400'}">${escapeHTML(orden.tipo)}</td>
-                <td class="px-3 py-4 text-white font-bold text-base">${escapeHTML(orden.numero_orden)}</td>
-                
-                <td class="px-3 py-4">
-                    <span class="px-3 py-1 rounded-full text-xs font-bold border shadow-sm 
-                        ${orden.estado === 'Pausada' 
-                            ? 'bg-yellow-600 text-white border-yellow-500'  // Estilo badge Pausada
-                            : 'bg-gray-600 text-gray-100 border-gray-500'   // Estilo badge Normal
-                        }">
-                        ${escapeHTML(orden.status).substring(0, 12)}
-                    </span>
-                </td>
-
-                <td class="px-3 py-4 text-gray-300 truncate max-w-[120px]" title="${escapeHTML(orden.molde)}">${escapeHTML(orden.molde)}</td>
-                <td class="px-3 py-4 text-gray-300 font-medium">${escapeHTML(orden.cavidad)}</td>
-                <td class="px-3 py-4 text-gray-300 font-medium">${escapeHTML(orden.circuito)}</td>
-                
-                <td class="px-3 py-4 text-center font-mono text-xl font-bold live-timer 
-                    ${orden.estado === 'Pausada' ? 'text-yellow-400' : 'text-emerald-400'}" 
-                    data-acumulado="${orden.duracion_segundos}" 
-                    data-inicio="${orden.estado === 'Activa' ? (orden.ultima_actualizacion_iso || '') : ''}">
-                    <span class="timer-text">${formatSeconds(tiempoInicial)}</span>
-                    ${orden.estado === 'Pausada' ? '<span class="text-sm ml-1">⏸</span>' : ''}
-                </td>
-            `;
-            
-            if (orden.estado !== 'Finalizada') {
-                tr.addEventListener('click', () => openModal(orden));
-            }
-            tbody.appendChild(tr);
+            // Si no hay fecha (Pausa), 'total' se queda fijo y el reloj no avanza.
+            span.innerText = formatSeconds(total);
         });
     }
+    setInterval(updateAllTimers, 1000);
 
-    // --- FETCH ---
+    // ---------------------------------------------------------
+    // 3. API y TABLA (Corrección visual de Estatus vs Estado)
+    // ---------------------------------------------------------
     async function fetchOrdenes() {
         try {
             const res = await fetch("{% url 'Moldeo:api_ordenes_recientes' %}");
-            if(!res.ok) throw new Error();
             const data = await res.json();
             ordenesCache = data.ordenes;
             renderTabla(ordenesCache);
-
-            if(!document.getElementById('orden-modal').classList.contains('hidden') && currentOrdenId) {
-                const activeOrden = ordenesCache.find(o => o.id == currentOrdenId);
-                if(activeOrden) renderTecnicosModal(activeOrden.tecnicos_lista);
+            
+            if(currentOrdenId && !document.getElementById('orden-modal').classList.contains('hidden')) {
+                const active = ordenesCache.find(o => o.id == currentOrdenId);
+                if(active) {
+                    renderTecnicosModal(active.tecnicos_lista);
+                    actualizarBotonPausarVisual(active);
+                    // En el modal mostramos el estado del flujo (Activa/Pausada)
+                    document.getElementById('modal-estado').innerText = active.estado; 
+                }
             }
         } catch(e) { console.error(e); }
     }
 
-    // --- MODAL ---
+    setInterval(fetchOrdenes, 5000);
+    fetchOrdenes(); 
+
+    function renderTabla(ordenes) {
+        const tbody = document.getElementById('ordenes-tbody');
+        let htmlContent = '';
+
+        if(!ordenes || ordenes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" class="p-6 text-center text-gray-400">No hay órdenes en curso.</td></tr>'; 
+            return;
+        }
+        
+        ordenes.forEach((orden, idx) => {
+            // Cálculo inicial del tiempo
+            let tiempoInicial = orden.duracion_segundos || 0;
+            if(orden.estado === 'Activa' && orden.ultima_actualizacion_iso) {
+                tiempoInicial += Math.floor((new Date() - new Date(orden.ultima_actualizacion_iso))/1000);
+            }
+
+            // CORRECCIÓN VISUAL: Usamos orden.estado (Activa/Pausada) para los colores
+            const esPausada = (orden.estado === 'Pausada');
+            let bgFila = esPausada ? 'bg-yellow-900/40 hover:bg-yellow-900/50' : (idx%2===0 ? 'bg-gray-800' : 'bg-gray-750') + ' hover:bg-gray-700';
+            let colorTextoReloj = esPausada ? 'text-yellow-400' : 'text-emerald-400';
+            let iconoPausa = esPausada ? '<span class="ml-1 text-yellow-400 animate-pulse">⏸</span>' : '';
+
+            // CORRECCIÓN COLUMNA ESTATUS: Mostrar orden.status (Código 204, etc)
+            let codigoEstatus = orden.status ? orden.status : '-';
+
+            htmlContent += `
+            <tr class="cursor-pointer border-b border-gray-700 transition ${bgFila}" onclick="openModalById(${orden.id})">
+                <td class="px-3 py-4 text-xs text-white">${escapeHTML(orden.fecha_creacion)}</td>
+                <td class="px-3 py-4 text-blue-300 font-bold">${escapeHTML(orden.mesa)}</td>
+                <td class="px-3 py-4 text-gray-200 truncate max-w-[150px]">${escapeHTML(orden.tecnico)}</td>
+                <td class="px-3 py-4 font-bold text-blue-400">${escapeHTML(orden.tipo)}</td>
+                <td class="px-3 py-4 text-white font-bold text-base">${escapeHTML(orden.numero_orden)}</td>
+                
+                <td class="px-3 py-4">
+                    <span class="px-2 py-1 rounded text-xs font-bold border border-gray-600 bg-gray-700 text-gray-200">
+                        ${escapeHTML(codigoEstatus)}
+                    </span>
+                </td>
+
+                <td class="px-3 py-4 text-gray-300 truncate max-w-[120px]">${escapeHTML(orden.molde)}</td>
+                <td class="px-3 py-4 text-gray-300 font-medium">${escapeHTML(orden.cavidad)}</td>
+                <td class="px-3 py-4 text-gray-300 font-medium">${escapeHTML(orden.circuito)}</td>
+                
+                <td class="px-3 py-4 text-center font-bold ${colorTextoReloj} font-mono live-timer" 
+                    data-acumulado="${orden.duracion_segundos}" 
+                    data-inicio="${orden.ultima_actualizacion_iso || ''}">
+                    <span class="timer-text">${formatSeconds(tiempoInicial)}</span>
+                    ${iconoPausa}
+                </td>
+            </tr>`;
+        });
+        tbody.innerHTML = htmlContent;
+    }
+
+    window.openModalById = function(id) {
+        const orden = ordenesCache.find(o => o.id == id);
+        if(orden) openModal(orden);
+    };
+
+    // ---------------------------------------------------------
+    // 4. FUNCIONALIDAD DEL MODAL (PAUSAR / FINALIZAR)
+    // ---------------------------------------------------------
+    async function actualizarOrden(payload) {
+        if (!currentOrdenId) return;
+        const csrf = document.querySelector('input[name=csrfmiddlewaretoken]').value;
+        const url = `/moldeo/api/orden/${currentOrdenId}/actualizar/`;
+        try {
+            // Importante: Enviamos el payload tal cual. Si pausamos, solo enviamos { estado: 'Pausada' }
+            const response = await fetch(url, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf }, 
+                body: JSON.stringify({...payload, tipo: currentOrdenTipo})
+            });
+            if (!response.ok) throw new Error("Error actualización");
+            document.getElementById('orden-modal').classList.add('hidden');
+            fetchOrdenes();
+        } catch (error) { console.error(error); alert("Error al actualizar."); }
+    }
+
+    // BOTÓN PAUSA CORREGIDO
+    document.getElementById('modal-pausar-btn').onclick = () => {
+        const ordenActual = ordenesCache.find(o => o.id == currentOrdenId);
+        if(!ordenActual) return;
+
+        // Leemos el ESTADO (Flujo), no el status
+        const estadoFlujo = ordenActual.estado; // 'Activa' o 'Pausada'
+        
+        // Invertimos
+        const nuevoEstado = (estadoFlujo === 'Pausada') ? 'Activa' : 'Pausada';
+
+        // Enviamos SOLO 'estado', para no tocar el 'status' (código mantenimiento)
+        actualizarOrden({ estado: nuevoEstado });
+    };
+
+    function actualizarBotonPausarVisual(orden) {
+        const btn = document.getElementById('modal-pausar-btn');
+        if (orden.estado === 'Pausada') {
+            btn.innerText = "Reanudar";
+            btn.className = "bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-6 rounded text-sm shadow-lg border border-green-700";
+        } else {
+            btn.innerText = "Pausar";
+            btn.className = "bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-6 rounded text-sm shadow-lg border border-yellow-700";
+        }
+    }
+
+    // ---------------------------------------------------------
+    // 5. RESTO DE FUNCIONES (Modal, Cards, Combobox, etc)
+    // ---------------------------------------------------------
+    // (Copia aquí tu lógica de openModal, renderTecnicosModal, setupCombobox, 
+    //  gestionarTecnicoAPI, etc. tal como la tenías funcionando).
+    
+    // ... [PEGAR AQUÍ TU CÓDIGO DE MODAL Y TARJETAS] ... 
+    
+    // -- PEGAR ESTO PARA QUE FUNCIONE SI COPIAS Y PEGAS --
     function openModal(orden) {
-        currentOrdenId = orden.id;
+        currentOrdenId = orden.id; currentOrdenTipo = orden.tipo; 
         document.getElementById('modal-titulo').innerText = `Orden ${orden.numero_orden}`;
         document.getElementById('modal-orden-id').value = orden.id;
-        document.getElementById('modal-defecto-sap').innerText = orden.defecto_sap;
-        document.getElementById('modal-estado').innerText = orden.estado;
-        document.getElementById('modal-defecto-real').innerText = orden.defecto_real;
+        document.getElementById('modal-defecto-sap').innerText = orden.defecto_sap || '-';
+        document.getElementById('modal-molde').innerText = orden.molde || 'N/A';
+        document.getElementById('modal-estado').innerText = orden.estado; // Mostramos el estado del flujo
         document.getElementById('modal-comentarios').value = orden.comentarios || '';
-        document.getElementById('btn-imprimir-formato').href = `/moldeo/orden/${orden.id}/${orden.tipo}/imprimir/`;
-
-        // Limpiar el input de agregar técnico al abrir
-        comboInput.value = '';
-
-        const btnPausa = document.getElementById('modal-pausar-btn');
-        if(orden.estado === 'Pausada') {
-            btnPausa.innerText = "Reanudar";
-            btnPausa.className = "bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-5 rounded text-base transition";
+        document.getElementById('modal-lider').innerText = orden.lider;
+        
+        const btnTomar = document.getElementById('btn-tomar-orden');
+        const elLider = document.getElementById('modal-lider');
+        if (soyLider && !orden.tiene_lider) {
+            btnTomar.classList.remove('hidden'); elLider.classList.add('text-yellow-400');
+            btnTomar.onclick = () => { if(confirm("¿Tomar?")) tomarOrdenAPI(orden.id, orden.tipo); };
         } else {
-            btnPausa.innerText = "Pausar";
-            btnPausa.className = "bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-5 rounded text-base transition";
+            btnTomar.classList.add('hidden'); elLider.classList.remove('text-yellow-400');
         }
-
+        actualizarBotonPausarVisual(orden);
         renderTecnicosModal(orden.tecnicos_lista);
         document.getElementById('orden-modal').classList.remove('hidden');
     }
-
-    function renderTecnicosModal(lista) {
-        const container = document.getElementById('modal-lista-tecnicos');
-        container.innerHTML = '';
-        if(!lista || lista.length === 0) {
-            container.innerHTML = '<p class="text-sm text-gray-500 italic">Sin técnicos asignados.</p>';
-            return;
-        }
-
-        lista.forEach(t => {
-            const div = document.createElement('div');
-            if(t.activo) {
-                div.className = "flex justify-between items-center bg-gray-800 p-3 rounded border-l-4 border-green-500 mb-1 shadow-sm";
-                div.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                        <span class="text-base font-bold text-white">${escapeHTML(t.nombre)}</span>
-                    </div>
-                    <button onclick="gestionarTecnico('baja', ${t.id})" class="text-xs bg-red-900 text-red-200 hover:bg-red-700 px-3 py-1 rounded font-bold uppercase tracking-wider transition">Salida</button>
-                `;
-            } else {
-                div.className = "flex justify-between items-center bg-gray-800/50 p-2 rounded border-l-4 border-gray-600 mb-1 opacity-60";
-                div.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <span class="w-2 h-2 bg-gray-600 rounded-full"></span>
-                        <span class="text-sm text-gray-400 line-through font-medium">${escapeHTML(t.nombre)}</span>
-                    </div>
-                    <span class="text-xs text-gray-500 font-mono">Fin: ${t.fecha_fin || '--:--'}</span>
-                `;
-            }
-            container.appendChild(div);
-        });
-    }
-
-    // --- API CALLS ---
-    window.gestionarTecnico = async (accion, itemId=null) => {
-        // CAMBIO: Leemos del input del combobox en lugar del select
-        const nombre = comboInput.value; 
-        
-        if(accion === 'agregar' && !nombre) return alert("Escribe o selecciona un técnico");
-        if(accion === 'baja' && !confirm("¿Confirmar salida?")) return;
-
-        const csrf = document.querySelector('input[name=csrfmiddlewaretoken]').value;
-        await fetch(`/moldeo/api/orden/${currentOrdenId}/tecnicos/`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrf},
-            body: JSON.stringify({accion, item_id: itemId, nombre})
-        });
-        
-        // Limpiar input si se agregó
-        if(accion === 'agregar') comboInput.value = "";
-        
-        fetchOrdenes(); 
-    };
-
-    document.getElementById('btn-agregar-tecnico').onclick = () => gestionarTecnico('agregar');
     document.getElementById('modal-close-btn').onclick = () => document.getElementById('orden-modal').classList.add('hidden');
-
-    async function actualizarOrden(payload) {
-        const csrf = document.querySelector('input[name=csrfmiddlewaretoken]').value;
-        await fetch(`/moldeo/api/orden/${currentOrdenId}/actualizar/`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrf},
-            body: JSON.stringify(payload)
-        });
-        document.getElementById('orden-modal').classList.add('hidden');
-        fetchOrdenes();
-    }
-
-    document.getElementById('modal-pausar-btn').onclick = () => {
-        const estadoActual = document.getElementById('modal-estado').innerText;
-        actualizarOrden({ estado: estadoActual === 'Pausada' ? 'Activa' : 'Pausada' });
-    };
+    document.getElementById('modal-finalizar-btn').onclick = () => { if(confirm("¿Finalizar?")) actualizarOrden({ estado: 'Finalizada' }); };
+    document.getElementById('modal-guardar-comentarios').onclick = () => { actualizarOrden({ comentarios: document.getElementById('modal-comentarios').value }); };
     
-    document.getElementById('modal-finalizar-btn').onclick = () => {
-        if(confirm("¿Finalizar orden?")) actualizarOrden({ estado: 'Finalizada' });
-    };
-
-    document.getElementById('modal-guardar-comentarios').onclick = () => {
-        actualizarOrden({ comentarios: document.getElementById('modal-comentarios').value });
-    };
-
-    setInterval(updateAllTimers, 1000);
-    setInterval(fetchOrdenes, 5000);
-    fetchOrdenes();
-
-    function updateAllTimers() {
-        document.querySelectorAll('.live-timer').forEach(cell => {
-            const acc = parseInt(cell.dataset.acumulado) || 0;
-            const ini = cell.dataset.inicio;
-            let total = acc;
-            if(ini) {
-                const diff = Math.floor((new Date() - new Date(ini))/1000);
-                if(diff > 0) total += diff;
-            }
-            cell.querySelector('.timer-text').innerText = formatSeconds(total);
+    // (Asegúrate de incluir las funciones setupCombobox, btnAddDetalle, renderTecnicosModal, etc. abajo)
+    // ...
+    // Funciones auxiliares
+    function escapeHTML(str) { return str ? str.toString().replace(/&/g, '&amp;').replace(/</g, '&lt;') : ''; }
+    
+    window.renderTecnicosModal = function(lista) { 
+        const c=document.getElementById('modal-lista-tecnicos'); c.innerHTML=''; 
+        if(!lista.length){ c.innerHTML='<div class="p-8 text-center text-gray-500 italic">Sin técnicos</div>'; return; }
+        lista.forEach(i=>{ 
+            const card=document.createElement('div'); card.className=`rounded-lg border border-slate-700 mb-4 overflow-hidden shadow-sm ${i.activo?'bg-[#1e293b]':'bg-gray-800/30 opacity-70'}`;
+            let b=i.activo?`<div class="flex gap-2"><button onclick="abrirRelevo(${i.id},'${escapeHTML(i.nombre)}')" class="bg-yellow-600 text-white text-[10px] font-bold py-1 px-3 rounded">RELEVO</button><button onclick="gestionarTecnicoAPI('baja',{item_id:${i.id}})" class="bg-red-700 text-white text-[10px] font-bold py-1 px-3 rounded">SALIDA</button></div>`:`<span class="text-[10px] text-gray-500">FIN: ${i.fecha_fin}</span>`;
+            card.innerHTML=`<div class="flex justify-between items-center p-3 border-b border-slate-700 bg-slate-800/50"><div class="flex items-center gap-3"><span class="w-3 h-3 rounded-full ${i.activo?'bg-green-500 shadow-[0_0_5px_#22c55e]':'bg-gray-600'}"></span><span class="font-bold text-white text-sm uppercase">${escapeHTML(i.nombre)}</span><span class="text-blue-400 text-xs font-mono">Mesa: ${escapeHTML(i.mesa)}</span></div>${b}</div>`;
+            const bd=document.createElement('div'); bd.className="p-0 bg-[#1e293b]";
+            bd.innerHTML=`<div class="grid grid-cols-12 text-[10px] font-bold text-gray-500 uppercase px-4 py-2 border-b border-slate-700/50"><div class="col-span-6">DEFECTO</div><div class="col-span-3 text-center">CAVIDAD</div><div class="col-span-3 text-center">CIRCUITO</div></div>`;
+            (i.detalles||[{defecto:i.defecto||'-',cav:i.cavidad||'-',circ:i.circuito||'-'}]).forEach((d,x)=>{
+                const r=document.createElement('div'); r.className=`grid grid-cols-12 items-center px-4 py-2 text-xs text-gray-300 border-b border-gray-700/30 last:border-0 ${x%2===0?'bg-slate-800/40':'bg-transparent'}`;
+                r.innerHTML=`<div class="col-span-6 font-bold text-gray-200"><span class="text-red-500 mr-2 text-[6px]">●</span>${escapeHTML(d.defecto)}</div><div class="col-span-3 text-center font-mono text-blue-400">${escapeHTML(d.cav)}</div><div class="col-span-3 text-center font-mono text-yellow-500">${escapeHTML(d.circ)}</div>`;
+                bd.appendChild(r);
+            });
+            card.appendChild(bd); c.appendChild(card);
         });
-    }
+    };
+    function setupCombobox(i,l,d){const I=document.getElementById(i),L=document.getElementById(l);if(!I||!L)return; function P(){const r=I.getBoundingClientRect();L.style.position='fixed';L.style.left=r.left+'px';L.style.width=r.width+'px';L.style.zIndex=10000;L.style.maxHeight='150px';L.style.overflowY='auto';if(window.innerHeight-r.bottom<200){L.style.top='auto';L.style.bottom=(window.innerHeight-r.top+2)+'px';}else{L.style.bottom='auto';L.style.top=(r.bottom+2)+'px';}} function R(q=''){L.innerHTML='';const f=d.filter(x=>x.nombre.toLowerCase().includes(q.toLowerCase()));if(!f.length){L.classList.add('hidden');return;}L.classList.remove('hidden');P();f.forEach(x=>{const D=document.createElement('div');D.className='p-2 hover:bg-blue-600 cursor-pointer text-xs bg-gray-700 text-white border-b border-gray-600';D.textContent=x.nombre;D.onmousedown=()=>{I.value=x.nombre;L.classList.add('hidden');};L.appendChild(D);});} I.addEventListener('input',e=>R(e.target.value));I.addEventListener('focus',()=>R(I.value));I.addEventListener('click',()=>R(I.value));window.addEventListener('scroll',e=>{if(!L.contains(e.target))L.classList.add('hidden');},true);document.addEventListener('mousedown',e=>{if(!I.contains(e.target)&&!L.contains(e.target))L.classList.add('hidden');});}
+    setupCombobox('add-nombre','add-combo-list',tecnicosData);setupCombobox('relevo-input','relevo-list',tecnicosData);setupCombobox('temp-defecto','temp-defecto-list',defectosData);
+    const B=document.getElementById('btn-add-detalle-temp');if(B)B.onclick=(e)=>{e.preventDefault();const d=document.getElementById('temp-defecto').value,c=document.getElementById('temp-cav').value,z=document.getElementById('temp-circ').value;if(!d)return alert("Defecto?");tempDetalles.push({defecto:d,cav:c||'-',circ:z||'-'});renderListaTemporal();document.getElementById('temp-defecto').value='';};
+    function renderListaTemporal(){const l=document.getElementById('lista-detalles-temp');l.innerHTML='';tempDetalles.forEach((x,i)=>{const li=document.createElement('li');li.className="flex justify-between bg-gray-900/50 px-2 py-1 rounded text-xs border border-gray-700";li.innerHTML=`<span>${x.defecto}</span><button onclick="removerDetalle(${i})" class="text-red-500">&times;</button>`;l.appendChild(li);});}
+    window.removerDetalle=i=>{tempDetalles.splice(i,1);renderListaTemporal();};
+    document.getElementById('btn-guardar-extra').onclick=()=>{const n=document.getElementById('add-nombre').value,m=document.getElementById('add-mesa').value;if(!n)return alert("Nombre?");gestionarTecnicoAPI('agregar',{nombre:n,mesa:m,detalles:tempDetalles});document.getElementById('add-nombre').value='';tempDetalles=[];renderListaTemporal();};
+    window.abrirRelevo=(id,n)=>{document.getElementById('relevo-id-saliente').value=id;document.getElementById('relevo-saliente-nombre').innerText=n;document.getElementById('relevo-input').value='';document.getElementById('relevo-dialog').classList.remove('hidden');};
+    document.getElementById('btn-confirmar-relevo').onclick=()=>{const n=document.getElementById('relevo-input').value;if(!n)return;gestionarTecnicoAPI('relevo',{item_id_saliente:document.getElementById('relevo-id-saliente').value,nombre_entrante:n});document.getElementById('relevo-dialog').classList.add('hidden');};
+    window.gestionarTecnicoAPI=async(a,x)=>{const c=document.querySelector('input[name=csrfmiddlewaretoken]').value;if(a==='baja'&&!confirm("¿Salir?"))return;try{const r=await fetch(`/moldeo/api/orden/${currentOrdenId}/tecnicos/`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':c},body:JSON.stringify({accion:a,tipo:currentOrdenTipo,...x})});if((await r.json()).success)fetchOrdenes();}catch(e){}};
+    window.tomarOrdenAPI=async(i,t)=>{const c=document.querySelector('input[name=csrfmiddlewaretoken]').value;try{await fetch(`/moldeo/api/orden/${i}/actualizar/`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':c},body:JSON.stringify({tipo:t,accion:'asignar_lider'})});document.getElementById('orden-modal').classList.add('hidden');fetchOrdenes();}catch(e){}};
 });
 </script>
 {% endblock scripts %}

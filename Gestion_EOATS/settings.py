@@ -128,3 +128,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+# Cuando el usuario hace login exitoso, lo mandamos a tu función de redirección
+LOGIN_REDIRECT_URL = 'inicio_redireccion'
+
+# 2. Al salir, volver al login
+LOGOUT_REDIRECT_URL = 'login'
+
+# 3. URL de login (por si intentan entrar a una zona prohibida)
+LOGIN_URL = 'login'

@@ -4,6 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from itertools import chain 
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.models import User
 
 
 # Create your models here.
@@ -200,6 +201,7 @@ class OrdenBase(models.Model):
         (ESTADO_FINALIZADA, 'Finalizada'),
     ]
     fecha_creacion = models.DateTimeField(auto_now_add=True) 
+    fecha_cierre = models.DateTimeField(null=True, blank=True)
     numero_orden = models.CharField(max_length=50, unique=True)
     estado = models.CharField(
         max_length=20,
@@ -210,12 +212,21 @@ class OrdenBase(models.Model):
     comentarios = models.TextField(blank=True, default='')
     # --- RELACIONES GENÉRICAS INVERSAS ---
     # Esto nos permite hacer "mi_orden.tecnicos.all()"
-    tecnicos = GenericRelation('ItemTecnico', related_query_name='orden')
-    mesas = GenericRelation('ItemMesa', related_query_name='orden')
-    cavidades = GenericRelation('ItemCavidad', related_query_name='orden')
-    circuitos = GenericRelation('ItemCircuito', related_query_name='orden')
+    asignaciones = GenericRelation('AsignacionUniversal')
+    #tecnicos = GenericRelation('ItemTecnico', related_query_name='orden')
+    #mesas = GenericRelation('ItemMesa', related_query_name='orden')
+    #cavidades = GenericRelation('ItemCavidad', related_query_name='orden')
+    #circuitos = GenericRelation('ItemCircuito', related_query_name='orden')
+    #defectos = GenericRelation('ItemDefecto', related_query_name='orden')
     duracion_segundos = models.IntegerField(default=0) 
-    ultima_actualizacion = models.DateTimeField(auto_now_add=True)
+    ultima_actualizacion = models.DateTimeField(null=True, blank=True)
+    lider = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='%(class)s_lideradas' # Esto evita conflictos de nombres
+    )
     class Meta:
         abstract = True # No crea una tabla "OrdenBase" en la BD
 
@@ -227,66 +238,109 @@ class OrdenMCM(OrdenBase):
     defecto_real = models.TextField()
     molde =models.ForeignKey(Moldes, on_delete=models.SET_NULL,null=True,blank=True,related_name='ordenes_mcm',db_constraint=False)
     status=models.CharField(max_length=5,blank=True, null=True)
+    motivo_retorno = models.CharField(max_length=100, blank=True, null=True)
+    observaciones_retorno = models.TextField(blank=True, null=True)
     def __str__(self):
         return f"Orden MCM {self.numero_orden}"
 
 class OrdenCHO(OrdenBase):
-   
+  status=models.CharField(max_length=5,blank=True, null=True) 
   molde =models.ForeignKey(Moldes, on_delete=models.SET_NULL,null=True,blank=True,related_name='ordenes_cho',db_constraint=False)
  
 class OrdenTPM(OrdenBase):
+    status=models.CharField(max_length=5,blank=True, null=True)
     molde =models.ForeignKey(Moldes, on_delete=models.SET_NULL,null=True,blank=True,related_name='ordenes_tpm',db_constraint=False)
-
+    def __str__(self):
+            return f"Orden TPM {self.numero_orden}"
 class OrdenPREP(OrdenBase):
+    status=models.CharField(max_length=5,blank=True, null=True)
     molde =models.ForeignKey(Moldes, on_delete=models.SET_NULL,null=True,blank=True,related_name='ordenes_prep',db_constraint=False)
-   
-# --- 3. MODELOS GENÉRICOS RELACIONADOS ---
-class ItemTecnico(models.Model):
-    nombre = models.CharField(max_length=100) 
+
+class AsignacionUniversal(models.Model):
+    # Conexión
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
-    activo = models.BooleanField(default=True) # True = Trabajando, False = Ya salió
+
+    # Datos
+    nombre_tecnico = models.CharField(max_length=200) # OBLIGATORIO
+    mesa = models.CharField(max_length=50, blank=True, null=True)     # OPCIONAL
+    cavidad = models.CharField(max_length=255, blank=True, null=True)  # OPCIONAL
+    circuito = models.CharField(max_length=255, blank=True, null=True) # OPCIONAL   
+    activo = models.BooleanField(default=True) # True = Trabajando, False = Salió
+    tipo_sistema = models.CharField(max_length=50, default='Estandar')
+    defecto = models.CharField(max_length=255, blank=True, null=True)
     fecha_inicio = models.DateTimeField(auto_now_add=True)
     fecha_fin = models.DateTimeField(null=True, blank=True)
+    detalles_json = models.TextField(blank=True, null=True, default='[]')
     def __str__(self):
-        return f"{self.nombre}"
-
-class ItemMesa(models.Model):
-    nombre = models.CharField(max_length=50) 
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey('content_type', 'object_id')
-
-    def __str__(self):
-        return f"{self.nombre}"
-
-class ItemCavidad(models.Model):
-    nombre = models.CharField(max_length=50)
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey('content_type', 'object_id')
-
-    def __str__(self):
-        return f"{self.nombre}"
+        status = "🟢" if self.activo else "🔴"
+        return f"{status} {self.nombre_tecnico} en {self.content_object}"
     
-class ItemCircuito(models.Model):
-    nombre = models.CharField(max_length=50)
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey('content_type', 'object_id')
+    class Meta:
+        indexes = [
+            models.Index(fields=["content_type", "object_id"]),
+        ]
+# --- 3. MODELOS GENÉRICOS RELACIONADOS ---
+#class ItemTecnico(models.Model):
+#    nombre = models.CharField(max_length=100) 
+#    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+#   object_id = models.PositiveIntegerField()
+#    content_object = GenericForeignKey('content_type', 'object_id')
+#    activo = models.BooleanField(default=True) # True = Trabajando, False = Ya salió
+#    fecha_inicio = models.DateTimeField(auto_now_add=True)
+#    fecha_fin = models.DateTimeField(null=True, blank=True)
+#    def __str__(self):
+#        return f"{self.nombre}"
 
-    def __str__(self):
-        return f"{self.nombre}"
+#class ItemMesa(models.Model):
+#    nombre = models.CharField(max_length=50) 
+#    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+#    object_id = models.PositiveIntegerField()
+#    content_object = GenericForeignKey('content_type', 'object_id')
+
+#    def __str__(self):
+#        return f"{self.nombre}"
+
+#class ItemCavidad(models.Model):
+#    nombre = models.CharField(max_length=50)
+#    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+#    object_id = models.PositiveIntegerField()
+#    content_object = GenericForeignKey('content_type', 'object_id')
+#
+#    def __str__(self):
+#        return f"{self.nombre}"
+    
+#class ItemCircuito(models.Model):
+#    nombre = models.CharField(max_length=50)
+#    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+#    object_id = models.PositiveIntegerField()
+#    content_object = GenericForeignKey('content_type', 'object_id')
+
+#    def __str__(self):
+#        return f"{self.nombre}"
 class OrdenSAP(models.Model):
     order = models.CharField(max_length=50, unique=True)      
     description = models.TextField(blank=True, null=True)    
     work_center = models.CharField(max_length=50, blank=True, null=True) 
-    equipment = models.CharField(max_length=50, blank=True, null=True)   
+    equipment = models.CharField(max_length=50, blank=True, null=True)  
+    fecha_inicio = models.DateField(null=True, blank=True)
+     
 
     def __str__(self):
         return self.order  
+#class ItemDefecto(models.Model):
+    # Relación Genérica (Para vincularlo a OrdenMCM o cualquier otra orden futura)
+#    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+#    object_id = models.PositiveIntegerField()
+#    content_object = GenericForeignKey('content_type', 'object_id')
 
+    # El dato que guardamos
+#    nombre = models.CharField(max_length=255)  # Aquí guardamos el nombre del defecto
+#    fecha_registro = models.DateTimeField(auto_now_add=True)
+
+ #   def __str__(self):
+ #       return self.nombre
 
 
     

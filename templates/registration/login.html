@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Gestión EOATS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 h-screen flex items-center justify-center">
+
+    <div class="bg-gray-800 p-8 rounded-lg shadow-2xl w-full max-w-md border border-gray-700 relative overflow-hidden">
+        
+        <div id="loader" class="absolute inset-0 bg-gray-900/80 z-50 hidden flex items-center justify-center">
+            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500"></div>
+        </div>
+
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-white mb-2">Bienvenido</h1>
+            <p class="text-gray-400 text-sm">Sistema de Gestión EOATS</p>
+        </div>
+
+        <form method="post" id="login-form" class="space-y-6">
+            {% csrf_token %}
+            
+            {% if error %}
+                <div class="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded text-sm text-center">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Usuario </label>
+                <div class="relative">
+                    <input type="text" id="username" name="username" value="{{ username|default:'' }}" 
+                           class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-3 pr-10 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition"
+                           placeholder="Ingrese su usuario..." autocomplete="off" required>
+                    
+                    <div id="user-status-icon" class="absolute right-3 top-3 hidden">
+                        </div>
+                </div>
+                <p id="user-msg" class="text-xs mt-1 h-4"></p>
+            </div>
+
+            <div id="password-container" class="hidden transition-all duration-300">
+                <label class="block text-sm font-medium text-gray-300 mb-1">Contraseña</label>
+                <input type="password" id="password" name="password" 
+                       class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+            </div>
+
+            <button type="submit" id="btn-submit" disabled
+                    class="w-full bg-gray-600 text-gray-300 font-bold py-3 rounded-lg shadow-lg transition transform cursor-not-allowed">
+                Ingrese Usuario...
+            </button>
+        </form>
+        
+        <p class="mt-6 text-center text-xs text-gray-500">
+            &copy; 2025 TE Connectivity
+        </p>
+    </div>
+
+<script>
+    const inputUser = document.getElementById('username');
+    const inputPass = document.getElementById('password');
+    const passContainer = document.getElementById('password-container');
+    const btnSubmit = document.getElementById('btn-submit');
+    const userMsg = document.getElementById('user-msg');
+    const loader = document.getElementById('loader');
+    const statusIcon = document.getElementById('user-status-icon');
+
+    // Timer para no llamar a la API con cada tecla, sino al dejar de escribir
+    let typingTimer;
+
+    inputUser.addEventListener('input', () => {
+        clearTimeout(typingTimer);
+        resetState();
+        if(inputUser.value.trim()) {
+            typingTimer = setTimeout(checkUser, 500); // Espera 500ms
+        }
+    });
+
+    async function checkUser() {
+        const username = inputUser.value.trim();
+        if(!username) return;
+
+        // Mostrar cargando pequeñito
+        userMsg.textContent = "Verificando...";
+        userMsg.className = "text-xs mt-1 h-4 text-blue-400";
+
+        try {
+            const csrf = document.querySelector('input[name=csrfmiddlewaretoken]').value;
+            const res = await fetch('/api/check-user/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrf},
+                body: JSON.stringify({ username: username })
+            });
+            
+            const data = await res.json();
+
+            if (data.exists) {
+                // Usuario encontrado
+                userMsg.textContent = "";
+                statusIcon.innerHTML = '<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+                statusIcon.classList.remove('hidden');
+
+                if (data.needs_password) {
+                    // MODO CON CONTRASEÑA
+                    passContainer.classList.remove('hidden');
+                    inputPass.required = true;
+                    btnSubmit.textContent = "Iniciar Sesión";
+                    btnSubmit.className = "w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-lg shadow-lg transition transform hover:scale-[1.02]";
+                    btnSubmit.disabled = false;
+                    inputPass.focus();
+                } else {
+                    // MODO SIN CONTRASEÑA
+                    passContainer.classList.add('hidden');
+                    inputPass.required = false;
+                    inputPass.value = ""; // Limpiar por seguridad
+                    btnSubmit.textContent = "Entrar sin contraseña";
+                    btnSubmit.className = "w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition transform hover:scale-[1.02]";
+                    btnSubmit.disabled = false;
+                }
+            } else {
+                // Usuario no existe
+                userMsg.textContent = "Usuario no encontrado";
+                userMsg.className = "text-xs mt-1 h-4 text-red-400";
+                statusIcon.innerHTML = '<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+                statusIcon.classList.remove('hidden');
+                blockSubmit();
+            }
+
+        } catch (e) {
+            console.error(e);
+            userMsg.textContent = "Error de conexión";
+        }
+    }
+
+    function resetState() {
+        passContainer.classList.add('hidden');
+        inputPass.value = '';
+        statusIcon.classList.add('hidden');
+        userMsg.textContent = '';
+        blockSubmit();
+    }
+
+    function blockSubmit() {
+        btnSubmit.textContent = "Ingrese Usuario...";
+        btnSubmit.className = "w-full bg-gray-600 text-gray-300 font-bold py-3 rounded-lg shadow-lg transition transform cursor-not-allowed";
+        btnSubmit.disabled = true;
+    }
+
+    // Efecto visual al enviar
+    document.getElementById('login-form').onsubmit = () => {
+        loader.classList.remove('hidden');
+    };
+</script>
+
+</body>
+</html>

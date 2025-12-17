@@ -26,7 +26,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8; /* Un gris/azul muy claro */
+            background-color: #f8f5f0; /* Un gris/azul muy claro */
         }
         .app-card {
             transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
@@ -41,7 +41,7 @@
 
     <div class="max-w-4xl w-full p-8">
         <header class="text-center mb-12">
-            <h1 class="text-4xl font-bold text-gray-800">Sistema de Gestión de Manufactura</h1>
+            <h1 class="text-4xl font-bold text-gray-800">Sistema de Gestión </h1>
             <p class="text-lg text-gray-600 mt-2">Selecciona el módulo al que deseas acceder.</p>
         </header>
 
@@ -60,7 +60,7 @@
                         </div>
                         <div>
                             <h2 class="text-2xl font-bold text-gray-800">Gestión de EOATs</h2>
-                            <p class="text-gray-600 mt-1">Bitácoras, refacciones y localización de herramentales.</p>
+                            <p class="text-gray-600 mt-1">Bitácoras, refacciones y localización de EOATs.</p>
                         </div>
                     </div>
                 </div>
@@ -75,7 +75,7 @@
                 Esto te llevará a tu OTRA aplicación.
                 Deberás crear una URL para esta (ej. 'dashboard_moldeo').
             -->
-            <a href="{% url 'Moldeo:panel_principal' %}" class="app-card bg-white rounded-xl shadow-lg overflow-hidden">
+            <a href="{% url 'Moldeo:ordenes_en_curso' %}" class="app-card bg-white  rounded-xl shadow-lg overflow-hidden">
                 <div class="p-8">
                     <div class="flex items-center space-x-5">
                         <div class="p-4 bg-green-100 rounded-full">
@@ -83,7 +83,7 @@
                         </div>
                         <div>
                             <h2 class="text-2xl font-bold text-gray-800">Gestión de Moldeo</h2>
-                            <p class="text-gray-600 mt-1">Parámetros, ciclos y eficiencia de máquinas.</p>
+                            <p class="text-gray-600 mt-1">.</p>
                         </div>
                     </div>
                 </div>
@@ -96,7 +96,7 @@
         </main>
         
         <footer class="text-center mt-12 text-gray-500">
-            &copy; {% now "Y" %} Tu Compañía. Todos los derechos reservados.
+            &copy; {% now "Y" %} TE Connectivity. 
         </footer>
     </div>
 

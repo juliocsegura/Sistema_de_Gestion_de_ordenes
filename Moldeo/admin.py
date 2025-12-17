@@ -1,12 +1,14 @@
 from django.contrib import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
-from django.contrib.contenttypes.models import ContentType
-# Register your models here.
+from django.utils.html import format_html
+import json
+
 from .models import (
     Actividades, Defectos, Estatus, Lideres, Maquinas, Moldmakers, Moldes,
-    NumerosDeParte, Retorno, RetornoInfo, Semana, Zonas, Bitacora,OrdenMCM, OrdenCHO, OrdenTPM,
-    ItemTecnico, ItemMesa, ItemCavidad,ItemCircuito
+    NumerosDeParte, Retorno, RetornoInfo, Semana, Zonas, Bitacora,
+    OrdenMCM, OrdenCHO, OrdenTPM, OrdenPREP, OrdenSAP, AsignacionUniversal
 )
+
 # ---------------------------------
 # Tablas de referencia / maestros
 # ---------------------------------
@@ -17,6 +19,7 @@ class ActividadesAdmin(admin.ModelAdmin):
 @admin.register(Defectos)
 class DefectosAdmin(admin.ModelAdmin):
     list_display = ('id_defecto', 'nombre_defecto', 'main_activity')
+    search_fields = ('nombre_defecto',)
 
 @admin.register(Estatus)
 class EstatusAdmin(admin.ModelAdmin):
@@ -37,6 +40,7 @@ class MoldmakersAdmin(admin.ModelAdmin):
 @admin.register(Moldes)
 class MoldesAdmin(admin.ModelAdmin):
     list_display = ('id_molde', 'numero_molde')
+    search_fields = ('numero_molde',)
 
 @admin.register(NumerosDeParte)
 class NumerosDeParteAdmin(admin.ModelAdmin):
@@ -58,6 +62,13 @@ class SemanaAdmin(admin.ModelAdmin):
 class ZonasAdmin(admin.ModelAdmin):
     list_display = ('id_zona', 'zona', 'wc', 'mn')
 
+@admin.register(OrdenSAP)
+class OrdenSAPAdmin(admin.ModelAdmin):
+    list_display = ('order', 'description', 'work_center', 'equipment', 'fecha_inicio')
+    search_fields = ('order', 'description', 'equipment', 'work_center')
+    list_filter = ('fecha_inicio', 'work_center')
+    ordering = ('-fecha_inicio',)
+
 # ---------------------------------
 # Tabla principal de bitácora
 # ---------------------------------
@@ -65,88 +76,88 @@ class ZonasAdmin(admin.ModelAdmin):
 class BitacoraAdmin(admin.ModelAdmin):
     list_display = (
         'fecha', 'orden', 'maquina', 'molde', 'parte_actual', 'parte_entrante',
-        'defecto1', 'cavidad1', 'defecto2', 'cavidad2', 'defecto3', 'cavidad3',
-        'tecnico1', 'tecnico2', 'tecnico3', 'tecnico4', 'tecnico5', 'tecnico6',
-        'tecnico7', 'tecnico8', 'tecnico9', 'lider1', 'lider2', 'fecha_paro',
-        'fecha_entrega', 'duracion', 'hora_entrega', 'retorno', 'estatus',
-        'info_retorno', 'defecto_retorno', 'lider_retorno', 'tecnico_retorno',
-        'estatus2', 'actividad', 'prioridad', 'comentarios'
+        'defecto1', 'estatus'
     )
     list_filter = ('fecha', 'maquina', 'molde', 'lider1', 'lider2', 'estatus')
-    search_fields = ('orden', 'molde', 'parte_actual', 'parte_entrante', 'defecto1', 'defecto2', 'defecto3')
+    search_fields = ('orden', 'molde__numero_molde')
 
+# ---------------------------------
+# Configuración para las Órdenes Nuevas
+# ---------------------------------
 
-class TecnicoInline(GenericTabularInline):
-    model = ItemTecnico
-    extra = 1 
-
-class MesaInline(GenericTabularInline):
-    model = ItemMesa
-    extra = 1
-
-class CavidadInline(GenericTabularInline):
-    model = ItemCavidad
-    extra = 1
-
+class AsignacionUniversalInline(GenericTabularInline):
+    model = AsignacionUniversal
+    extra = 0
+    can_delete = True
+    fields = ('nombre_tecnico', 'mesa', 'defecto', 'detalles_json', 'activo', 'fecha_inicio', 'fecha_fin')
+    readonly_fields = ('fecha_inicio', 'fecha_fin')
 
 class OrdenAdminBase(admin.ModelAdmin):
-  
-    inlines = [
-        TecnicoInline,
-        MesaInline,
-        CavidadInline,
-    ]
-    
-    list_display = ('numero_orden', 'fecha_creacion')
-    
-    list_filter = ('fecha_creacion',)
-   
-    search_fields = ('numero_orden','numero_molde')
+    list_display = ('numero_orden', 'ver_molde', 'status', 'estado', 'fecha_creacion', 'ver_tecnicos_resumen')
+    list_filter = ('fecha_creacion', 'estado', 'status', 'tipo_mntn')
+    search_fields = ('numero_orden', 'molde__numero_molde')
+    inlines = [AsignacionUniversalInline] 
 
+    def ver_molde(self, obj):
+        return obj.molde.numero_molde if obj.molde else "N/A"
+    ver_molde.short_description = "Molde"
+
+    def ver_tecnicos_resumen(self, obj):
+        asignaciones = obj.asignaciones.filter(activo=True)
+        nombres = [a.nombre_tecnico for a in asignaciones]
+        return ", ".join(nombres) if nombres else "Sin asignar"
+    ver_tecnicos_resumen.short_description = "Técnicos Activos"
 
 @admin.register(OrdenMCM)
 class OrdenMCMAdmin(OrdenAdminBase):
-    list_display = ('numero_orden', 'fecha_creacion','status', 'ver_tecnicos', 'ver_mesas', 'ver_cavidades','ver_circuitos','tipo_mntn')
-    search_fields = ('numero_orden', )
-
+    list_display = ('numero_orden', 'ver_molde', 'status', 'ver_tecnicos_resumen', 'motivo_retorno', 'ver_detalles_json')
+    search_fields = ('numero_orden', 'molde__numero_molde')
     
-    def ver_tecnicos(self, obj):
+    # --- AQUÍ ESTÁ LA LÓGICA DE ETIQUETAS DINÁMICAS ---
+    def ver_detalles_json(self, obj):
+        asignaciones = obj.asignaciones.all()
+        html = ""
+        for a in asignaciones:
+            try:
+                detalles = json.loads(a.detalles_json) if a.detalles_json else []
+                info_tecnico = f"<strong>{a.nombre_tecnico} (Mesa {a.mesa}):</strong><br>"
+                info_detalles = ""
+                
+                for d in detalles:
+                    defecto_nombre = d.get('defecto', '').upper()
+                    valor_cav = d.get('cav', '-')
+                    valor_circ = d.get('circ', '-')
+                    
+                    # Determinar etiquetas según el defecto
+                    label_cav = "Cav"
+                    label_circ = "Circ"
+                    
+                    if "HOT RUNNER" in defecto_nombre or "COLADA CALIENTE" in defecto_nombre:
+                        label_cav = "Drop"
+                        label_circ = "Zona"
+                    elif "FALLA DE SENSORES" in defecto_nombre or "SENSOR" in defecto_nombre:
+                        label_cav = "PG"
+                        label_circ = "EO"
+                    
+                    # Construir la línea
+                    info_detalles += f"- {d.get('defecto')} ({label_cav}: {valor_cav}, {label_circ}: {valor_circ})<br>"
+                
+                html += f"<div style='margin-bottom:5px; border-bottom:1px solid #eee; padding-bottom:2px;'>{info_tecnico}{info_detalles}</div>"
+            except:
+                html += f"{a.nombre_tecnico}: Error de formato<br>"
         
-        ct = ContentType.objects.get_for_model(obj)
-        items = ItemTecnico.objects.filter(content_type=ct, object_id=obj.id)
-        return ", ".join([str(item) for item in items]) or "-"
+        return format_html(html)
     
-    ver_tecnicos.short_description = "Técnicos" 
+    ver_detalles_json.short_description = "Detalles (Técnicos)"
 
-   
-    def ver_mesas(self, obj):
-        ct = ContentType.objects.get_for_model(obj)
-        items = ItemMesa.objects.filter(content_type=ct, object_id=obj.id)
-        return ", ".join([str(item) for item in items]) or "-"
-    
-    ver_mesas.short_description = "Mesas"
-
-  
-    def ver_cavidades(self, obj):
-        ct = ContentType.objects.get_for_model(obj)
-        items = ItemCavidad.objects.filter(content_type=ct, object_id=obj.id)
-        return ", ".join([str(item) for item in items]) or "-"
-    
-    ver_cavidades.short_description = "Cavidades"
-    
-    def ver_circuitos(self, obj):
-        ct = ContentType.objects.get_for_model(obj)
-        items = ItemCircuito.objects.filter(content_type=ct, object_id=obj.id)
-        return ", ".join([str(item) for item in items]) or "-"
-    
-    ver_cavidades.short_description = "Circuito"   
 @admin.register(OrdenCHO)
 class OrdenCHOAdmin(OrdenAdminBase):
-    
-    list_display = ('numero_orden', 'fecha_creacion',)
     pass
 
 @admin.register(OrdenTPM)
 class OrdenTPMAdmin(OrdenAdminBase):
     pass
 
+@admin.register(OrdenPREP)
+class OrdenPREPAdmin(OrdenAdminBase):
+    pass

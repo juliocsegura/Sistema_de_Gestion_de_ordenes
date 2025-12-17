@@ -7,7 +7,10 @@
     
     <div class="flex flex-col md:flex-row justify-between items-center mb-6 mt-8 gap-4">
         <div class="flex items-center gap-4">
-            <h2 class="text-3xl font-bold text-gray-200">Historial Finalizadas</h2>
+            <h2 class="text-3xl font-bold text-gray-200 flex items-center gap-2">
+                <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Historial Finalizadas
+            </h2>
         </div>
         
         <div class="relative w-full md:w-96">
@@ -15,8 +18,8 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </span>
             <input type="text" id="searchInput" onkeyup="filtrarTabla()" 
-                   placeholder="Buscar orden, molde, técnico..." 
-                   class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-colors placeholder-gray-400">
+                   placeholder="Buscar por orden, técnico, molde..." 
+                   class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm placeholder-gray-400">
         </div>
     </div>
 
@@ -26,8 +29,11 @@
             Regresar
         </a>
         <a href="{% url 'Moldeo:ordenes_en_curso' %}" class="inline-flex items-center bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             Ver En Curso
+        </a>
+        <a href="{% url 'Moldeo:exportar_excel' %}" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2 px-4 rounded-lg shadow hover:scale-105 transition text-sm ml-auto">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+            Excel
         </a>
     </div>
 
@@ -35,245 +41,267 @@
         <table class="w-full min-w-full table-fixed" id="tablaFinalizadas">
             <thead class="bg-gray-700 border-b border-gray-600">
                 <tr>
-                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-24">Orden</th>
-                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-32">Molde</th>
-                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-40">Defecto</th>
-                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-32">Técnico</th>
-                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-32">Inicio</th>
-                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-32">Fin</th>
-                    <th class="px-3 py-4 text-center text-sm font-bold text-gray-200 uppercase tracking-wider w-32">Duración</th>
-                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-48">Comentarios</th>
+                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase w-24">Orden</th>
+                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase w-32">Molde</th>
+                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase w-40">Defecto</th>
+                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase w-32">Líder</th>
+                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase w-20">Tipo</th>
+                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase w-28">Fin</th>
+                    <th class="px-3 py-4 text-center text-sm font-bold text-yellow-400 uppercase w-24" title="Tiempo trabajado">T. Activo</th>
+                    <th class="px-3 py-4 text-center text-sm font-bold text-blue-400 uppercase w-24" title="Tiempo total">T. Real</th>
+                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase w-48">Comentarios</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-700">
                 {% for orden in ordenes %}
-                <tr class="hover:bg-gray-750 transition duration-150 border-b border-gray-700 last:border-0 cursor-pointer fila-orden" 
-                    data-index="{{ forloop.counter0 }}">
+                <tr class="hover:bg-gray-700 transition duration-150 border-b border-gray-700 last:border-0 cursor-pointer fila-orden group" 
+                    onclick="abrirModalDesdeFila(this)">
                     
-                    <td class="px-3 py-4 font-bold text-white text-base">{{ orden.numero_orden }}</td>
-                    <td class="px-3 py-4 text-gray-300 truncate max-w-[120px]" title="{{ orden.molde }}">{{ orden.molde }}</td>
-                    <td class="px-3 py-4 text-gray-400 truncate max-w-[150px]" title="{{ orden.defecto }}">{{ orden.defecto }}</td>
-                    <td class="px-3 py-4 text-blue-300 font-medium truncate max-w-[120px]" title="{{ orden.tecnico }}">{{ orden.tecnico }}</td>
-                    <td class="px-3 py-4 text-sm text-gray-400">{{ orden.fecha_inicio|date:"d/m H:i" }}</td>
-                    <td class="px-3 py-4 text-sm text-green-400">{{ orden.fecha_fin|date:"d/m H:i" }}</td>
+                    <td class="hidden">
+                        <textarea class="data-json hidden">
+                            {
+                                "id": "{{ orden.id }}",
+                                "numero": "{{ orden.numero_orden }}",
+                                "tipo": "{{ orden.tipo }}",
+                                "molde": "{{ orden.molde|escapejs }}",
+                                "defecto_sap": "{{ orden.defecto|escapejs }}",
+                                "lider": "{{ orden.lider|escapejs }}",
+                                "fecha_inicio": "{{ orden.fecha_inicio|date:'d/m/Y H:i' }}",
+                                "fecha_fin": "{{ orden.fecha_fin|date:'d/m/Y H:i' }}",
+                                "tiempo_activo": "{{ orden.tiempo_activo_fmt }}",
+                                "tiempo_real": "{{ orden.tiempo_real_fmt }}",
+                                "comentarios": "{{ orden.comentarios|escapejs }}",
+                                "tecnicos": [
+                                    {% for t in orden.lista_tecnicos %}
+                                    {
+                                        "nombre": "{{ t.nombre|escapejs }}",
+                                        "defecto": "{{ t.defecto|escapejs }}",
+                                        "mesa": "{{ t.mesa|escapejs }}",
+                                        "cavidad": "{{ t.cavidad|escapejs }}",
+                                        "circuito": "{{ t.circuito|escapejs }}",
+                                        "inicio": "{{ t.inicio }}",
+                                        "fin": "{{ t.fin }}"
+                                    }{% if not forloop.last %},{% endif %}
+                                    {% endfor %}
+                                ]
+                            }
+                        </textarea>
+                    </td>
+                    <td class="px-3 py-4 font-bold text-white text-base group-hover:text-blue-300 transition">{{ orden.numero_orden }}</td>
+                    <td class="px-3 py-4 text-gray-300 truncate max-w-[120px]">{{ orden.molde }}</td>
+                    <td class="px-3 py-4 text-gray-400 truncate max-w-[150px]">{{ orden.defecto }}</td>
+                    <td class="px-3 py-4 text-gray-300 text-xs font-medium uppercase">{{ orden.lider }}</td>
+                    
+                    <td class="px-3 py-4 text-center font-bold">
+                        {% if orden.tipo == 'MCM' %} <span class="text-red-400">MCM</span>
+                        {% elif orden.tipo == 'CHO' %} <span class="text-orange-400">CHO</span>
+                        {% elif orden.tipo == 'TPM' %} <span class="text-yellow-400">TPM</span>
+                        {% else %} <span class="text-blue-400">{{ orden.tipo }}</span>
+                        {% endif %}
+                    </td>
+                    
+                    <td class="px-3 py-4 text-xs text-gray-400 font-mono">{{ orden.fecha_fin|date:"d/m H:i" }}</td>
+                    
                     <td class="px-3 py-4 text-center">
-                        <span class="bg-gray-900 text-emerald-400 font-mono font-bold px-3 py-1 rounded border border-gray-600 shadow-sm text-sm">
-                            {{ orden.duracion_fmt }}
+                        <span class="font-mono text-xs text-yellow-200 bg-yellow-900/30 border border-yellow-800 px-2 py-1 rounded">
+                            {{ orden.tiempo_activo_fmt }}
                         </span>
                     </td>
-                    <td class="px-3 py-4 text-sm text-gray-500 italic truncate max-w-[200px]" title="{{ orden.comentarios }}">
-                        {{ orden.comentarios|default:"-" }}
+
+                    <td class="px-3 py-4 text-center">
+                        <span class="font-mono text-xs text-blue-200 bg-blue-900/30 border border-blue-800 px-2 py-1 rounded font-bold">
+                            {{ orden.tiempo_real_fmt }}
+                        </span>
                     </td>
+
+                    <td class="px-3 py-4 text-xs italic text-gray-500 truncate max-w-[200px]">{{ orden.comentarios }}</td>
                 </tr>
                 {% empty %}
-                <tr>
-                    <td colspan="8" class="p-8 text-center text-gray-500 text-lg">No hay historial disponible.</td>
-                </tr>
+                <tr><td colspan="9" class="p-8 text-center text-gray-500 text-lg italic">No hay historial disponible.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
 
-<div id="modal-detalle" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 hidden backdrop-blur-sm transition-opacity">
-    <div class="bg-gray-800 text-gray-200 rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col border border-gray-600 transform transition-all scale-100">
+<div id="modal-finalizada" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 hidden backdrop-blur-sm transition-opacity duration-300">
+    <div class="bg-gray-800 text-gray-200 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border border-gray-600">
         
-        <div class="flex justify-between items-center border-b border-gray-700 p-5 bg-gray-900">
+        <div class="flex justify-between items-center border-b border-gray-700 p-4 bg-gray-900">
             <div>
-                <h3 class="text-2xl font-bold text-white" id="md-titulo">Orden Finalizada</h3>
-                <span class="text-xs text-green-400 font-mono uppercase tracking-widest">Estado: COMPLETADA</span>
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <span id="modal-titulo">Cargando...</span>
+                    <span class="bg-red-900 text-red-100 text-xs px-2 py-0.5 rounded border border-red-700 uppercase font-bold tracking-wider">Finalizada</span>
+                </h3>
+                <span id="modal-fechas" class="text-xs text-gray-400 font-mono mt-1 block"></span>
             </div>
-            <button onclick="cerrarModal()" class="text-gray-400 hover:text-white text-3xl transition">&times;</button>
+            <button onclick="cerrarModal()" class="text-gray-400 hover:text-white text-3xl focus:outline-none transition">&times;</button>
         </div>
 
-        <div class="p-6 space-y-6 overflow-y-auto bg-gray-800 custom-scrollbar">
+        <div class="p-6 space-y-6 overflow-y-auto bg-gray-800 custom-scrollbar flex-1">
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-gray-700/40 p-3 rounded border border-gray-600">
-                    <label class="text-xs text-blue-400 uppercase font-bold tracking-wider">Defecto SAP</label>
-                    <p id="md-defecto-sap" class="text-white font-medium text-lg mt-1"></p>
+                <div class="bg-gray-700/50 p-3 rounded border border-gray-600">
+                    <label class="text-[10px] text-blue-400 uppercase font-bold tracking-wider">Defecto SAP</label>
+                    <p id="modal-defecto" class="font-medium text-white text-sm mt-1">-</p>
                 </div>
-                <div class="bg-gray-700/40 p-3 rounded border border-gray-600">
-                    <label class="text-xs text-blue-400 uppercase font-bold tracking-wider">Molde</label>
-                    <p id="md-molde" class="text-white font-medium text-lg mt-1"></p>
+                <div class="bg-gray-700/50 p-3 rounded border border-gray-600">
+                    <label class="text-[10px] text-blue-400 uppercase font-bold tracking-wider">Molde / Equipo</label>
+                    <p id="modal-molde" class="font-medium text-white text-sm mt-1">-</p>
                 </div>
-                <div class="bg-gray-700/40 p-3 rounded border border-gray-600">
-                    <label class="text-xs text-blue-400 uppercase font-bold tracking-wider">Duración Total</label>
-                    <p id="md-duracion" class="text-emerald-400 font-mono font-bold text-lg mt-1"></p>
+                <div class="bg-gray-700/50 p-3 rounded border border-gray-600">
+                    <label class="text-[10px] text-blue-400 uppercase font-bold tracking-wider">Líder Responsable</label>
+                    <p id="modal-lider" class="font-medium text-white text-sm mt-1 uppercase">-</p>
                 </div>
             </div>
 
-            <div class="space-y-4">
-                <div>
-                    <label class="text-xs text-gray-500 uppercase font-bold">Defecto Real Reportado</label>
-                    <div id="md-defecto-real" class="bg-gray-900 p-3 rounded text-gray-300 text-sm border border-gray-700 mt-1 min-h-[40px]"></div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-yellow-900/20 p-3 rounded border border-yellow-800/50 flex flex-col items-center">
+                    <label class="text-[10px] text-yellow-500 uppercase font-bold tracking-wider">Tiempo Activo (Man Hours)</label>
+                    <span id="modal-t-activo" class="text-xl font-mono text-yellow-200 font-bold mt-1">00:00:00</span>
                 </div>
-                <div>
-                    <label class="text-xs text-gray-500 uppercase font-bold">Comentarios Finales</label>
-                    <div id="md-comentarios" class="bg-gray-900 p-3 rounded text-gray-300 text-sm border border-gray-700 mt-1 italic min-h-[40px]"></div>
+                <div class="bg-blue-900/20 p-3 rounded border border-blue-800/50 flex flex-col items-center">
+                    <label class="text-[10px] text-blue-400 uppercase font-bold tracking-wider">Tiempo Real (Turnaround)</label>
+                    <span id="modal-t-real" class="text-xl font-mono text-blue-200 font-bold mt-1">00:00:00</span>
                 </div>
+            </div>
+
+            <div class="border border-gray-600 rounded-lg bg-gray-900/40 overflow-hidden">
+                <div class="p-3 bg-gray-900 border-b border-gray-600">
+                    <h4 class="text-sm font-bold text-gray-300 uppercase flex items-center gap-2">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        Historial de Asignaciones
+                    </h4>
+                </div>
+
+                <div class="grid grid-cols-12 gap-2 px-3 py-2 bg-gray-800 text-[10px] font-bold text-gray-500 uppercase border-b border-gray-700">
+                    <div class="col-span-3">Técnico</div>
+                    <div class="col-span-4">Defectos Atendidos</div>
+                    <div class="col-span-1 text-center">Mesa</div>
+                    <div class="col-span-1 text-center">Cav/Drop</div>
+                    <div class="col-span-1 text-center">Circ/Zona</div>
+                    <div class="col-span-2 text-right">Horario</div>
+                </div>
+                
+                <div id="modal-lista-tecnicos" class="max-h-60 overflow-y-auto custom-scrollbar p-1 space-y-1 bg-gray-800">
+                    </div>
             </div>
 
             <div>
-                <label class="text-xs text-gray-500 uppercase font-bold mb-2 block">Historial de Técnicos (Turnos)</label>
-                <div class="overflow-hidden rounded-lg border border-gray-700">
-                    <table class="w-full text-sm text-left text-gray-400">
-                        <thead class="text-xs text-gray-300 uppercase bg-gray-700">
-                            <tr>
-                                <th class="px-4 py-2">Técnico</th>
-                                <th class="px-4 py-2">Hora Entrada</th>
-                                <th class="px-4 py-2">Hora Salida</th>
-                            </tr>
-                        </thead>
-                        <tbody id="md-tabla-tecnicos" class="bg-gray-800 divide-y divide-gray-700">
-                            </tbody>
-                    </table>
+                <label class="text-xs text-gray-400 uppercase font-bold">Comentarios / Bitácora</label>
+                <div class="mt-1 bg-gray-700/30 border border-gray-600 rounded p-3 text-sm text-gray-300 italic min-h-[60px]" id="modal-comentarios">
+                    - Sin comentarios -
                 </div>
-            </div>
-
-            <div class="flex justify-between text-xs text-gray-500 border-t border-gray-700 pt-4">
-                <p>Fecha Inicio: <span id="md-fecha-inicio" class="text-gray-300 font-mono"></span></p>
-                <p>Fecha Cierre: <span id="md-fecha-fin" class="text-gray-300 font-mono"></span></p>
             </div>
         </div>
 
-        <div class="bg-gray-900 p-4 border-t border-gray-700 flex justify-end gap-3">
-            <button onclick="cerrarModal()" class="px-5 py-2 rounded-lg text-gray-300 hover:bg-gray-700 font-semibold transition text-sm">
+        <div class="flex justify-end gap-3 bg-gray-900 p-4 border-t border-gray-700">
+            <button onclick="cerrarModal()" class="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded font-bold text-sm transition shadow-lg border border-gray-600">
                 Cerrar
             </button>
-            <a id="md-btn-imprimir" href="#" target="_blank" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow flex items-center gap-2 transition hover:scale-105">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                Imprimir Reporte
-            </a>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script i>
-const ordenesData = [
-        {% for orden in ordenes %}
-        {
-            id: "{{ orden.id }}",
-            tipo: "{{ orden.tipo }}",
-            numero_orden: "{{ orden.numero_orden }}",
-            molde: "{{ orden.molde|escapejs }}",
-            defecto_sap: "{{ orden.defecto|escapejs }}",
-            defecto_real: "{{ orden.defecto_real|escapejs|default:'-' }}",
-            duracion: "{{ orden.duracion_fmt }}",
-            comentarios: "{{ orden.comentarios|escapejs|default:'' }}",
-            inicio: "{{ orden.fecha_inicio|date:'d/m H:i' }}",
-            fin: "{{ orden.fecha_fin|date:'d/m H:i' }}",
+<script>
+    // --- ABRIR MODAL LEYENDO DATOS DE LA FILA ---
+    function abrirModalDesdeFila(trElement) {
+        // Buscamos el textarea oculto DENTRO de la fila clickeada
+        const textArea = trElement.querySelector('.data-json');
+        
+        if (!textArea) {
+            console.error("No se encontraron datos en esta fila.");
+            return;
+        }
+
+        try {
+            const data = JSON.parse(textArea.value);
+
+            // 1. Datos Generales
+            document.getElementById('modal-titulo').innerText = `${data.tipo} - ${data.numero}`;
+            document.getElementById('modal-fechas').innerText = `Inicio: ${data.fecha_inicio} | Fin: ${data.fecha_fin}`;
             
-            // Aquí iteramos manualmente la lista de técnicos para asegurarnos que el formato sea correcto
-            lista_tecnicos: [
-                {% for t in orden.lista_tecnicos %}
-                {
-                    nombre: "{{ t.nombre|escapejs }}",
-                    inicio: "{{ t.inicio }}",
-                    fin: "{{ t.fin }}"
-                },
-                {% endfor %}
-            ]
-        },
-        {% endfor %}
-    ];
+            document.getElementById('modal-defecto').innerText = data.defecto_sap || '-';
+            document.getElementById('modal-molde').innerText = data.molde || 'N/A';
+            document.getElementById('modal-lider').innerText = data.lider || 'Sin Líder Asignado';
+            document.getElementById('modal-comentarios').innerText = data.comentarios ? data.comentarios : '- Sin comentarios -';
 
-    // Variables globales
-    const modal = document.getElementById('modal-detalle');
+            // 2. Tiempos (NUEVO)
+            document.getElementById('modal-t-activo').innerText = data.tiempo_activo || "00:00:00";
+            document.getElementById('modal-t-real').innerText = data.tiempo_real || "00:00:00";
 
-    document.addEventListener('DOMContentLoaded', () => {
-        // Asignar eventos click a las filas usando el índice
-        const rows = document.querySelectorAll('.fila-orden');
-        rows.forEach(row => {
-            row.addEventListener('click', () => {
-                const index = row.getAttribute('data-index');
-                // Buscamos los datos en nuestro array seguro
-                if(ordenesData[index]) {
-                    populateModal(ordenesData[index]);
-                }
-            });
-        });
-    });
+            // 3. Tabla de Técnicos
+            const listaContainer = document.getElementById('modal-lista-tecnicos');
+            listaContainer.innerHTML = '';
 
-    // Función para llenar el modal con datos
-    function populateModal(data) {
-        document.getElementById('md-titulo').textContent = `Orden ${data.numero_orden} (${data.tipo})`;
-        document.getElementById('md-defecto-sap').textContent = data.defecto_sap;
-        document.getElementById('md-molde').textContent = data.molde;
-        document.getElementById('md-duracion').textContent = data.duracion;
-        
-        document.getElementById('md-defecto-real').textContent = data.defecto_real;
-        document.getElementById('md-comentarios').textContent = data.comentarios || 'Sin comentarios adicionales.';
-        
-        document.getElementById('md-fecha-inicio').textContent = data.inicio;
-        document.getElementById('md-fecha-fin').textContent = data.fin;
-        
-        // URL para imprimir
-        const btnImprimir = document.getElementById('md-btn-imprimir');
-        if(btnImprimir) {
-            btnImprimir.href = `/moldeo/orden/${data.id}/${data.tipo}/imprimir/`;
+            if(data.tecnicos && data.tecnicos.length > 0) {
+                data.tecnicos.forEach(t => {
+                    const div = document.createElement('div');
+                    div.className = "grid grid-cols-12 gap-2 items-center p-2 rounded text-xs border-b border-gray-700/50 last:border-0 bg-gray-800/30 text-gray-400 hover:bg-gray-700/20 transition";
+
+                    // Etiquetas Rojas
+                    let defectosHTML = '';
+                    if (t.defecto && t.defecto !== '-' && t.defecto.trim() !== '') {
+                        t.defecto.split(',').forEach(d => {
+                            if(d.trim()) {
+                                defectosHTML += `<span class="inline-flex items-center bg-red-900/30 text-red-300 border border-red-800/30 px-1.5 py-0.5 rounded text-[10px] mr-1 mb-1 shadow-sm max-w-full truncate">${d.trim()}</span>`;
+                            }
+                        });
+                    } else {
+                        defectosHTML = '<span class="italic opacity-50 text-[10px]">-</span>';
+                    }
+
+                    // Ubicación
+                    let ubicacionStr = `<span class="text-blue-400/80 font-bold font-mono">${t.mesa}</span>`;
+                    if (t.cavidad && t.cavidad !== '-') ubicacionStr += ` <span class="text-gray-600 mx-1">|</span> ${t.cavidad}`;
+                    if (t.circuito && t.circuito !== '-') ubicacionStr += ` <span class="text-gray-600 mx-1">/</span> ${t.circuito}`;
+
+                    div.innerHTML = `
+                        <div class="col-span-3 font-bold truncate text-gray-300" title="${t.nombre}">${t.nombre}</div>
+                        <div class="col-span-3 leading-tight flex flex-wrap content-center">${defectosHTML}</div>
+                        
+                        <div class="col-span-1 text-center text-[10px] font-mono text-blue-400 font-bold truncate">${t.mesa}</div>
+                        <div class="col-span-1 text-center text-[10px] font-mono text-gray-400 truncate">${t.cavidad}</div>
+                        <div class="col-span-1 text-center text-[10px] font-mono text-gray-400 truncate">${t.circuito}</div>
+                        
+                        <div class="col-span-3 text-right font-mono text-[10px] opacity-70">
+                            ${t.inicio} <br> ${t.fin}
+                        </div>
+                    `;
+                    listaContainer.appendChild(div);
+                });
+            } else {
+                listaContainer.innerHTML = '<div class="p-8 text-center text-gray-600 italic text-sm">No se registraron asignaciones.</div>';
+            }
+
+            // 4. Mostrar
+            document.getElementById('modal-finalizada').classList.remove('hidden');
+
+        } catch(e) {
+            console.error("Error al leer JSON:", e);
+            alert("Error al cargar detalles.");
         }
-
-        // Llenar tabla de historial de técnicos
-        const tbodyTec = document.getElementById('md-tabla-tecnicos');
-        tbodyTec.innerHTML = '';
-        
-        if (data.lista_tecnicos && data.lista_tecnicos.length > 0) {
-            data.lista_tecnicos.forEach(t => {
-                const tr = document.createElement('tr');
-                tr.className = 'border-b border-gray-700 hover:bg-gray-700/50 transition';
-                tr.innerHTML = `
-                    <td class="px-4 py-3 font-medium text-white">${t.nombre}</td>
-                    <td class="px-4 py-3 text-gray-400 text-xs">${t.inicio}</td>
-                    <td class="px-4 py-3 text-gray-400 text-xs">${t.fin}</td>
-                `;
-                tbodyTec.appendChild(tr);
-            });
-        } else {
-            tbodyTec.innerHTML = '<tr><td colspan="3" class="px-4 py-4 text-center italic text-gray-500">No hay registro de técnicos.</td></tr>';
-        }
-
-        modal.classList.remove('hidden');
     }
 
     function cerrarModal() {
-        modal.classList.add('hidden');
+        document.getElementById('modal-finalizada').classList.add('hidden');
     }
 
-    // Filtrado de tabla
-    window.filtrarTabla = function() {
+    function filtrarTabla() {
         const input = document.getElementById('searchInput');
         const filter = input.value.toUpperCase();
-        const table = document.getElementById('tablaFinalizadas');
-        const tr = table.getElementsByTagName('tr');
+        const tr = document.querySelectorAll('#tablaFinalizadas tbody tr');
 
-        for (let i = 1; i < tr.length; i++) { 
-            let visible = false;
-            const tds = tr[i].getElementsByTagName('td');
-            for (let j = 0; j < tds.length; j++) {
-                if (tds[j]) {
-                    const txtValue = tds[j].textContent || tds[j].innerText;
-                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                        visible = true;
-                        break; 
-                    }
-                }
-            }
-            tr[i].style.display = visible ? "" : "none";
-        }
-    };
+        tr.forEach(row => {
+            const text = row.innerText;
+            row.style.display = text.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+        });
+    }
 
-    // Cerrar con tecla Escape
-    window.addEventListener('keydown', (e) => {
-        if(e.key === 'Escape') cerrarModal();
-    });
-    
-    // Cerrar al hacer clic fuera del modal
-    modal.addEventListener('click', (e) => {
-        if(e.target === modal) cerrarModal();
-    });
-
+    document.addEventListener('keydown', (e) => { if(e.key === 'Escape') cerrarModal(); });
+    const modal = document.getElementById('modal-finalizada');
+    if(modal) modal.addEventListener('click', (e) => { if (e.target === modal) cerrarModal(); });
 </script>
-{% endblock scripts %}
+{% endblock %}

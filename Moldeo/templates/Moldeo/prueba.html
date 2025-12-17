@@ -1,402 +1,657 @@
-<!-- 1. Heredamos TODO de 'base.html' -->
 {% extends 'Moldeo/base.html' %}
 
-<!-- 2. (Opcional) Cambiamos el título de la pestaña del navegador -->
 {% block title %}Registrar Orden - MCM{% endblock %}
 
-<!-- 3. Definimos el contenido específico para esta página -->
-
 {% block content %}
-
 <div class="container mx-auto max-w-7xl px-4 py-12">
     <div class="mb-6">
-        <a href="javascript:history.back()" 
-           class="inline-flex items-center bg-gray-600 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg transition-colors">
-            <!-- Icono de flecha izquierda -->
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-            </svg>
+        <a href="javascript:history.back()" class="inline-flex items-center bg-gray-600 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             Regresar
         </a>
     </div>
-    <h1 class="text-4xl font-bold text-center text-gray-100 mb-8">
-        Registrar Orden (MCM)
-    </h1>
+    
+    <h1 class="text-4xl font-bold text-center text-gray-100 mb-8">Registrar Orden (MCM)</h1>
 
-    <!-- Formulario con fondo oscuro -->
-    <!-- CORRECCIÓN: El formulario ahora apunta a 'registrar_mcm' -->
-    <form action="{% url 'Moldeo:registrar_mcm' %}" method="POST" class="w-full max-w-7xl mx-auto bg-gray-800 p-8 rounded-lg shadow-xl space-y-6">
+    <form id="form-registro" action="" method="POST" class="w-full max-w-7xl mx-auto bg-gray-800 rounded-lg shadow-xl border border-gray-700 overflow-visible" novalidate>
         {% csrf_token %}
+        <input type="hidden" name="asignaciones_json" id="asignaciones-json">
 
-        <!-- Mostrar mensajes de error -->
-        {% if messages %}
-            <div class="mb-4">
-                {% for message in messages %}
-                    <div class{% if message.tags %}="p-4 rounded-md 
-                        {% if message.tags == 'error' %}bg-red-800 text-red-100
-                        {% elif message.tags == 'success' %}bg-green-800 text-green-100
-                        {% else %}bg-blue-800 text-blue-100{% endif %}"
-                        {% else %}"p-4 bg-gray-700 text-gray-200 rounded-md"{% endif %} 
-                        role="alert">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-
-        <!-- Clases comunes para inputs y labels -->
-        {% comment %} 
-        Input: "w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-indigo-500 focus:border-indigo-500"
-        Label: "block text-sm font-medium text-gray-300 mb-1"
-        {% endcomment %}
-
-        <!-- CAMPOS ESTÁTICOS -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div>
-                <label for="numero_orden" class="block text-sm font-medium text-gray-300 mb-1">Número de Orden</label>
-                  <div class="relative">
-                        <input type="text" id="numero_orden" name="numero_orden" required
-                            value="{{ pre_orden }}"
-                            readonly
-                            class="block w-full bg-gray-600 border border-gray-500 text-gray-200 rounded-md shadow-sm py-2 pl-3 pr-10 focus:outline-none font-bold cursor-not-allowed">
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 pointer-events-none">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                           <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-                                    </svg>      
-                        </div>
-                  </div>
-       
-            </div>
-            <div>
-                <label for="defecto_sap" class="block text-sm font-medium text-gray-300 mb-1">Defecto SAP</label>
-                    <div class="relative">
-                        <input type="text" id="defecto_sap" name="defecto_sap" required
-                            value="{{ pre_defecto }}"
-                            readonly
-                            class="block w-full bg-gray-600 border border-gray-500 text-gray-200 rounded-md shadow-sm py-2 pl-3 pr-10 focus:outline-none font-bold cursor-not-allowed">
-                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 pointer-events-none">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-                                        </svg>
-                            </div>  
-                    </div>
-            </div>
-        </div>
-
-        <!-- ¡CAMPO 'MOLDE' AÑADIDO! -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-1">Molde</label>
-                        
-                        <div class="relative">
-                            <input 
-                                type="text" 
-                                value="{{ pre_molde_nombre }}" 
-                                readonly
-                                class="block w-full bg-gray-600 border border-gray-500 text-gray-200 rounded-md shadow-sm py-2 pl-3 pr-10 focus:outline-none font-bold cursor-not-allowed"
-                            >
-                            
-                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 pointer-events-none">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                        </div>
-
-                        <input type="hidden" name="molde" value="{{ pre_molde_pk }}">
-                    </div>
-                    <div>
-               
-                    <div>
-                        <label for="statusmcm" class="block text-sm font-medium text-gray-300 mb-1">
-                            Status
-                        </label>
-                        <div class="relative">
-                            
-                            <input 
-                                type="text" 
-                                id="statusmcm" 
-                                name="statusmcm" 
-                                value="{{ status_actual }}" 
-                                readonly
-                                class="block w-full bg-gray-600 border border-gray-500 text-gray-300 rounded-md shadow-sm py-2 pl-3 pr-10 focus:outline-none font-bold cursor-not-allowed"
-                            >
-                            
-                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 pointer-events-none">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-            </div>          
-        </div>
-        <div>
-            <label for="defecto_real" class="block text-sm font-medium text-gray-300 mb-1">Defecto Real</label>
-            <textarea id="defecto_real" name="defecto_real" rows="3" required
-                      class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-indigo-500 focus:border-indigo-500"></textarea>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-
-            <div class="border-t border-gray-700 pt-6">
-                <div class="flex justify-between items-center mb-4">
-                    <label class="text-lg font-semibold text-white">Técnicos</label>
-                    <button type="button" id="add-tecnico-btn" 
-                            class="bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold py-1 px-3 rounded transition whitespace-nowrap">
-                        + Añadir
-                    </button>
-                </div>
-                <div id="tecnicos-wrapper" class="space-y-4">
-                    </div>
-            </div>
-
-            <div class="border-t border-gray-700 pt-6">
-                <div class="flex justify-between items-center mb-4">
-                    <label class="text-lg font-semibold text-white">Mesas</label>
-                    <button type="button" id="add-mesa-btn" 
-                            class="bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold py-1 px-3 rounded transition whitespace-nowrap">
-                        + Añadir
-                    </button>
-                </div>
-                <div id="mesas-wrapper" class="space-y-3">
-                    <div class="flex items-center">
-                        <input type="text" name="mesas" placeholder="Mesa 1" required
-                            class="w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                </div>
-            </div>
-
-            <div class="border-t border-gray-700 pt-6">
-                <div class="flex justify-between items-center mb-4">
-                    <label class="text-lg font-semibold text-white">Cavidades</label>
-                    <button type="button" id="add-cavidad-btn" 
-                            class="bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold py-1 px-3 rounded transition whitespace-nowrap">
-                        + Añadir
-                    </button>
-                </div>
-                <div id="cavidades-wrapper" class="space-y-3">
-                    <div class="flex items-center">
-                        <input type="text" name="cavidades" placeholder="Cavidad 1" required
-                            class="w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                </div>
-            </div>
-
-            <div class="border-t border-gray-700 pt-6">
-                <div class="flex justify-between items-center mb-4">
-                    <label class="text-lg font-semibold text-white">Circuitos </label>
-                    <button type="button" id="add-circuito-btn" 
-                            class="bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold py-1 px-3 rounded transition whitespace-nowrap">
-                        + Añadir
-                    </button>
-                </div>
-                <div id="circuitos-wrapper" class="space-y-3">
-                    <div class="flex items-center">
-                        <input type="text" name="circuitos" placeholder="Circuito 1" required
-                            class="w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Botón de Enviar -->
-        <div class="pt-6">
-            <button type="submit" 
-                    class="w-full bg-green-600 hover:bg-green-500 text-white text-xl font-bold py-3 px-6 rounded-lg shadow-lg transform transition hover:scale-105">
-                Guardar Orden
-            </button>
-        </div>
-    </form>
- </div>
-{% endblock content %}
-{% block scripts %}
-<script>
-    // 1. CARGAMOS DATOS
-    const tecnicosData = [
-        {% if moldmakers %}
-            {% for t in moldmakers %}
-                { id: "{{ t.id_mold_m }}", nombre: "{{ t.nombre|escapejs }}" },
-            {% endfor %}
-        {% else %}
-            { id: "", nombre: "No hay datos" } 
-        {% endif %}
-    ];
-
-    document.addEventListener('DOMContentLoaded', () => {
-
-        let tecnicoCount = 0;
-
-        // Modificamos la función para aceptar el parámetro 'esInicial'
-        function crearComboboxTecnico(esInicial = false) {
-            tecnicoCount++;
-            const wrapper = document.getElementById('tecnicos-wrapper');
-            const rowId = `tecnico-row-${tecnicoCount}`;
-
-            const rowDiv = document.createElement('div');
-            rowDiv.className = 'flex items-start space-x-2 relative'; // 'items-end' si quieres alinearlo abajo
-            rowDiv.id = rowId;
-
-            // Lógica para mostrar u ocultar el botón de eliminar
-            const botonEliminarHTML = esInicial ? '' : `
-                <button type="button" class="btn-remove-row flex-shrink-0 bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-3 rounded-md text-xs mt-2">
-                    X
+        <div class="bg-gray-900/50 border-b border-gray-700 px-8 pt-4">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                <button type="button" id="tab-btn-general" onclick="switchTab('general')"
+                    class="group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-all border-emerald-500 text-emerald-500">
+                    Datos de la Orden
                 </button>
-            `;
+                <button type="button" id="tab-btn-retorno" onclick="switchTab('retorno')"
+                    class="hidden group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-all border-transparent text-gray-400 hover:text-gray-300">
+                    Información de Retorno
+                    <span class="ml-2 bg-yellow-900 text-yellow-200 py-0.5 px-2 rounded-full text-xs hidden" id="badge-retorno">!</span>
+                </button>
+            </nav>
+        </div>
 
-            /* CAMBIOS REALIZADOS EN EL HTML:
-               1. Lista de opciones: 'absolute bottom-full mb-1' (Hacia arriba)
-               2. Colores: bg-gray-700, text-white
-            */
-            rowDiv.innerHTML = `
-                <div class="w-full relative combobox-container max-w-xl">
-                    <div class="tecnico-options-list absolute bottom-full mb-1 z-50 w-full bg-gray-700 rounded-lg shadow-xl border border-gray-600 overflow-hidden max-h-60 overflow-y-auto hidden">
-                        </div>
+        <div class="p-8">
+            {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                        <div class="p-4 rounded-md {% if message.tags == 'error' %}bg-red-900 text-red-100{% else %}bg-green-900 text-green-100{% endif %}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
 
-                    <div class="relative">
-                        <input type="text" 
-                            class="tecnico-search-input w-full bg-gray-700 border border-gray-600 text-white rounded-md shadow-sm py-2 pl-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
-                            placeholder="Buscar Técnico..."
-                            autocomplete="off">
-                        
-                        <button type="button" class="tecnico-toggle-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-white transition">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
+            <div id="view-general" class="animate-fade-in">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 border-b border-gray-700 pb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Orden</label>
+                        <input type="text" name="numero_orden" value="{{ pre_orden }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Molde</label>
+                        <input type="text" value="{{ pre_molde_nombre }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold">
+                        <input type="hidden" name="molde" value="{{ pre_molde_pk|default:'' }}">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Defecto</label>
+                        <input type="text" name="defecto_sap" value="{{ pre_defecto }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Status</label>
+                        <input type="text" id="input-status" name="statusmcm" value="{{ status_actual|default:'100' }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold">
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center bg-gray-700/30 p-2 rounded-t-lg border-b border-gray-600">
+                        <h3 class="text-lg font-bold text-white pl-2">Asignaciones</h3>
+                        <button type="button" id="btn-add-tech" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-4 rounded shadow transition transform hover:scale-105 flex items-center gap-1">
+                            <span class="text-lg leading-none">+</span> Nuevo Técnico
                         </button>
                     </div>
 
-                    <input type="hidden" name="tecnicos" class="tecnico-hidden-value">
+                    <div class="bg-gray-900/30 rounded-b-lg border border-gray-600 min-h-[350px] flex flex-col overflow-visible">
+                        <div class="flex overflow-x-auto bg-gray-800 border-b border-gray-600 p-1 space-x-1 custom-scrollbar" id="tech-tabs-bar"></div>
+                        <div id="tech-cards-content" class="p-4 flex-1 relative overflow-visible">
+                            <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-gray-500 italic pointer-events-none">
+                                <span>No hay técnicos asignados. Agrega uno arriba.</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+            </div>
 
-                ${botonEliminarHTML}
-            `;
+           <div id="view-retorno" class="hidden animate-fade-in">
+                <div class="bg-yellow-900/10 border border-yellow-700/50 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-yellow-500 mb-6 flex items-center gap-2 border-b border-yellow-800 pb-2">
+                        Detalles del Retorno
+                    </h3>
 
-            wrapper.appendChild(rowDiv);
-
-            // Referencias
-            const searchInput = rowDiv.querySelector('.tecnico-search-input');
-            const optionsList = rowDiv.querySelector('.tecnico-options-list');
-            const hiddenInput = rowDiv.querySelector('.tecnico-hidden-value');
-            const toggleBtn = rowDiv.querySelector('.tecnico-toggle-btn');
-            
-            // Solo buscamos el botón si no es el inicial
-            const removeBtn = esInicial ? null : rowDiv.querySelector('.btn-remove-row');
-
-            function renderOptions(filterText = '') {
-                optionsList.innerHTML = '';
-                const lowerFilter = filterText.toLowerCase();
-
-                const filtrados = tecnicosData.filter(t => 
-                    t.nombre.toLowerCase().includes(lowerFilter)
-                );
-
-                if (filtrados.length === 0) {
-                    // Texto gris claro para "No hay resultados"
-                    optionsList.innerHTML = '<div class="p-3 text-gray-400 text-sm">No hay resultados</div>';
-                } else {
-                    filtrados.forEach(t => {
-                        const option = document.createElement('div');
-                        // CAMBIO DE COLOR: Texto blanco (text-gray-200), hover oscuro (hover:bg-gray-600)
-                        option.className = 'cursor-pointer p-2 hover:bg-gray-600 text-gray-200 border-b border-gray-600 last:border-0 transition-colors';
-                        option.textContent = t.nombre;
+                    <div class="mb-6 bg-gray-800/50 p-4 rounded-lg border border-gray-600">
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Consultar Orden Anterior (Cerrada)</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="input-buscar-orden" class="flex-1 bg-gray-900 border border-gray-500 rounded px-3 py-2 text-white focus:ring-2 focus:ring-yellow-500 outline-none" placeholder="Ej: 52790000">
+                            <button type="button" id="btn-buscar-orden" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </button>
+                        </div>
                         
-                        option.addEventListener('click', () => {
-                            searchInput.value = t.nombre;
-                            hiddenInput.value = t.id;
-                            optionsList.classList.add('hidden');
-                        });
-                        optionsList.appendChild(option);
-                    });
-                }
+                        <div id="resultado-busqueda" class="hidden mt-3 p-3 bg-gray-700/50 rounded border border-gray-600 text-sm">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="text-gray-300"><span class="text-yellow-400 font-bold">Molde:</span> <span id="res-molde"></span></p>
+                                    <p class="text-gray-300"><span class="text-yellow-400 font-bold">Defecto:</span> <span id="res-defecto"></span></p>
+                                </div>
+                                <button type="button" id="btn-ver-detalles" class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded border border-blue-500 font-bold shadow hover:shadow-lg transition">
+                                    Ver Detalles Completos
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="contenedor-resumen-visual" class="hidden mb-6 bg-gray-800 border border-gray-500 rounded-lg p-4 shadow-xl animate-fade-in relative">
+                        <button type="button" onclick="document.getElementById('contenedor-resumen-visual').classList.add('hidden')" class="absolute top-2 right-2 text-gray-400 hover:text-white">&times;</button>
+                        <h4 class="text-lg font-bold text-white border-b border-gray-600 pb-2 mb-3">Resumen de Orden: <span id="lbl-orden-cargada" class="text-yellow-400"></span></h4>
+                        
+                        <div id="contenido-dinamico-orden" class="space-y-3 max-h-60 overflow-y-auto custom-scrollbar pr-2"></div>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <div class="relative">
+                            <label class="block text-sm font-bold text-gray-300 mb-2">Líderes de Retorno (Selección Múltiple)</label>
+                            <div id="container-lideres-chips" class="flex flex-wrap gap-2 mb-2 min-h-[28px]"></div>
+                            
+                            <input type="text" id="input-lider-search" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-yellow-500 outline-none placeholder-gray-500" placeholder="Buscar y agregar líder..." autocomplete="off">
+                            
+                            <div id="dropdown-lideres" class="hidden absolute top-full left-0 w-full bg-gray-800 border border-gray-600 max-h-48 overflow-y-auto z-50 rounded-b-lg shadow-xl">
+                                {% for l in lideres_all %}
+                                <div class="option-lider p-2 hover:bg-yellow-700 text-gray-200 cursor-pointer border-b border-gray-700 last:border-0 text-sm" data-nombre="{{ l.nombre }}">
+                                    {{ l.nombre }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="lideres_retorno_str" id="input-lideres-final">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-gray-300 mb-2">Motivo Principal</label>
+                            <select id="select-motivo" name="motivo_retorno" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-yellow-500">
+                                <option value="">-- Seleccione --</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-gray-300 mb-2">Observaciones</label>
+                            <textarea id="txt-observaciones" name="observaciones_retorno" rows="6" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-yellow-500"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pt-6 border-t border-gray-700 mt-8">
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xl font-bold py-4 px-6 rounded-lg shadow-lg transform transition hover:scale-[1.01]">
+                    Guardar Orden
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<template id="tech-card-template">
+    <div class="tech-card animate-fade-in relative">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-6 pr-2">
+            
+            <div class="md:col-span-5 relative group-combo">
+                <label class="block text-[10px] text-gray-400 uppercase font-bold mb-1 tracking-wider">Nombre Técnico</label>
+                <input type="text" class="input-nombre sync-name w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500 placeholder-gray-500 validate-required" placeholder="Buscar..." autocomplete="off">
+                <div class="combo-list hidden absolute top-full left-0 w-full bg-gray-600 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg"></div>
+            </div>
+
+            <div class="md:col-span-4 relative group-combo-lider">
+                <label class="block text-[10px] text-gray-400 uppercase font-bold mb-1 tracking-wider">Líder</label>
+                <input type="text" class="input-lider w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500 placeholder-gray-500 validate-required" placeholder="Seleccionar..." autocomplete="off">
+                <div class="combo-list-lider hidden absolute top-full left-0 w-full bg-gray-600 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg"></div>
+            </div>
+
+            <div class="md:col-span-3 relative custom-select-container">
+                <label class="block text-[10px] text-gray-400 uppercase font-bold mb-1 tracking-wider">Mesa</label>
+                <input type="text" class="input-mesa input-select w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white text-center focus:ring-2 focus:ring-blue-500 cursor-pointer outline-none validate-required" value="" placeholder="-" readonly>
+                <div class="select-menu hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 shadow-2xl rounded max-h-48 overflow-y-auto z-50">
+                    {% for i in "x"|rjust:"20" %}<div class="select-option p-2 hover:bg-blue-600 text-white text-center text-sm cursor-pointer border-b border-gray-600 last:border-0" data-value="{{ forloop.counter }}">{{ forloop.counter }}</div>{% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-3 defect-cards-container"></div>
+        <button type="button" class="btn-add-defect-card mt-3 w-full border-2 border-dashed border-gray-600 hover:border-blue-500 text-gray-400 hover:text-blue-400 font-bold py-2 rounded transition flex items-center justify-center gap-2 text-xs uppercase tracking-wide">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Agregar Nuevo Defecto
+        </button>
+    </div>
+</template>
+
+<template id="defect-card-template">
+    <div class="defect-card bg-gray-800/80 border border-gray-600 rounded p-3 relative animate-fade-in mb-3">
+        <button type="button" class="btn-remove-defect-card absolute top-2 right-2 text-gray-600 hover:text-red-400 p-1 text-xl font-bold">&times;</button>
+        
+        <div class="mb-3 relative group-combo-def pr-6">
+            <label class="block text-[9px] text-blue-400 uppercase font-bold mb-1">Defecto</label>
+            <input type="text" class="input-defecto w-full bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white font-bold validate-required" placeholder="Seleccionar..." autocomplete="off">
+            <div class="combo-list-def hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 z-50 max-h-40 overflow-y-auto shadow-xl rounded-b"></div>
+        </div>
+        
+        <div class="bg-gray-900/50 rounded border border-gray-700/50">
+            <div class="grid grid-cols-12 bg-gray-700/50 px-2 py-1 text-[9px] text-gray-400 uppercase font-bold text-center">
+                <div class="col-span-5 label-cav">Cavidad</div>
+                <div class="col-span-5 label-circ">Circuito</div>
+                <div class="col-span-2"></div>
+            </div>
+            <div class="location-rows-container"></div>
+            <button type="button" class="btn-add-location-row w-full bg-gray-700/30 hover:bg-gray-700 text-gray-400 hover:text-white text-[10px] py-1 border-t border-gray-700 transition">+ Agregar Cavidad/Circuito</button>
+        </div>
+    </div>
+</template>
+
+<template id="location-row-template">
+    <div class="location-row grid grid-cols-12 gap-1 px-2 py-1 border-b border-gray-700/30 last:border-0 items-center animate-fade-in relative">
+        <div class="col-span-5 relative custom-select-container">
+            <input type="text" class="input-cav input-select w-full bg-transparent border-b border-gray-600 focus:border-blue-500 text-center text-xs text-white placeholder-gray-600 focus:outline-none py-1 cursor-pointer validate-required" placeholder="-" readonly>
+            <div class="select-menu hidden absolute top-full left-0 w-full bg-gray-800 border border-gray-600 shadow-2xl rounded max-h-60 overflow-y-auto z-50">
+                {% for i in "x"|rjust:"128" %}<div class="select-option p-2 hover:bg-blue-600 text-white text-center text-xs cursor-pointer border-b border-gray-700 last:border-0" data-value="{{ forloop.counter }}">{{ forloop.counter }}</div>{% endfor %}
+            </div>
+        </div>
+        <div class="col-span-5 relative group-circuito">
+            <input type="text" class="input-circ w-full bg-transparent border-b border-gray-600 focus:border-yellow-500 text-center text-xs text-white placeholder-gray-600 focus:outline-none py-1 cursor-pointer validate-required" placeholder="Seleccionar..." readonly>
+            <div class="circuito-menu hidden absolute top-full left-0 w-64 bg-gray-800 border border-gray-600 shadow-2xl rounded z-[100] p-2 max-h-60 overflow-y-auto">
+                <label class="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded cursor-pointer border-b border-gray-600 mb-2"><input type="checkbox" value="Todas" class="chk-todas form-checkbox h-4 w-4 text-yellow-600 bg-gray-900 border-gray-500 rounded"><span class="text-xs text-white font-bold">TODAS</span></label>
+                <div class="grid grid-cols-4 gap-2">{% for i in "x"|rjust:"126" %}<label class="flex items-center justify-center p-1 hover:bg-gray-700 rounded cursor-pointer"><input type="checkbox" value="{{ forloop.counter }}" class="chk-num form-checkbox h-3 w-3 text-yellow-500 bg-gray-900 border-gray-500 rounded mr-1"><span class="text-[10px] text-gray-300">{{ forloop.counter }}</span></label>{% endfor %}</div>
+            </div>
+        </div>
+        <div class="col-span-2 text-center"><button type="button" class="btn-remove-loc text-gray-600 hover:text-red-500 font-bold px-2 text-xl">&times;</button></div>
+    </div>
+</template>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // --- 1. UTILIDADES VISUALES (TABS) ---
+    function switchTab(tabName) {
+        const btnGeneral = document.getElementById('tab-btn-general');
+        const btnRetorno = document.getElementById('tab-btn-retorno');
+        const viewGeneral = document.getElementById('view-general');
+        const viewRetorno = document.getElementById('view-retorno');
+
+        if(tabName === 'general') {
+            viewGeneral.classList.remove('hidden'); viewRetorno.classList.add('hidden');
+            btnGeneral.classList.replace('border-transparent', 'border-emerald-500'); btnGeneral.classList.replace('text-gray-400', 'text-emerald-500');
+            btnRetorno.classList.replace('border-yellow-500', 'border-transparent'); btnRetorno.classList.replace('text-yellow-500', 'text-gray-400');
+        } else {
+            viewGeneral.classList.add('hidden'); viewRetorno.classList.remove('hidden');
+            btnRetorno.classList.replace('border-transparent', 'border-yellow-500'); btnRetorno.classList.replace('text-gray-400', 'text-yellow-500');
+            btnGeneral.classList.replace('border-emerald-500', 'border-transparent'); btnGeneral.classList.replace('text-emerald-500', 'text-gray-400');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- 2. DATOS MAESTROS (DJANGO -> JS) ---
+        const tecnicosData = [{% for t in moldmakers %}{ nombre: "{{ t.nombre|escapejs }}" },{% endfor %}];
+        const lideresData = [{% for l in lideres_all %}{ nombre: "{{ l.nombre|escapejs }}" },{% endfor %}]; // DATOS LÍDERES
+        const defectosData = [{% if lista_defectos %}{% for d in lista_defectos %}{ nombre: "{{ d.nombre_defecto|escapejs }}" },{% endfor %}{% else %}{ nombre: "Rebaba" }{% endif %}];
+        
+        // --- VARIABLES GLOBALES ---
+        const tabsBar = document.getElementById('tech-tabs-bar');
+        const contentArea = document.getElementById('tech-cards-content');
+        const emptyState = document.getElementById('empty-state');
+        const statusInput = document.getElementById('input-status');
+        const btnRetorno = document.getElementById('tab-btn-retorno');
+        const badge = document.getElementById('badge-retorno');
+        
+        let techCounter = 0;
+        let dataOrdenEncontrada = null; 
+
+        // --- CHECK STATUS AUTOMÁTICO ---
+        function checkStatus() {
+            const val = statusInput.value.trim();
+            if (val === '203' || val === '204') {
+                btnRetorno.classList.remove('hidden'); badge.classList.remove('hidden');
+            } else {
+                btnRetorno.classList.add('hidden'); badge.classList.add('hidden'); switchTab('general');
             }
+        }
+        checkStatus();
 
-            searchInput.addEventListener('input', (e) => {
-                renderOptions(e.target.value);
-                optionsList.classList.remove('hidden');
+        // ==========================================
+        // 3. PESTAÑA RETORNO: BÚSQUEDA Y LÍDERES
+        // ==========================================
+        const btnBuscarOrden = document.getElementById('btn-buscar-orden');
+        const inputBuscarOrden = document.getElementById('input-buscar-orden');
+        const resContainer = document.getElementById('resultado-busqueda');
+        const resMolde = document.getElementById('res-molde');
+        const resDefecto = document.getElementById('res-defecto');
+        const btnVerDetalles = document.getElementById('btn-ver-detalles'); // ID nuevo
+        
+        const contenedorVisual = document.getElementById('contenedor-resumen-visual');
+        const contenidoOrden = document.getElementById('contenido-dinamico-orden');
+        const lblOrdenCargada = document.getElementById('lbl-orden-cargada');
+
+        // Lógica de Búsqueda
+        if(btnBuscarOrden) {
+            btnBuscarOrden.addEventListener('click', async () => {
+                const numero = inputBuscarOrden.value.trim();
+                if(!numero) return alert("Ingresa un número.");
+                try {
+                    const response = await fetch(`/moldeo/api/buscar-orden-info/?numero=${numero}`);
+                    const data = await response.json();
+                    if(data.success) {
+                        resContainer.classList.remove('hidden');
+                        resMolde.textContent = data.molde;
+                        resDefecto.textContent = data.defecto || 'N/A';
+                        dataOrdenEncontrada = data; 
+                        contenedorVisual.classList.add('hidden'); // Ocultar si había uno abierto
+                    } else {
+                        alert("Orden no encontrada.");
+                        resContainer.classList.add('hidden');
+                        dataOrdenEncontrada = null;
+                    }
+                } catch(e) { console.error(e); alert("Error al buscar."); }
             });
 
-            searchInput.addEventListener('focus', () => {
-                renderOptions(searchInput.value);
-                optionsList.classList.remove('hidden');
-            });
+            // Lógica Botón "Ver Detalles Completos" (Solo Lectura)
+            if(btnVerDetalles) {
+                btnVerDetalles.addEventListener('click', () => {
+                    if(!dataOrdenEncontrada) return;
+                    
+                    // Llenar campos de texto
+                    const txtObs = document.getElementById('txt-observaciones');
+                    const selectMotivo = document.getElementById('select-motivo');
+                    txtObs.value = `[Ref. Orden #${inputBuscarOrden.value}]\n${dataOrdenEncontrada.observaciones_retorno || ''}\n${dataOrdenEncontrada.comentarios || ''}`;
+                    
+                    if(dataOrdenEncontrada.motivo_retorno) {
+                        for(let i=0; i<selectMotivo.options.length; i++){
+                            if(selectMotivo.options[i].value === dataOrdenEncontrada.motivo_retorno){ selectMotivo.selectedIndex = i; break; }
+                        }
+                    }
 
-            toggleBtn.addEventListener('click', () => {
-                const isHidden = optionsList.classList.contains('hidden');
-                if (isHidden) {
-                    renderOptions(searchInput.value);
-                    optionsList.classList.remove('hidden');
-                    searchInput.focus();
-                } else {
-                    optionsList.classList.add('hidden');
-                }
-            });
-
-            document.addEventListener('click', (e) => {
-                if (!rowDiv.contains(e.target)) {
-                    optionsList.classList.add('hidden');
-                }
-            });
-
-            // Solo agregamos el evento si el botón existe (es decir, no es el inicial)
-            if (removeBtn) {
-                removeBtn.addEventListener('click', () => {
-                    rowDiv.remove();
+                    // Construir vista de solo lectura
+                    contenidoOrden.innerHTML = '';
+                    lblOrdenCargada.textContent = inputBuscarOrden.value;
+                    const asignaciones = dataOrdenEncontrada.asignaciones;
+                    
+                    if(asignaciones && asignaciones.length > 0) {
+                        asignaciones.forEach(asig => {
+                            let htmlDetalles = asig.detalles && asig.detalles.length > 0 ? '<ul class="list-disc list-inside mt-1 ml-2 text-xs text-gray-400">' : '<p class="text-xs text-gray-500 ml-2 italic">Sin defectos.</p>';
+                            if(asig.detalles) asig.detalles.forEach(d => { htmlDetalles += `<li><span class="text-blue-300 font-bold">${d.defecto}</span> - Cav: ${d.cav}, Circ: ${d.circ}</li>`; });
+                            if(asig.detalles && asig.detalles.length > 0) htmlDetalles += '</ul>';
+                            
+                            contenidoOrden.insertAdjacentHTML('beforeend', `
+                                <div class="bg-gray-700/50 p-3 rounded border border-gray-600">
+                                    <div class="flex justify-between items-center border-b border-gray-600 pb-1 mb-1">
+                                        <span class="font-bold text-sm text-white">${asig.nombre}</span>
+                                        <span class="text-xs bg-gray-600 px-2 py-0.5 rounded text-gray-300">Mesa: ${asig.mesa}</span>
+                                    </div>
+                                    ${htmlDetalles}
+                                </div>
+                            `);
+                        });
+                    } else { 
+                        contenidoOrden.innerHTML = '<p class="text-gray-400 text-sm italic">No hay técnicos registrados en la orden consultada.</p>'; 
+                    }
+                    contenedorVisual.classList.remove('hidden');
                 });
             }
         }
 
-        // --- Lógica campos simples ---
-        function setupSimpleField(wrapperId, buttonId, placeholderPrefix) {
-            const wrapper = document.getElementById(wrapperId);
-            const button = document.getElementById(buttonId);
-            if (!wrapper || !button) return;
+        // Lógica Chips de Líderes (Multi-select)
+        const inputLiderSearch = document.getElementById('input-lider-search');
+        const dropdownLideres = document.getElementById('dropdown-lideres');
+        const containerChips = document.getElementById('container-lideres-chips');
+        const inputFinalLideres = document.getElementById('input-lideres-final');
+        const opcionesLideres = document.querySelectorAll('.option-lider');
+        let lideresSeleccionados = [];
 
-            button.addEventListener('click', () => {
-                const firstRow = wrapper.querySelector('div'); 
-                let clone;
-                
-                if (firstRow) {
-                    clone = firstRow.cloneNode(true);
-                    const input = clone.querySelector('input');
-                    input.value = '';
-                    const count = wrapper.children.length + 1;
-                    input.placeholder = `${placeholderPrefix} ${count}`;
-                    
-                    // Asegurarnos que el clon tenga botón de eliminar (incluso si copiamos del primero que podría no tenerlo)
-                    let btn = clone.querySelector('button');
-                    
-                    if (!btn) {
-                        btn = document.createElement('button');
-                        btn.type = 'button';
-                        btn.className = 'flex-shrink-0 bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-3 rounded-md text-xs ml-2';
-                        btn.textContent = 'X';
-                        clone.appendChild(btn);
-                    } else {
-                        // Si ya tiene botón (porque copiamos uno que no era el primero), necesitamos recrearlo para el listener
-                        const newBtn = btn.cloneNode(true);
-                        btn.replaceWith(newBtn);
-                        btn = newBtn;
-                    }
-                    
-                    // Agregar listener
-                    btn.addEventListener('click', () => clone.remove());
-                    
-                    wrapper.appendChild(clone);
-                }
+        function actualizarInputFinal() { if(inputFinalLideres) inputFinalLideres.value = lideresSeleccionados.join(', '); }
+        window.removerLider = function(nombre, btn) { lideresSeleccionados = lideresSeleccionados.filter(l => l !== nombre); btn.parentElement.remove(); actualizarInputFinal(); };
+        
+        function agregarLider(nombre) {
+            if (lideresSeleccionados.includes(nombre)) return;
+            lideresSeleccionados.push(nombre);
+            const chip = document.createElement('div');
+            chip.className = "bg-yellow-600 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2 shadow animate-fade-in";
+            chip.innerHTML = `${nombre} <button type="button" class="hover:text-red-300 font-bold text-sm" onclick="removerLider('${nombre}', this)">&times;</button>`;
+            containerChips.appendChild(chip);
+            actualizarInputFinal();
+        }
+
+        if(inputLiderSearch) {
+            inputLiderSearch.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase(); let hay = false;
+                opcionesLideres.forEach(opt => { if(opt.dataset.nombre.toLowerCase().includes(term)) { opt.classList.remove('hidden'); hay=true; } else { opt.classList.add('hidden'); } });
+                dropdownLideres.classList.toggle('hidden', !hay);
+            });
+            inputLiderSearch.addEventListener('focus', () => dropdownLideres.classList.remove('hidden'));
+            opcionesLideres.forEach(opt => { opt.addEventListener('click', () => { agregarLider(opt.dataset.nombre); inputLiderSearch.value = ''; dropdownLideres.classList.add('hidden'); }); });
+            window.addEventListener('click', (e) => { if (!inputLiderSearch.contains(e.target) && !dropdownLideres.contains(e.target)) dropdownLideres.classList.add('hidden'); });
+        }
+
+        // ==========================================
+        // 4. FACTORY FUNCTIONS (CREACIÓN DE ELEMENTOS)
+        // ==========================================
+        function createNewTechCard() {
+            emptyState.style.display = 'none';
+            techCounter++;
+            const currentId = 'tech-' + techCounter;
+            
+            const tabBtn = document.createElement('div');
+            tabBtn.id = 'btn-' + currentId;
+            tabBtn.className = "tech-tab-btn flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-t-lg border-t-2 border-transparent cursor-pointer bg-gray-800 text-gray-400 transition-all shrink-0 select-none";
+            tabBtn.onclick = () => activateTechTab(currentId);
+            tabBtn.innerHTML = `<span id="label-${currentId}">Nuevo Técnico</span> <button onclick="removeTech('${currentId}', event)" class="ml-2 text-gray-500 hover:text-red-400 hover:bg-gray-900 rounded-full p-0.5">&times;</button>`;
+            tabsBar.appendChild(tabBtn);
+
+            const template = document.getElementById('tech-card-template');
+            const clone = template.content.cloneNode(true);
+            const cardContainer = document.createElement('div');
+            cardContainer.id = 'card-' + currentId;
+            cardContainer.className = "tech-card-wrapper w-full hidden animate-fade-in";
+            cardContainer.appendChild(clone);
+            
+            cardContainer.querySelector('.sync-name').addEventListener('input', (e) => {
+                document.getElementById('label-' + currentId).innerText = e.target.value.substring(0, 15) || 'Nuevo Técnico';
+            });
+            initCardLogic(cardContainer);
+            contentArea.appendChild(cardContainer);
+            return cardContainer;
+        }
+
+        // Evento Botón Nuevo Técnico
+        document.getElementById('btn-add-tech').addEventListener('click', () => {
+            const card = createNewTechCard();
+            activateTechTab(card.id.replace('card-',''));
+            const defCard = createNewDefectCard(card); // 1 Defecto inicial
+            createNewLocationRow(defCard.querySelector('.location-rows-container')); // 1 Fila inicial
+        });
+
+        // --- FUNCIONES INTERNAS (DEFECTOS / FILAS) ---
+        function createNewDefectCard(card) {
+            const container = card.querySelector('.defect-cards-container');
+            const defTempl = document.getElementById('defect-card-template');
+            const defClone = defTempl.content.cloneNode(true);
+            const defCard = defClone.querySelector('.defect-card');
+            
+            defCard.querySelector('.btn-remove-defect-card').onclick = () => defCard.remove();
+            
+            // CONFIGURAR COMBO DEFECTO CON CALLBACK PARA ETIQUETAS
+            const inputDefecto = defCard.querySelector('.input-defecto');
+            const listDefecto = defCard.querySelector('.combo-list-def');
+            setupCombobox(inputDefecto, listDefecto, defectosData, (val) => updateLabels(defCard, val));
+            inputDefecto.addEventListener('input', (e) => updateLabels(defCard, e.target.value));
+
+            const locContainer = defCard.querySelector('.location-rows-container');
+            defCard.querySelector('.btn-add-location-row').onclick = () => createNewLocationRow(locContainer);
+            
+            container.appendChild(defCard);
+            return defCard;
+        }
+
+        function createNewLocationRow(container) {
+            const locTempl = document.getElementById('location-row-template');
+            const locClone = locTempl.content.cloneNode(true);
+            const locRow = locClone.querySelector('.location-row');
+            locRow.querySelector('.btn-remove-loc').onclick = () => locRow.remove();
+            const cavContainer = locRow.querySelector('.custom-select-container');
+            if(cavContainer) setupSimpleDropdown(cavContainer);
+            setupCircuitoMultiselect(locRow);
+            container.appendChild(locRow);
+            return locRow;
+        }
+
+        // --- LÓGICA DE INICIALIZACIÓN DE TARJETA ---
+        function initCardLogic(card) {
+            // Mesa
+            const mesaContainer = card.querySelector('.custom-select-container');
+            if(mesaContainer) setupSimpleDropdown(mesaContainer);
+            
+            // Botón Agregar Defecto
+            card.querySelector('.btn-add-defect-card').onclick = () => {
+                const defCard = createNewDefectCard(card);
+                createNewLocationRow(defCard.querySelector('.location-rows-container'));
+            };
+
+            // Setup Comboboxes
+            setupCombobox(card.querySelector('.input-nombre'), card.querySelector('.combo-list'), tecnicosData);
+            setupCombobox(card.querySelector('.input-lider'), card.querySelector('.combo-list-lider'), lideresData); // LÍDER AQUÍ
+        }
+
+        // ==========================================
+        // 5. FUNCIONES HELPERS (UI, DROPDOWNS)
+        // ==========================================
+        function updateLabels(defCard, defectName) {
+            const lblCav = defCard.querySelector('.label-cav');
+            const lblCirc = defCard.querySelector('.label-circ');
+            const term = defectName.toLowerCase();
+            if (term.includes('hot runner') || term.includes('colada caliente')) { lblCav.textContent = 'Drop'; lblCirc.textContent = 'Zona'; } 
+            else if (term.includes('falla de sensores') || term.includes('sensor')) { lblCav.textContent = 'PG'; lblCirc.textContent = 'EO'; } 
+            else { lblCav.textContent = 'Cavidad'; lblCirc.textContent = 'Circuito'; }
+        }
+
+        window.activateTechTab = function(techId) {
+            document.querySelectorAll('.tech-card-wrapper').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tech-tab-btn').forEach(btn => {
+                btn.classList.remove('bg-gray-700', 'text-white', 'border-blue-500');
+                btn.classList.add('bg-gray-800', 'text-gray-400', 'border-transparent', 'hover:bg-gray-700');
+            });
+            document.getElementById('card-' + techId)?.classList.remove('hidden');
+            const btn = document.getElementById('btn-' + techId);
+            if(btn) {
+                btn.classList.replace('bg-gray-800', 'bg-gray-700');
+                btn.classList.replace('text-gray-400', 'text-white');
+                btn.classList.replace('border-transparent', 'border-blue-500');
+            }
+        };
+
+        window.removeTech = function(techId, e) {
+            e.stopPropagation();
+            if(!confirm("¿Eliminar este técnico?")) return;
+            document.getElementById('btn-' + techId)?.remove();
+            document.getElementById('card-' + techId)?.remove();
+            if(tabsBar.children.length === 0) emptyState.style.display = 'flex';
+            else activateTechTab(tabsBar.querySelector('.tech-tab-btn').id.replace('btn-', ''));
+        };
+
+        function closeAllMenus() { document.querySelectorAll('.circuito-menu, .select-menu, .combo-list, .combo-list-def, .combo-list-lider').forEach(m => m.classList.add('hidden')); }
+        window.addEventListener('click', () => closeAllMenus());
+
+        function setupSimpleDropdown(container) {
+            const input = container.querySelector('.input-select');
+            const menu = container.querySelector('.select-menu');
+            const options = menu.querySelectorAll('.select-option');
+            input.addEventListener('click', (e) => { e.stopPropagation(); closeAllMenus(); menu.classList.remove('hidden'); });
+            options.forEach(opt => {
+                opt.addEventListener('click', (e) => {
+                    e.stopPropagation(); input.value = opt.dataset.value; 
+                    if(input.value) input.classList.remove('border-red-500'); menu.classList.add('hidden');
+                });
             });
         }
 
-        // Inicializar el PRIMER técnico (Pasamos true para que NO tenga botón de borrar)
-        crearComboboxTecnico(true);
+        function setupCircuitoMultiselect(row) {
+            const input = row.querySelector('.input-circ');
+            const menu = row.querySelector('.circuito-menu');
+            const chkTodas = menu.querySelector('.chk-todas');
+            const chkNums = menu.querySelectorAll('.chk-num');
+            input.addEventListener('click', (e) => { e.stopPropagation(); closeAllMenus(); menu.classList.remove('hidden'); });
+            menu.addEventListener('click', (e) => e.stopPropagation());
+            const update = () => {
+                if (chkTodas.checked) { input.value = "Todas"; chkNums.forEach(c => c.checked = false); } 
+                else { const v = Array.from(chkNums).filter(c => c.checked).map(c => c.value); input.value = v.join(', '); }
+                if(input.value) input.classList.remove('border-red-500');
+            };
+            chkTodas.addEventListener('change', () => { if(chkTodas.checked) chkNums.forEach(c => c.checked = false); update(); });
+            chkNums.forEach(c => { c.addEventListener('change', () => { if(c.checked) chkTodas.checked = false; update(); }); });
+        }
 
-        // Botón añadir técnicos (Pasamos false implícitamente, SÍ tendrá botón)
-        document.getElementById('add-tecnico-btn').addEventListener('click', () => crearComboboxTecnico(false));
+        // Setup Combobox Genérico
+        function setupCombobox(input, list, data, onSelectCallback = null) {
+            const render = (q='') => {
+                list.innerHTML = ''; const f = data.filter(i => i.nombre.toLowerCase().includes(q.toLowerCase()));
+                if(f.length === 0) { list.classList.add('hidden'); return; }
+                list.classList.remove('hidden');
+                f.forEach(item => {
+                    const div = document.createElement('div'); div.className = 'p-2 hover:bg-blue-600 cursor-pointer text-xs text-white border-b border-gray-500 bg-gray-700'; div.textContent = item.nombre;
+                    div.onmousedown = (e) => { 
+                        e.preventDefault(); input.value = item.nombre; input.dispatchEvent(new Event('input')); 
+                        if(input.value) input.classList.remove('border-red-500'); list.classList.add('hidden'); 
+                        if (onSelectCallback) onSelectCallback(item.nombre);
+                    };
+                    list.appendChild(div);
+                });
+            };
+            input.addEventListener('input', (e) => { render(e.target.value); if(input.value) input.classList.remove('border-red-500'); });
+            input.addEventListener('focus', () => render(input.value));
+            input.addEventListener('click', (e) => { e.stopPropagation(); closeAllMenus(); render(input.value); });
+        }
 
-        setupSimpleField('mesas-wrapper', 'add-mesa-btn', 'Mesa');
-        setupSimpleField('cavidades-wrapper', 'add-cavidad-btn', 'Cavidad');
-        setupSimpleField('circuitos-wrapper', 'add-circuito-btn', 'Circuito');
+        // ==========================================
+        // 6. SUBMIT (RECOLECCIÓN DE DATOS Y JSON)
+        // ==========================================
+        const form = document.getElementById('form-registro');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // Concatenar Líderes de Retorno a Observaciones
+            const inputLideresRet = document.getElementById('input-lideres-final');
+            const txtObs = document.getElementById('txt-observaciones');
+            if(inputLideresRet && inputLideresRet.value.trim() !== "") {
+                txtObs.value += `\n[Líderes de Retorno: ${inputLideresRet.value}]`;
+            }
+
+            const cards = contentArea.querySelectorAll('.tech-card-wrapper');
+            if(cards.length === 0) { alert("Agrega un técnico."); return; }
+
+            let isValid = true;
+            let firstErrorTab = null;
+            let totalDefectos = 0;
+            const asignaciones = [];
+
+            cards.forEach((wrapper) => {
+                const card = wrapper.querySelector('.tech-card');
+                let cardError = false;
+                
+                // Validar Inputs (Incluye Nombre, Líder, Mesa y selects vacíos)
+                card.querySelectorAll('.validate-required').forEach(inp => {
+                    if(!inp.value.trim()) { inp.classList.add('border-red-500'); isValid = false; cardError = true; } 
+                    else inp.classList.remove('border-red-500');
+                });
+
+                const nombre = card.querySelector('.input-nombre').value.trim();
+                const lider = card.querySelector('.input-lider').value.trim(); // NUEVO: Capturar Líder
+                const mesa = card.querySelector('.input-mesa').value.trim();
+                const detalles = [];
+                const defCards = card.querySelectorAll('.defect-card');
+
+                if(defCards.length === 0) { alert("Faltan defectos."); isValid = false; cardError = true; } 
+                else {
+                    defCards.forEach(dc => {
+                        const nomDef = dc.querySelector('.input-defecto').value.trim();
+                        if(!nomDef) { dc.querySelector('.input-defecto').classList.add('border-red-500'); isValid = false; cardError = true; }
+                        else { dc.querySelector('.input-defecto').classList.remove('border-red-500'); }
+                        
+                        const rows = dc.querySelectorAll('.location-row');
+                        if(rows.length === 0) { alert("Falta ubicación."); isValid = false; cardError = true; }
+                        
+                        rows.forEach(r => {
+                            const cav = r.querySelector('.input-cav').value.trim();
+                            const circ = r.querySelector('.input-circ').value.trim();
+                            if(!cav || !circ) { 
+                                if(!cav) r.querySelector('.input-cav').classList.add('border-red-500');
+                                if(!circ) r.querySelector('.input-circ').classList.add('border-red-500');
+                                isValid = false; cardError = true; 
+                            } else {
+                                r.querySelector('.input-cav').classList.remove('border-red-500');
+                                r.querySelector('.input-circ').classList.remove('border-red-500');
+                                if(nomDef) { detalles.push({ defecto: nomDef, cav: cav, circ: circ }); totalDefectos++; }
+                            }
+                        });
+                    });
+                }
+
+                // Marcar error en pestaña
+                const tabBtn = document.getElementById('btn-' + wrapper.id.replace('card-',''));
+                if(cardError) { tabBtn.classList.add('text-red-400'); if(!firstErrorTab) firstErrorTab = wrapper.id.replace('card-',''); }
+                else { tabBtn.classList.remove('text-red-400'); }
+
+                // GUARDAR EN JSON (Nombre, Líder, Mesa, Detalles)
+                if(!cardError && nombre && mesa && lider && detalles.length > 0) {
+                    asignaciones.push({ nombre, lider, mesa, detalles });
+                }
+            });
+
+            if(!isValid) { alert("Faltan campos obligatorios."); if(firstErrorTab) activateTechTab(firstErrorTab); return; }
+            if(totalDefectos === 0) { alert("Registra al menos un defecto."); return; }
+            if(asignaciones.length === 0) { alert("Error al procesar datos."); return; }
+
+            document.getElementById('asignaciones-json').value = JSON.stringify(asignaciones);
+            form.submit();
+        });
     });
 </script>
-{% endblock scripts %}
+{% endblock %}

@@ -6,7 +6,7 @@
 
 <!-- 3. Definimos el contenido específico para esta página -->
 {% block content %}
-<div class="container mx-auto max-w-3xl px-4 py-12">
+<div class="container mx-auto max-w-7xl px-4 py-12">
     <div class="mb-6">
         <a href="javascript:history.back()" 
            class="inline-flex items-center bg-gray-600 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg transition-colors">
@@ -25,18 +25,54 @@
     <form action="" method="POST" class="bg-gray-800 p-8 rounded-lg shadow-xl space-y-6">
         {% csrf_token %}
 
-        <!-- Clases comunes para inputs y labels -->
-        {% comment %} 
-        Input: "w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-indigo-500 focus:border-indigo-500"
-        Label: "block text-sm font-medium text-gray-300 mb-1"
-        {% endcomment %}
+     
 
-        <!-- CAMPOS ESTÁTICOS -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div>
+             <div>
                 <label for="numero_orden" class="block text-sm font-medium text-gray-300 mb-1">Número de Orden</label>
-                <input type="text" id="numero_orden" name="numero_orden" required
-                       class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-indigo-500 focus:border-indigo-500">
+                  <div class="relative">
+                        <input type="text" id="numero_orden" name="numero_orden" required
+                            value="{{ pre_orden }}"
+                            readonly
+                            class="block w-full bg-gray-600 border border-gray-500 text-gray-200 rounded-md shadow-sm py-2 pl-3 pr-10 focus:outline-none font-bold cursor-not-allowed">
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                           <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                                    </svg>      
+                        </div>
+                  </div>
+       
+            </div>
+              <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Molde</label>
+                        
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                value="{{ pre_molde_nombre }}" 
+                                readonly
+                                class="block w-full bg-gray-600 border border-gray-500 text-gray-200 rounded-md shadow-sm py-2 pl-3 pr-10 focus:outline-none font-bold cursor-not-allowed"
+                            >
+                            
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="molde" value="{{ pre_molde_pk }}">
+                    </div>
+                <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Status</label>
+                <div class="relative">
+                    <input type="text" name="statusmcm" value="{{ status_actual }}" readonly class="block w-full bg-gray-600 border border-gray-500 text-gray-300 rounded-md py-2 pl-3 font-bold cursor-not-allowed">
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
             </div>
             <div>
                 <label for="defecto_sap" class="block text-sm font-medium text-gray-300 mb-1">Np Saliente</label>
@@ -52,135 +88,266 @@
         </div>
 
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            
-            <div class="grid grid-cols-1 sm:grid-cols-1 gap-6">
-                <div class="border-t border-gray-700 pt-6">
-                    <div class="flex justify-between items-center mb-2">
-                        <label class="text-lg font-semibold text-white">Técnicos</label>
-                        <button type="button" id="add-tecnico-btn" 
-                                class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-1 px-3 rounded-md transition">
-                            + Añadir
-                        </button>
+         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+            <div class="border-t border-gray-700 pt-6">
+                <div class="flex justify-between items-center mb-4">
+                    <label class="text-lg font-semibold text-white">Técnicos</label>
+                    <button type="button" id="add-tecnico-btn" 
+                            class="bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold py-1 px-3 rounded transition whitespace-nowrap">
+                        + Añadir
+                    </button>
+                </div>
+                <div id="tecnicos-wrapper" class="space-y-4">
                     </div>
-                    <div id="tecnicos-wrapper" class="space-y-2">
-                        <!-- Input inicial (Técnico 1) -->
-                        <div class="flex items-center space-x-2">
-                            <input type="text" name="tecnicos" placeholder="Técnico 1" required
-                                class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-indigo-500 focus:border-indigo-500">
-                            <!-- El primer campo no se puede eliminar para asegurar al menos uno -->
-                        </div>
+            </div>
+
+            <div class="border-t border-gray-700 pt-6">
+                <div class="flex justify-between items-center mb-4">
+                    <label class="text-lg font-semibold text-white">Mesas</label>
+                    <button type="button" id="add-mesa-btn" 
+                            class="bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold py-1 px-3 rounded transition whitespace-nowrap">
+                        + Añadir
+                    </button>
+                </div>
+                <div id="mesas-wrapper" class="space-y-3">
+                    <div class="flex items-center">
+                        <input type="text" name="mesas" placeholder="Mesa 1" required
+                            class="w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white focus:ring-blue-500 focus:border-blue-500">
                     </div>
                 </div>
             </div>
-                <!-- CAMPOS DINÁMICOS: MESA -->
-            <div class="grid grid-cols-1 sm:grid-cols-1 gap-6">
-                <div class="border-t border-gray-700 pt-6">
-                    <div class="flex justify-between items-center mb-2">
-                        <label class="text-lg font-semibold text-white">Mesas</label>
-                        <button type="button" id="add-mesa-btn" 
-                                class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-1 px-3 rounded-md transition">
-                            + Añadir
-                        </button>
-                    </div>
-                    <div id="mesas-wrapper" class="space-y-2">
-                        <div class="flex items-center space-x-2">
-                            <input type="text" name="mesas" placeholder="Mesa 1" required
-                                class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-indigo-500 focus:border-indigo-500">
-                        </div>
+
+            <div class="border-t border-gray-700 pt-6">
+                <div class="flex justify-between items-center mb-4">
+                    <label class="text-lg font-semibold text-white">Cavidades</label>
+                    <button type="button" id="add-cavidad-btn" 
+                            class="bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold py-1 px-3 rounded transition whitespace-nowrap">
+                        + Añadir
+                    </button>
+                </div>
+                <div id="cavidades-wrapper" class="space-y-3">
+                    <div class="flex items-center">
+                        <input type="text" name="cavidades" placeholder="Cavidad 1" required
+                            class="w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white focus:ring-blue-500 focus:border-blue-500">
                     </div>
                 </div>
             </div>
-            <!-- CAMPOS DINÁMICOS: CAVIDADES -->
-            <div class="grid grid-cols-1 sm:grid-cols-1 gap-6">
-                <div class="border-t border-gray-700 pt-6">
-                    <div class="flex justify-between items-center mb-2">
-                        <label class="text-lg font-semibold text-white">Cavidades</label>
-                        <button type="button" id="add-cavidad-btn" 
-                                class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-1 px-3 rounded-md transition">
-                            + Añadir
-                        </button>
-                    </div>
-                    <div id="cavidades-wrapper" class="space-y-2">
-                        <div class="flex items-center space-x-2">
-                            <input type="text" name="cavidades" placeholder="Cavidad 1" required
-                                class="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-indigo-500 focus:border-indigo-500">
-                        </div>
+
+            <div class="border-t border-gray-700 pt-6">
+                <div class="flex justify-between items-center mb-4">
+                    <label class="text-lg font-semibold text-white">Circuitos </label>
+                    <button type="button" id="add-circuito-btn" 
+                            class="bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold py-1 px-3 rounded transition whitespace-nowrap">
+                        + Añadir
+                    </button>
+                </div>
+                <div id="circuitos-wrapper" class="space-y-3">
+                    <div class="flex items-center">
+                        <input type="text" name="circuitos" placeholder="Circuito 1" required
+                            class="w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white focus:ring-blue-500 focus:border-blue-500">
                     </div>
                 </div>
             </div>
-        </div>
-
-
-    
-
-        <!-- Botón de Enviar -->
-        <div class="pt-6">
+            <div class="pt-6">
             <button type="submit" 
                     class="w-full bg-green-600 hover:bg-green-500 text-white text-xl font-bold py-3 px-6 rounded-lg shadow-lg transform transition hover:scale-105">
-                Guardar e Iniciar Orden
+                Guardar Orden
             </button>
         </div>
-    </form>
+    
+    </div>
 </div>
 
-<!-- SCRIPT PARA CAMPOS DINÁMICOS -->
+
+
+{% endblock content %}
+{% block scripts %}
 <script>
+    // 1. CARGAMOS DATOS
+    const tecnicosData = [
+        {% if moldmakers %}
+            {% for t in moldmakers %}
+                { id: "{{ t.id_mold_m }}", nombre: "{{ t.nombre|escapejs }}" },
+            {% endfor %}
+        {% else %}
+            { id: "", nombre: "No hay datos" } 
+        {% endif %}
+    ];
+
     document.addEventListener('DOMContentLoaded', () => {
 
-        /**
-         * Función genérica para añadir campos dinámicos
-         * @param {string} wrapperId - ID del div que contendrá los inputs
-         * @param {string} buttonId - ID del botón "Añadir"
-         * @param {string} fieldName - El atributo 'name' para el input (ej. 'tecnicos')
-         * @param {string} placeholderPrefix - El texto base del placeholder (ej. 'Técnico')
-         */
-        function setupDynamicFields(wrapperId, buttonId, fieldName, placeholderPrefix) {
-            let count = 1; // Ya existe 1 campo por defecto
+        let tecnicoCount = 0;
+
+        // Modificamos la función para aceptar el parámetro 'esInicial'
+        function crearComboboxTecnico(esInicial = false) {
+            tecnicoCount++;
+            const wrapper = document.getElementById('tecnicos-wrapper');
+            const rowId = `tecnico-row-${tecnicoCount}`;
+
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'flex items-start space-x-2 relative'; // 'items-end' si quieres alinearlo abajo
+            rowDiv.id = rowId;
+
+            // Lógica para mostrar u ocultar el botón de eliminar
+            const botonEliminarHTML = esInicial ? '' : `
+                <button type="button" class="btn-remove-row flex-shrink-0 bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-3 rounded-md text-xs mt-2">
+                    X
+                </button>
+            `;
+
+            /* CAMBIOS REALIZADOS EN EL HTML:
+               1. Lista de opciones: 'absolute bottom-full mb-1' (Hacia arriba)
+               2. Colores: bg-gray-700, text-white
+            */
+            rowDiv.innerHTML = `
+                <div class="w-full relative combobox-container max-w-xl">
+                    <div class="tecnico-options-list absolute bottom-full mb-1 z-50 w-full bg-gray-700 rounded-lg shadow-xl border border-gray-600 overflow-hidden max-h-60 overflow-y-auto hidden">
+                        </div>
+
+                    <div class="relative">
+                        <input type="text" 
+                            class="tecnico-search-input w-full bg-gray-700 border border-gray-600 text-white rounded-md shadow-sm py-2 pl-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
+                            placeholder="Buscar Técnico..."
+                            autocomplete="off">
+                        
+                        <button type="button" class="tecnico-toggle-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-white transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <input type="hidden" name="tecnicos" class="tecnico-hidden-value">
+                </div>
+
+                ${botonEliminarHTML}
+            `;
+
+            wrapper.appendChild(rowDiv);
+
+            // Referencias
+            const searchInput = rowDiv.querySelector('.tecnico-search-input');
+            const optionsList = rowDiv.querySelector('.tecnico-options-list');
+            const hiddenInput = rowDiv.querySelector('.tecnico-hidden-value');
+            const toggleBtn = rowDiv.querySelector('.tecnico-toggle-btn');
+            
+            // Solo buscamos el botón si no es el inicial
+            const removeBtn = esInicial ? null : rowDiv.querySelector('.btn-remove-row');
+
+            function renderOptions(filterText = '') {
+                optionsList.innerHTML = '';
+                const lowerFilter = filterText.toLowerCase();
+
+                const filtrados = tecnicosData.filter(t => 
+                    t.nombre.toLowerCase().includes(lowerFilter)
+                );
+
+                if (filtrados.length === 0) {
+                    // Texto gris claro para "No hay resultados"
+                    optionsList.innerHTML = '<div class="p-3 text-gray-400 text-sm">No hay resultados</div>';
+                } else {
+                    filtrados.forEach(t => {
+                        const option = document.createElement('div');
+                        // CAMBIO DE COLOR: Texto blanco (text-gray-200), hover oscuro (hover:bg-gray-600)
+                        option.className = 'cursor-pointer p-2 hover:bg-gray-600 text-gray-200 border-b border-gray-600 last:border-0 transition-colors';
+                        option.textContent = t.nombre;
+                        
+                        option.addEventListener('click', () => {
+                            searchInput.value = t.nombre;
+                            hiddenInput.value = t.id;
+                            optionsList.classList.add('hidden');
+                        });
+                        optionsList.appendChild(option);
+                    });
+                }
+            }
+
+            searchInput.addEventListener('input', (e) => {
+                renderOptions(e.target.value);
+                optionsList.classList.remove('hidden');
+            });
+
+            searchInput.addEventListener('focus', () => {
+                renderOptions(searchInput.value);
+                optionsList.classList.remove('hidden');
+            });
+
+            toggleBtn.addEventListener('click', () => {
+                const isHidden = optionsList.classList.contains('hidden');
+                if (isHidden) {
+                    renderOptions(searchInput.value);
+                    optionsList.classList.remove('hidden');
+                    searchInput.focus();
+                } else {
+                    optionsList.classList.add('hidden');
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!rowDiv.contains(e.target)) {
+                    optionsList.classList.add('hidden');
+                }
+            });
+
+            // Solo agregamos el evento si el botón existe (es decir, no es el inicial)
+            if (removeBtn) {
+                removeBtn.addEventListener('click', () => {
+                    rowDiv.remove();
+                });
+            }
+        }
+
+        // --- Lógica campos simples ---
+        function setupSimpleField(wrapperId, buttonId, placeholderPrefix) {
             const wrapper = document.getElementById(wrapperId);
             const button = document.getElementById(buttonId);
+            if (!wrapper || !button) return;
 
             button.addEventListener('click', () => {
-                count++;
+                const firstRow = wrapper.querySelector('div'); 
+                let clone;
                 
-                // Crear el contenedor (div)
-                const newFieldRow = document.createElement('div');
-                newFieldRow.className = 'flex items-center space-x-2';
-
-                // Crear el nuevo input
-                const newInput = document.createElement('input');
-                newInput.type = 'text';
-                newInput.name = fieldName; // Todos los inputs usan el mismo name
-                newInput.placeholder = `${placeholderPrefix} ${count}`;
-                newInput.required = true;
-                newInput.className = 'w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-indigo-500 focus:border-indigo-500';
-
-                // Crear el botón de eliminar
-                const removeButton = document.createElement('button');
-                removeButton.type = 'button';
-                removeButton.className = 'flex-shrink-0 bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-3 rounded-md text-xs';
-                removeButton.textContent = 'X';
-                
-                // Acción para eliminar la fila
-                removeButton.addEventListener('click', () => {
-                    newFieldRow.remove();
-                    // No es necesario re-indexar, el backend recibirá la lista
-                });
-
-                // Añadir input y botón al contenedor
-                newFieldRow.appendChild(newInput);
-                newFieldRow.appendChild(removeButton);
-
-                // Añadir la nueva fila al wrapper
-                wrapper.appendChild(newFieldRow);
+                if (firstRow) {
+                    clone = firstRow.cloneNode(true);
+                    const input = clone.querySelector('input');
+                    input.value = '';
+                    const count = wrapper.children.length + 1;
+                    input.placeholder = `${placeholderPrefix} ${count}`;
+                    
+                    // Asegurarnos que el clon tenga botón de eliminar (incluso si copiamos del primero que podría no tenerlo)
+                    let btn = clone.querySelector('button');
+                    
+                    if (!btn) {
+                        btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'flex-shrink-0 bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-3 rounded-md text-xs ml-2';
+                        btn.textContent = 'X';
+                        clone.appendChild(btn);
+                    } else {
+                        // Si ya tiene botón (porque copiamos uno que no era el primero), necesitamos recrearlo para el listener
+                        const newBtn = btn.cloneNode(true);
+                        btn.replaceWith(newBtn);
+                        btn = newBtn;
+                    }
+                    
+                    // Agregar listener
+                    btn.addEventListener('click', () => clone.remove());
+                    
+                    wrapper.appendChild(clone);
+                }
             });
         }
 
-        // Configurar los 3 campos dinámicos
-        setupDynamicFields('tecnicos-wrapper', 'add-tecnico-btn', 'tecnicos', 'Técnico');
-        setupDynamicFields('mesas-wrapper', 'add-mesa-btn', 'mesas', 'Mesa');
-        setupDynamicFields('cavidades-wrapper', 'add-cavidad-btn', 'cavidades', 'Cavidad');
+        // Inicializar el PRIMER técnico (Pasamos true para que NO tenga botón de borrar)
+        crearComboboxTecnico(true);
+
+        // Botón añadir técnicos (Pasamos false implícitamente, SÍ tendrá botón)
+        document.getElementById('add-tecnico-btn').addEventListener('click', () => crearComboboxTecnico(false));
+
+        setupSimpleField('mesas-wrapper', 'add-mesa-btn', 'Mesa');
+        setupSimpleField('cavidades-wrapper', 'add-cavidad-btn', 'Cavidad');
+        setupSimpleField('circuitos-wrapper', 'add-circuito-btn', 'Circuito');
     });
 </script>
-
-{% endblock content %}
+{% endblock scripts %}
