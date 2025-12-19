@@ -34,14 +34,13 @@
             <thead class="bg-gray-700 border-b border-gray-600">
                 <tr>
                     <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-28">Fecha</th>
-                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-24">Mesa</th>
-                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-40">Técnico</th>
-                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-20">Tipo</th>
-                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-28">Orden</th>
-                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-28">Estatus</th>
-                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-32">Molde</th>
-                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-20">Cav</th>
-                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-20">Circ</th>
+                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-24">Orden</th>
+                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-40">Maquina</th>
+                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-20">Molde</th>
+                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-28">Defecto</th>
+                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-28">Tipo</th>
+                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-32">Estatus</th>
+                    <th class="px-3 py-4 text-left text-sm font-bold text-gray-200 uppercase tracking-wider w-20">Mesa</th>
                     <th class="px-3 py-4 text-center text-sm font-bold text-gray-200 uppercase tracking-wider w-32">Tiempo</th>
                 </tr>
             </thead>
@@ -81,7 +80,29 @@
                     <p id="modal-estado" class="font-bold text-white text-sm mt-1"></p>
                 </div>
             </div>
-
+            <div id="modal-info-retorno" class="hidden mt-2 bg-yellow-900/30 border border-yellow-600/60 rounded-lg p-4 animate-fade-in relative">
+                <div class="flex items-start gap-3">
+                    <div class="mt-1">
+                        <svg class="w-6 h-6 text-yellow-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </div>
+                    <div class="w-full">
+                        <h4 class="text-yellow-400 font-bold text-sm uppercase mb-1 border-b border-yellow-700/50 pb-1">
+                            ⚠️ Alerta de Retorno (Ref: <span id="modal-ret-ref" class="text-white"></span>)
+                        </h4>
+                        
+                        <div class="grid grid-cols-1 gap-2 mt-2">
+                            <div>
+                                <span class="text-[10px] text-yellow-600 uppercase font-bold">Defectos:</span>
+                                <p id="modal-ret-motivo" class="text-gray-200 text-sm leading-tight"></p>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-yellow-600 uppercase font-bold">Detalle Técnico:</span>
+                                <div id="modal-ret-obs" class="text-gray-300 text-xs font-mono bg-black/20 p-2 rounded border border-yellow-900/50 max-h-32 overflow-y-auto whitespace-pre-wrap"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="border border-gray-600 rounded-lg bg-gray-900/40 overflow-hidden mb-4">
                 <div class="p-3 bg-gray-900 border-b border-gray-600 flex justify-between items-center">
                     <h4 class="text-sm font-bold text-emerald-400 uppercase">Personal y Defectos Asignados</h4>
@@ -192,7 +213,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     // 1. VARIABLES
-    const soyLider = {{ es_lider_logueado|yesno:"true,false" }};
+ 
     const tecnicosData = [{% for t in moldmakers %}{ nombre: "{{ t.nombre|escapejs }}" },{% endfor %}];
     const defectosData = [{% if lista_defectos %}{% for d in lista_defectos %}{ nombre: "{{ d.nombre_defecto|escapejs }}" },{% endfor %}{% endif %}];
 
@@ -262,7 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(fetchOrdenes, 5000);
     fetchOrdenes(); 
 
-    function renderTabla(ordenes) {
+   function renderTabla(ordenes) {
         const tbody = document.getElementById('ordenes-tbody');
         let htmlContent = '';
 
@@ -272,40 +293,70 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         ordenes.forEach((orden, idx) => {
-            // Cálculo inicial del tiempo
+            // 1. Cálculo del tiempo
             let tiempoInicial = orden.duracion_segundos || 0;
             if(orden.estado === 'Activa' && orden.ultima_actualizacion_iso) {
                 tiempoInicial += Math.floor((new Date() - new Date(orden.ultima_actualizacion_iso))/1000);
             }
 
-            // CORRECCIÓN VISUAL: Usamos orden.estado (Activa/Pausada) para los colores
+            // 2. Estilos de Estado (Pausa/Activa)
             const esPausada = (orden.estado === 'Pausada');
             let bgFila = esPausada ? 'bg-yellow-900/40 hover:bg-yellow-900/50' : (idx%2===0 ? 'bg-gray-800' : 'bg-gray-750') + ' hover:bg-gray-700';
             let colorTextoReloj = esPausada ? 'text-yellow-400' : 'text-emerald-400';
             let iconoPausa = esPausada ? '<span class="ml-1 text-yellow-400 animate-pulse">⏸</span>' : '';
-
-            // CORRECCIÓN COLUMNA ESTATUS: Mostrar orden.status (Código 204, etc)
             let codigoEstatus = orden.status ? orden.status : '-';
 
+            // 3. LÓGICA DE COLOR PARA EL TIPO (Corregido: JS puro en vez de Django tags)
+            let colorTipo = 'text-blue-400'; // Default
+            if (orden.tipo === 'MCM') colorTipo = 'text-red-400';
+            else if (orden.tipo === 'CHO') colorTipo = 'text-orange-400';
+            else if (orden.tipo === 'TPM') colorTipo = 'text-yellow-400';
+
+            // 4. Construcción de la fila
+            // NOTA: El orden de los <td> debe coincidir con tus <th> del HTML
             htmlContent += `
             <tr class="cursor-pointer border-b border-gray-700 transition ${bgFila}" onclick="openModalById(${orden.id})">
-                <td class="px-3 py-4 text-xs text-white">${escapeHTML(orden.fecha_creacion)}</td>
-                <td class="px-3 py-4 text-blue-300 font-bold">${escapeHTML(orden.mesa)}</td>
-                <td class="px-3 py-4 text-gray-200 truncate max-w-[150px]">${escapeHTML(orden.tecnico)}</td>
-                <td class="px-3 py-4 font-bold text-blue-400">${escapeHTML(orden.tipo)}</td>
-                <td class="px-3 py-4 text-white font-bold text-base">${escapeHTML(orden.numero_orden)}</td>
                 
-                <td class="px-3 py-4">
+                <td class="px-3 py-4 text-xs text-white align-top">
+                    ${escapeHTML(orden.fecha_creacion)}
+                </td>
+
+                <td class="px-3 py-4 text-white font-bold text-base align-top">
+                    ${escapeHTML(orden.numero_orden)}
+                </td>
+                
+                <td class="px-3 py-4 text-gray-200 align-top">
+                    <div class="whitespace-normal text-xs leading-tight font-medium">
+                        ${escapeHTML(orden.circuito)}
+                    </div>
+                </td>
+                <td class="px-3 py-4 text-gray-300 font-medium align-top">
+                    ${escapeHTML(orden.molde)}
+                </td>
+                
+                <td class="px-3 py-4 text-gray-300 align-top">
+                    <div class="whitespace-normal leading-tight text-xs">
+                        ${escapeHTML(orden.lista_defectos)}
+                    </div>
+                </td>
+               
+
+                
+                <td class="px-3 py-4 align-top">
                     <span class="px-2 py-1 rounded text-xs font-bold border border-gray-600 bg-gray-700 text-gray-200">
                         ${escapeHTML(codigoEstatus)}
                     </span>
                 </td>
-
-                <td class="px-3 py-4 text-gray-300 truncate max-w-[120px]">${escapeHTML(orden.molde)}</td>
-                <td class="px-3 py-4 text-gray-300 font-medium">${escapeHTML(orden.cavidad)}</td>
-                <td class="px-3 py-4 text-gray-300 font-medium">${escapeHTML(orden.circuito)}</td>
+                <td class="px-3 py-4 font-bold align-top ${colorTipo}">
+                    ${escapeHTML(orden.tipo)}
+                </td>
                 
-                <td class="px-3 py-4 text-center font-bold ${colorTextoReloj} font-mono live-timer" 
+                
+                <td class="px-3 py-4 text-blue-300 font-bold align-top">
+                    ${escapeHTML(orden.mesa)}
+                </td> 
+                
+                <td class="px-3 py-4 text-center font-bold ${colorTextoReloj} font-mono live-timer align-top" 
                     data-acumulado="${orden.duracion_segundos}" 
                     data-inicio="${orden.ultima_actualizacion_iso || ''}">
                     <span class="timer-text">${formatSeconds(tiempoInicial)}</span>
@@ -366,61 +417,145 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ---------------------------------------------------------
-    // 5. RESTO DE FUNCIONES (Modal, Cards, Combobox, etc)
-    // ---------------------------------------------------------
-    // (Copia aquí tu lógica de openModal, renderTecnicosModal, setupCombobox, 
-    //  gestionarTecnicoAPI, etc. tal como la tenías funcionando).
-    
-    // ... [PEGAR AQUÍ TU CÓDIGO DE MODAL Y TARJETAS] ... 
-    
-    // -- PEGAR ESTO PARA QUE FUNCIONE SI COPIAS Y PEGAS --
+   
     function openModal(orden) {
-        currentOrdenId = orden.id; currentOrdenTipo = orden.tipo; 
+        currentOrdenId = orden.id; 
+        currentOrdenTipo = orden.tipo; 
+        
+        // Llenar datos básicos
         document.getElementById('modal-titulo').innerText = `Orden ${orden.numero_orden}`;
         document.getElementById('modal-orden-id').value = orden.id;
         document.getElementById('modal-defecto-sap').innerText = orden.defecto_sap || '-';
         document.getElementById('modal-molde').innerText = orden.molde || 'N/A';
-        document.getElementById('modal-estado').innerText = orden.estado; // Mostramos el estado del flujo
+        document.getElementById('modal-estado').innerText = orden.estado; 
         document.getElementById('modal-comentarios').value = orden.comentarios || '';
-        document.getElementById('modal-lider').innerText = orden.lider;
-        
-        const btnTomar = document.getElementById('btn-tomar-orden');
-        const elLider = document.getElementById('modal-lider');
-        if (soyLider && !orden.tiene_lider) {
-            btnTomar.classList.remove('hidden'); elLider.classList.add('text-yellow-400');
-            btnTomar.onclick = () => { if(confirm("¿Tomar?")) tomarOrdenAPI(orden.id, orden.tipo); };
-        } else {
-            btnTomar.classList.add('hidden'); elLider.classList.remove('text-yellow-400');
+        document.getElementById('modal-lider').innerText = orden.lider || 'Sin asignar';
+
+        // Lógica de Retorno (Si agregaste el HTML nuevo)
+        const divRetorno = document.getElementById('modal-info-retorno');
+        if (divRetorno) {
+            if (orden.orden_retorno_ref || (orden.motivo_retorno && orden.motivo_retorno.trim() !== '')) {
+                document.getElementById('modal-ret-ref').innerText = orden.orden_retorno_ref || 'N/A';
+                document.getElementById('modal-ret-motivo').innerText = orden.motivo_retorno || 'No especificado';
+                document.getElementById('modal-ret-obs').innerText = orden.observaciones_retorno || '';
+                divRetorno.classList.remove('hidden');
+            } else {
+                divRetorno.classList.add('hidden');
+            }
         }
+
+       
+       
         actualizarBotonPausarVisual(orden);
         renderTecnicosModal(orden.tecnicos_lista);
         document.getElementById('orden-modal').classList.remove('hidden');
     }
-    document.getElementById('modal-close-btn').onclick = () => document.getElementById('orden-modal').classList.add('hidden');
-    document.getElementById('modal-finalizar-btn').onclick = () => { if(confirm("¿Finalizar?")) actualizarOrden({ estado: 'Finalizada' }); };
-    document.getElementById('modal-guardar-comentarios').onclick = () => { actualizarOrden({ comentarios: document.getElementById('modal-comentarios').value }); };
+
     
-    // (Asegúrate de incluir las funciones setupCombobox, btnAddDetalle, renderTecnicosModal, etc. abajo)
-    // ...
-    // Funciones auxiliares
+    const modalElement = document.getElementById('orden-modal');
+    
+   
+    document.getElementById('modal-close-btn').addEventListener('click', () => {
+        modalElement.classList.add('hidden');
+    });
+
+   
+    modalElement.addEventListener('click', (e) => {
+        if (e.target === modalElement) {
+            modalElement.classList.add('hidden');
+        }
+    });
+
+  
+    document.getElementById('modal-finalizar-btn').onclick = () => { 
+        if(confirm("¿Finalizar orden?")) actualizarOrden({ estado: 'Finalizada' }); 
+    };
+    
+    document.getElementById('modal-guardar-comentarios').onclick = () => { 
+        actualizarOrden({ comentarios: document.getElementById('modal-comentarios').value }); 
+    };
+  
     function escapeHTML(str) { return str ? str.toString().replace(/&/g, '&amp;').replace(/</g, '&lt;') : ''; }
     
     window.renderTecnicosModal = function(lista) { 
-        const c=document.getElementById('modal-lista-tecnicos'); c.innerHTML=''; 
-        if(!lista.length){ c.innerHTML='<div class="p-8 text-center text-gray-500 italic">Sin técnicos</div>'; return; }
-        lista.forEach(i=>{ 
-            const card=document.createElement('div'); card.className=`rounded-lg border border-slate-700 mb-4 overflow-hidden shadow-sm ${i.activo?'bg-[#1e293b]':'bg-gray-800/30 opacity-70'}`;
-            let b=i.activo?`<div class="flex gap-2"><button onclick="abrirRelevo(${i.id},'${escapeHTML(i.nombre)}')" class="bg-yellow-600 text-white text-[10px] font-bold py-1 px-3 rounded">RELEVO</button><button onclick="gestionarTecnicoAPI('baja',{item_id:${i.id}})" class="bg-red-700 text-white text-[10px] font-bold py-1 px-3 rounded">SALIDA</button></div>`:`<span class="text-[10px] text-gray-500">FIN: ${i.fecha_fin}</span>`;
-            card.innerHTML=`<div class="flex justify-between items-center p-3 border-b border-slate-700 bg-slate-800/50"><div class="flex items-center gap-3"><span class="w-3 h-3 rounded-full ${i.activo?'bg-green-500 shadow-[0_0_5px_#22c55e]':'bg-gray-600'}"></span><span class="font-bold text-white text-sm uppercase">${escapeHTML(i.nombre)}</span><span class="text-blue-400 text-xs font-mono">Mesa: ${escapeHTML(i.mesa)}</span></div>${b}</div>`;
-            const bd=document.createElement('div'); bd.className="p-0 bg-[#1e293b]";
-            bd.innerHTML=`<div class="grid grid-cols-12 text-[10px] font-bold text-gray-500 uppercase px-4 py-2 border-b border-slate-700/50"><div class="col-span-6">DEFECTO</div><div class="col-span-3 text-center">CAVIDAD</div><div class="col-span-3 text-center">CIRCUITO</div></div>`;
-            (i.detalles||[{defecto:i.defecto||'-',cav:i.cavidad||'-',circ:i.circuito||'-'}]).forEach((d,x)=>{
-                const r=document.createElement('div'); r.className=`grid grid-cols-12 items-center px-4 py-2 text-xs text-gray-300 border-b border-gray-700/30 last:border-0 ${x%2===0?'bg-slate-800/40':'bg-transparent'}`;
-                r.innerHTML=`<div class="col-span-6 font-bold text-gray-200"><span class="text-red-500 mr-2 text-[6px]">●</span>${escapeHTML(d.defecto)}</div><div class="col-span-3 text-center font-mono text-blue-400">${escapeHTML(d.cav)}</div><div class="col-span-3 text-center font-mono text-yellow-500">${escapeHTML(d.circ)}</div>`;
+        const c = document.getElementById('modal-lista-tecnicos'); 
+        c.innerHTML = ''; 
+        
+        if(!lista.length){ 
+            c.innerHTML='<div class="p-8 text-center text-gray-500 italic">Sin técnicos asignados</div>'; 
+            return; 
+        }
+
+        lista.forEach(i => { 
+            // Contenedor del Técnico
+            const card = document.createElement('div'); 
+            card.className = `rounded-lg border border-slate-700 mb-4 overflow-hidden shadow-sm ${i.activo ? 'bg-[#1e293b]' : 'bg-gray-800/30 opacity-70'}`;
+            
+            // Botones de acción (Relevo/Salida)
+            let b = i.activo 
+                ? `<div class="flex gap-2">
+                     <button onclick="abrirRelevo(${i.id},'${escapeHTML(i.nombre)}')" class="bg-yellow-600 text-white text-[10px] font-bold py-1 px-3 rounded hover:bg-yellow-500">CAMBIO</button>
+                     <button onclick="gestionarTecnicoAPI('baja',{item_id:${i.id}})" class="bg-red-700 text-white text-[10px] font-bold py-1 px-3 rounded hover:bg-red-600">SALIDA</button>
+                   </div>`
+                : `<span class="text-[10px] text-gray-500 font-mono">FIN: ${i.fecha_fin}</span>`;
+
+            // Encabezado de la tarjeta (Nombre y Mesa)
+            card.innerHTML = `
+                <div class="flex justify-between items-center p-3 border-b border-slate-700 bg-slate-800/50">
+                    <div class="flex items-center gap-3">
+                        <span class="w-3 h-3 rounded-full ${i.activo ? 'bg-green-500 shadow-[0_0_5px_#22c55e]' : 'bg-gray-600'}"></span>
+                        <span class="font-bold text-white text-sm uppercase">${escapeHTML(i.nombre)}</span>
+                        <span class="text-blue-400 text-xs font-mono bg-slate-900 px-2 py-0.5 rounded border border-slate-700">Mesa: ${escapeHTML(i.mesa)}</span>
+                    </div>
+                    ${b}
+                </div>`;
+
+            // Contenedor de Detalles (Tabla interna)
+            const bd = document.createElement('div'); 
+            bd.className = "p-0 bg-[#1e293b]";
+            
+           
+            bd.innerHTML = `
+                <div class="grid grid-cols-12 text-[9px] font-bold text-gray-500 uppercase px-4 py-2 border-b border-slate-700/50 text-center">
+                    <div class="col-span-5 text-left">DEFECTO</div>
+                    <div class="col-span-2">CAV</div>
+                    <div class="col-span-2">CIRC</div>
+                    <div class="col-span-3">LADO (F/M)</div>
+                </div>`;
+
+            // Iterar detalles
+            const detalles = i.detalles || [{defecto: i.defecto || '-', cav: i.cavidad || '-', circ: i.circuito || '-', fijo: false, movil: false}];
+            
+            detalles.forEach((d, x) => {
+                const r = document.createElement('div'); 
+                r.className = `grid grid-cols-12 items-center px-4 py-2 text-xs text-gray-300 border-b border-gray-700/30 last:border-0 ${x % 2 === 0 ? 'bg-slate-800/40' : 'bg-transparent'}`;
+                
+                // Estilos visuales para Fijo (F) y Móvil (M)
+                // Si es true, se pone de color; si es false, gris oscuro
+                const badgeFijo = d.fijo 
+                    ? `<span class="inline-block w-5 h-5 leading-5 text-center bg-emerald-600 text-white font-bold rounded shadow-sm" title="Lado Fijo">F</span>` 
+                    : `<span class="inline-block w-5 h-5 leading-5 text-center bg-gray-800 text-gray-600 font-bold rounded border border-gray-700">F</span>`;
+                
+                const badgeMovil = d.movil 
+                    ? `<span class="inline-block w-5 h-5 leading-5 text-center bg-blue-600 text-white font-bold rounded shadow-sm" title="Lado Móvil">M</span>` 
+                    : `<span class="inline-block w-5 h-5 leading-5 text-center bg-gray-800 text-gray-600 font-bold rounded border border-gray-700">M</span>`;
+
+                r.innerHTML = `
+                    <div class="col-span-5 font-bold text-gray-200 truncate pr-2" title="${escapeHTML(d.defecto)}">
+                        <span class="text-red-500 mr-2 text-[6px]">●</span>${escapeHTML(d.defecto)}
+                    </div>
+                    <div class="col-span-2 text-center font-mono text-blue-400">${escapeHTML(d.cav)}</div>
+                    <div class="col-span-2 text-center font-mono text-yellow-500">${escapeHTML(d.circ)}</div>
+                    <div class="col-span-3 text-center flex justify-center gap-2 text-[10px]">
+                        ${badgeFijo}
+                        ${badgeMovil}
+                    </div>`;
+                
                 bd.appendChild(r);
             });
-            card.appendChild(bd); c.appendChild(card);
+            
+            card.appendChild(bd); 
+            c.appendChild(card);
         });
     };
     function setupCombobox(i,l,d){const I=document.getElementById(i),L=document.getElementById(l);if(!I||!L)return; function P(){const r=I.getBoundingClientRect();L.style.position='fixed';L.style.left=r.left+'px';L.style.width=r.width+'px';L.style.zIndex=10000;L.style.maxHeight='150px';L.style.overflowY='auto';if(window.innerHeight-r.bottom<200){L.style.top='auto';L.style.bottom=(window.innerHeight-r.top+2)+'px';}else{L.style.bottom='auto';L.style.top=(r.bottom+2)+'px';}} function R(q=''){L.innerHTML='';const f=d.filter(x=>x.nombre.toLowerCase().includes(q.toLowerCase()));if(!f.length){L.classList.add('hidden');return;}L.classList.remove('hidden');P();f.forEach(x=>{const D=document.createElement('div');D.className='p-2 hover:bg-blue-600 cursor-pointer text-xs bg-gray-700 text-white border-b border-gray-600';D.textContent=x.nombre;D.onmousedown=()=>{I.value=x.nombre;L.classList.add('hidden');};L.appendChild(D);});} I.addEventListener('input',e=>R(e.target.value));I.addEventListener('focus',()=>R(I.value));I.addEventListener('click',()=>R(I.value));window.addEventListener('scroll',e=>{if(!L.contains(e.target))L.classList.add('hidden');},true);document.addEventListener('mousedown',e=>{if(!I.contains(e.target)&&!L.contains(e.target))L.classList.add('hidden');});}

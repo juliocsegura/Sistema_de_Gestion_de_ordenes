@@ -240,6 +240,12 @@ class OrdenMCM(OrdenBase):
     status=models.CharField(max_length=5,blank=True, null=True)
     motivo_retorno = models.CharField(max_length=100, blank=True, null=True)
     observaciones_retorno = models.TextField(blank=True, null=True)
+    orden_retorno_ref = models.CharField(
+        max_length=50, 
+        blank=True, 
+        null=True, 
+        help_text="Número de la orden anterior que causó el retorno"
+    )
     def __str__(self):
         return f"Orden MCM {self.numero_orden}"
 
@@ -341,6 +347,3 @@ class OrdenSAP(models.Model):
 
  #   def __str__(self):
  #       return self.nombre
-
-
-    

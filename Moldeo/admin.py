@@ -29,22 +29,13 @@ class EstatusAdmin(admin.ModelAdmin):
 class LideresAdmin(admin.ModelAdmin):
     list_display = ('id_lider', 'nombre')
 
-@admin.register(Maquinas)
-class MaquinasAdmin(admin.ModelAdmin):
-    list_display = ('id_maquinas', 'wc', 'mn', 'wc2')
 
 @admin.register(Moldmakers)
 class MoldmakersAdmin(admin.ModelAdmin):
     list_display = ('id_mold_m', 'nombre')
 
-@admin.register(Moldes)
-class MoldesAdmin(admin.ModelAdmin):
-    list_display = ('id_molde', 'numero_molde')
-    search_fields = ('numero_molde',)
 
-@admin.register(NumerosDeParte)
-class NumerosDeParteAdmin(admin.ModelAdmin):
-    list_display = ('id_np', 'id_molde', 'numero_parte', 'terminacion', 'inicio', 'number_part', 'junto')
+
 
 @admin.register(Retorno)
 class RetornoAdmin(admin.ModelAdmin):
@@ -110,17 +101,72 @@ class OrdenAdminBase(admin.ModelAdmin):
 
 @admin.register(OrdenMCM)
 class OrdenMCMAdmin(OrdenAdminBase):
-    list_display = ('numero_orden', 'ver_molde', 'status', 'ver_tecnicos_resumen', 'motivo_retorno', 'ver_detalles_json')
-    search_fields = ('numero_orden', 'molde__numero_molde')
+    # 1. LISTADO DE COLUMNAS
+    list_display = (
+        'numero_orden', 
+        'ver_molde', 
+        'status', 
+        'ver_tecnicos_resumen', 
+        'ver_ref_retorno',   # <--- AQUÍ ESTÁ LA REFERENCIA VISUAL MEJORADA
+        'motivo_retorno',    
+        'ver_detalles_json'
+    )
     
-    # --- AQUÍ ESTÁ LA LÓGICA DE ETIQUETAS DINÁMICAS ---
+    # 2. BUSCADOR (Podrás buscar por la nueva orden O por la vieja)
+    search_fields = (
+        'numero_orden', 
+        'molde__numero_molde', 
+        'orden_retorno_ref', # <--- Búsqueda activada para la referencia
+        'motivo_retorno'
+    )
+    
+    # 3. FILTROS LATERALES
+    list_filter = (
+        'fecha_creacion', 
+        'estado', 
+        'status', 
+        'motivo_retorno'
+    )
+
+    # 4. ORGANIZACIÓN DEL FORMULARIO
+    fieldsets = (
+        ('Información General', {
+            'fields': ('numero_orden', 'molde', 'defecto_sap', 'status', 'tipo_mntn', 'estado', 'lider')
+        }),
+        ('Información de Retorno (Si aplica)', {
+            'classes': ('collapse',), 
+            'fields': ('orden_retorno_ref', 'motivo_retorno', 'observaciones_retorno')
+        }),
+        ('Tiempos', {
+            'fields': ('fecha_creacion', 'fecha_cierre', 'ultima_actualizacion', 'duracion_segundos')
+        }),
+    )
+    
+    # --- MÉTODO PARA RESALTAR LA REFERENCIA ---
+    def ver_ref_retorno(self, obj):
+        if obj.orden_retorno_ref:
+            # Se muestra en naranja negrita si existe referencia
+            return format_html(
+                '<span style="color: #d97706; font-weight: bold;">{}</span>', 
+                obj.orden_retorno_ref
+            )
+        return "-" # Guion si es una orden normal
+    
+    ver_ref_retorno.short_description = "Ref. Orden Anterior"
+    ver_ref_retorno.admin_order_field = 'orden_retorno_ref' # Permite ordenar la columna
+
+    # --- MÉTODO DE DETALLES TÉCNICOS (Igual que antes) ---
     def ver_detalles_json(self, obj):
         asignaciones = obj.asignaciones.all()
         html = ""
         for a in asignaciones:
             try:
+                nombre_mostrar = a.nombre_tecnico
+                if "(L:" in nombre_mostrar:
+                    nombre_mostrar = nombre_mostrar.replace("(L:", "<span style='color:#d97706; font-weight:bold;'>(Líder:") + "</span>"
+
                 detalles = json.loads(a.detalles_json) if a.detalles_json else []
-                info_tecnico = f"<strong>{a.nombre_tecnico} (Mesa {a.mesa}):</strong><br>"
+                info_tecnico = f"<strong>{nombre_mostrar} (Mesa {a.mesa}):</strong><br>"
                 info_detalles = ""
                 
                 for d in detalles:
@@ -128,7 +174,6 @@ class OrdenMCMAdmin(OrdenAdminBase):
                     valor_cav = d.get('cav', '-')
                     valor_circ = d.get('circ', '-')
                     
-                    # Determinar etiquetas según el defecto
                     label_cav = "Cav"
                     label_circ = "Circ"
                     
@@ -139,16 +184,15 @@ class OrdenMCMAdmin(OrdenAdminBase):
                         label_cav = "PG"
                         label_circ = "EO"
                     
-                    # Construir la línea
-                    info_detalles += f"- {d.get('defecto')} ({label_cav}: {valor_cav}, {label_circ}: {valor_circ})<br>"
+                    info_detalles += f"- {d.get('defecto')} (<span style='color:#2563eb;'>{label_cav}: {valor_cav}</span>, <span style='color:#2563eb;'>{label_circ}: {valor_circ}</span>)<br>"
                 
-                html += f"<div style='margin-bottom:5px; border-bottom:1px solid #eee; padding-bottom:2px;'>{info_tecnico}{info_detalles}</div>"
+                html += f"<div style='margin-bottom:8px; border-left:3px solid #ccc; padding-left:5px;'>{info_tecnico}{info_detalles}</div>"
             except:
-                html += f"{a.nombre_tecnico}: Error de formato<br>"
+                html += f"{a.nombre_tecnico}: Error JSON<br>"
         
         return format_html(html)
     
-    ver_detalles_json.short_description = "Detalles (Técnicos)"
+    ver_detalles_json.short_description = "Detalles Técnicos"
 
 @admin.register(OrdenCHO)
 class OrdenCHOAdmin(OrdenAdminBase):

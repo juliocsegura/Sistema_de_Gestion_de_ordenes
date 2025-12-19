@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="sticky top-0 z-40 bg-gray-900 border-b border-gray-700 shadow-xl px-4 py-4 mb-6">
-    <div class="container mx-auto max-w-6xl flex flex-col lg:flex-row justify-between items-center gap-4">
+    <div class="container mx-auto max-w-7xl flex flex-col lg:flex-row justify-between items-center gap-4">
         
         <div class="flex items-center gap-4 w-full lg:w-auto">
             <a href="javascript:history.back()" class="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition">
@@ -14,20 +14,20 @@
         </div>
 
         <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto items-center">
-            <div class="relative w-full sm:w-80">
+            <div class="relative w-full sm:w-96">
                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </span>
                 <input type="text" id="filtro-texto" placeholder="Buscar orden, molde, defecto..." 
-                       class="w-full bg-gray-800 text-white border border-gray-600 rounded-lg pl-9 pr-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none placeholder-gray-500 text-sm">
+                       class="w-full bg-gray-800 text-white border border-gray-600 rounded-lg pl-9 pr-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none placeholder-gray-500 text-sm shadow-sm transition-all focus:border-blue-500">
             </div>
 
-            <button id="btn-limpiar" class="hidden bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-2 rounded-lg text-sm transition flex items-center gap-2">
+            <button id="btn-limpiar" class="hidden bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-2 rounded-lg text-sm transition flex items-center gap-2 border border-gray-600">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 Limpiar
             </button>
 
-            <a href="{% url 'Moldeo:importar_sap' %}" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition whitespace-nowrap flex items-center gap-2">
+            <a href="{% url 'Moldeo:importar_sap' %}" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg transition whitespace-nowrap flex items-center gap-2 transform hover:scale-105">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                 Subir Excel
             </a>
@@ -35,41 +35,51 @@
     </div>
 </div>
 
-<div class="container mx-auto max-w-6xl px-4 pb-12">
+<div class="container mx-auto max-w-7xl px-4 pb-12">
     
-    <div class="overflow-x-auto bg-gray-800 rounded-lg shadow-xl border border-gray-700">
+    <div class="overflow-hidden bg-gray-800 rounded-lg shadow-2xl border border-gray-700">
         <table class="w-full min-w-full" id="tabla-sap">
-            <thead class="bg-gray-900 border-b border-gray-700 sticky top-0 z-30 shadow-md">
+            <thead class="bg-gray-900 border-b border-gray-700">
                 <tr>
-                    <th class="p-4 text-left text-sm font-bold text-gray-300 uppercase tracking-wider w-32">Orden (SAP)</th>
+                    <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Orden (SAP)</th>
                     
-                    <th class="p-2 text-left text-sm font-bold text-gray-300 uppercase tracking-wider w-48">
-                        <div class="flex flex-col gap-1">
-                            <div class="flex items-center gap-2 cursor-pointer hover:text-white transition select-none" onclick="toggleSort()">
+                    <th class="p-2 text-left text-xs font-bold text-gray-400 uppercase tracking-wider w-56 relative group">
+                        <div class="flex items-center justify-between cursor-pointer p-1 rounded hover:bg-gray-800 transition" onclick="toggleDateMenu()">
+                            <div class="flex items-center gap-2">
                                 <span>Fecha Inicio</span>
-                                <span id="icono-sort" class="text-gray-500 text-xs">⇅</span>
+                                <span id="icono-sort" class="text-gray-500 hover:text-white transition" onclick="event.stopPropagation(); toggleSort()">⇅</span>
                             </div>
-                            
-                            <div class="flex gap-1 items-center">
-                                <input type="date" id="fecha-inicio" 
-                                       class="bg-gray-800 text-[10px] text-gray-300 border border-gray-600 rounded px-1 py-0.5 focus:border-blue-500 w-full"
-                                       title="Desde">
-                                <span class="text-gray-500">-</span>
-                                <input type="date" id="fecha-fin" 
-                                       class="bg-gray-800 text-[10px] text-gray-300 border border-gray-600 rounded px-1 py-0.5 focus:border-blue-500 w-full"
-                                       title="Hasta">
+                            <svg class="w-3 h-3 text-gray-500 group-hover:text-blue-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                        </div>
+
+                        <div id="menu-fecha" class="hidden absolute top-full left-0 mt-1 w-64 bg-gray-800 border border-gray-600 rounded-lg shadow-2xl z-50 p-3 animate-fade-in">
+                            <div class="text-xs text-gray-400 mb-2 font-bold uppercase">Filtrar por rango:</div>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs text-gray-500 w-8">De:</span>
+                                    <input type="date" id="fecha-inicio" class="bg-gray-900 text-xs text-white border border-gray-600 rounded px-2 py-1 w-full focus:border-blue-500 outline-none">
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs text-gray-500 w-8">A:</span>
+                                    <input type="date" id="fecha-fin" class="bg-gray-900 text-xs text-white border border-gray-600 rounded px-2 py-1 w-full focus:border-blue-500 outline-none">
+                                </div>
+                            </div>
+                            <div class="mt-3 flex justify-end">
+                                <button onclick="toggleDateMenu()" class="text-xs text-blue-400 hover:text-white font-bold">Cerrar</button>
                             </div>
                         </div>
                     </th>
 
-                    <th class="p-4 text-left text-sm font-bold text-gray-300 uppercase tracking-wider">Descripción / Defecto</th>
-                    <th class="p-4 text-left text-sm font-bold text-gray-300 uppercase tracking-wider">Equipo</th>
-                    <th class="p-4 text-left text-sm font-bold text-gray-300 uppercase tracking-wider">Molde (WC)</th>
+                    <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Hora</th>
+
+                    <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Descripción / Defecto</th>
+                    <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Equipo</th>
+                    <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Molde (WC)</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-700" id="cuerpo-tabla">
+            <tbody class="divide-y divide-gray-700 text-sm" id="cuerpo-tabla">
                 {% for orden in ordenes %}
-                <tr class="hover:bg-gray-700 transition cursor-pointer fila-sap"
+                <tr class="hover:bg-gray-700 transition cursor-pointer fila-sap group"
                     data-search="{{ orden.order }} {{ orden.description }} {{ orden.equipment }} {{ orden.work_center }}"
                     onclick="openModal({
                         orden: '{{ orden.order }}',
@@ -78,26 +88,32 @@
                         centro: '{{ orden.work_center|default:'-' }}'
                     })">
                     
-                    <td class="p-4 whitespace-nowrap font-bold text-blue-400">
+                    <td class="p-4 whitespace-nowrap font-bold text-blue-400 group-hover:text-blue-300">
                         {{ orden.order }}
                     </td>
-                    <td class="px-4 py-3 text-left text-gray-300 font-mono col-fecha text-sm" 
+                    <td class="px-4 py-3 text-left text-gray-300 font-mono col-fecha" 
                         data-fecha="{{ orden.fecha_inicio|date:'Y-m-d' }}">
                        {{ orden.fecha_inicio|date:"d/m/Y"|default:"-" }} 
                     </td>
+                    
+                    <td class="p-4 text-gray-400 font-mono whitespace-nowrap">
+                        {{ orden.hora_inicio|time:"H:i"|default:"-" }}
+                    </td>
+
                     <td class="p-4 text-gray-300">
                         {{ orden.description }}
                     </td>
-                    <td class="p-4 whitespace-nowrap font-mono text-yellow-500">
+                    <td class="p-4 whitespace-nowrap font-mono text-yellow-600 group-hover:text-yellow-500">
                         {{ orden.equipment|default:"-" }}
                     </td>
-                    <td class="p-4 whitespace-nowrap text-gray-400">
+                    <td class="p-4 whitespace-nowrap text-gray-400 font-bold">
                         {{ orden.work_center }}
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="p-8 text-center text-gray-500 text-lg">
+                    <td colspan="6" class="p-12 text-center text-gray-500 text-lg flex flex-col items-center justify-center">
+                        <svg class="w-12 h-12 mb-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         No se encontraron órdenes cargadas.
                     </td>
                 </tr>
@@ -111,7 +127,7 @@
     </div>
     
     <div class="mt-4 text-right text-gray-500 text-xs">
-        Registros cargados: <span id="contador-registros">{{ ordenes|length }}</span>
+        Registros cargados: <span id="contador-registros" class="font-bold text-white">{{ ordenes|length }}</span>
     </div>
 
     <div id="modal-detalle" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 hidden backdrop-blur-sm transition-opacity duration-300">
@@ -147,12 +163,17 @@
 </div>
 
 <style>
+    /* Estilo oscuro para inputs de fecha */
     ::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; opacity: 0.6; }
     ::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+    
+    /* Animación suave para el menú */
+    @keyframes fadeInMenu { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-in { animation: fadeInMenu 0.15s ease-out; }
 </style>
 
 <script>
-    // --- ELEMENTOS ---
+    // --- VARIABLES Y ELEMENTOS ---
     const inputTexto = document.getElementById('filtro-texto');
     const fechaInicio = document.getElementById('fecha-inicio');
     const fechaFin = document.getElementById('fecha-fin');
@@ -161,8 +182,21 @@
     const btnLimpiar = document.getElementById('btn-limpiar');
     const contador = document.getElementById('contador-registros');
     const iconoSort = document.getElementById('icono-sort');
+    const menuFecha = document.getElementById('menu-fecha');
 
-    // --- FILTRADO (TEXTO + RANGO FECHAS) ---
+    // --- TOGGLE MENU FECHA ---
+    window.toggleDateMenu = function() {
+        menuFecha.classList.toggle('hidden');
+    }
+
+    // Cerrar menú al hacer click fuera
+    window.addEventListener('click', (e) => {
+        if (!e.target.closest('th') && !menuFecha.classList.contains('hidden')) {
+            menuFecha.classList.add('hidden');
+        }
+    });
+
+    // --- FILTRADO ---
     function aplicarFiltros() {
         const texto = inputTexto.value.toLowerCase();
         const fInicio = fechaInicio.value; 
@@ -173,13 +207,12 @@
 
         filas.forEach(fila => {
             const contenido = fila.getAttribute('data-search').toLowerCase();
-            // Obtenemos la fecha ISO (YYYY-MM-DD) desde el atributo data
             const fechaFila = fila.querySelector('.col-fecha').getAttribute('data-fecha'); 
 
-            // 1. Coincidencia Texto
+            // 1. Texto
             const matchTexto = contenido.includes(texto);
 
-            // 2. Coincidencia Fecha (Rango)
+            // 2. Fecha
             let matchFecha = true;
             if (fInicio && fechaFila < fInicio) matchFecha = false;
             if (fFin && fechaFila > fFin) matchFecha = false;
@@ -194,9 +227,7 @@
 
         noResults.classList.toggle('hidden', visibles > 0);
         contador.innerText = visibles;
-        
-        const hayFiltros = texto || fInicio || fFin;
-        btnLimpiar.classList.toggle('hidden', !hayFiltros);
+        btnLimpiar.classList.toggle('hidden', (!texto && !fInicio && !fFin));
     }
 
     inputTexto.addEventListener('input', aplicarFiltros);
@@ -210,31 +241,25 @@
         aplicarFiltros();
     });
 
-    // --- ORDENAMIENTO (CLIENT SIDE) ---
-    let sortAsc = false; // Empezamos descendente (más reciente primero)
-
-    function toggleSort() {
+    // --- ORDENAMIENTO ---
+    let sortAsc = false; 
+    window.toggleSort = function() {
         sortAsc = !sortAsc;
-        iconoSort.innerText = sortAsc ? '▲' : '▼'; // Flecha visual
+        iconoSort.innerText = sortAsc ? '▲' : '▼'; 
         
         const filas = Array.from(document.querySelectorAll('.fila-sap'));
         
         filas.sort((a, b) => {
             const dateA = a.querySelector('.col-fecha').getAttribute('data-fecha') || '';
             const dateB = b.querySelector('.col-fecha').getAttribute('data-fecha') || '';
-            
-            // Si alguna no tiene fecha, la mandamos al final
-            if (!dateA) return 1;
-            if (!dateB) return -1;
-
+            if (!dateA) return 1; if (!dateB) return -1;
             return sortAsc ? dateA.localeCompare(dateB) : dateB.localeCompare(dateA);
         });
 
-        // Reinsertar ordenado
         filas.forEach(fila => tbody.appendChild(fila));
     }
 
-    // --- MODAL (Tu lógica original) ---
+    // --- MODAL ---
     const modalDetalle = document.getElementById('modal-detalle');
     const btnIniciar = document.getElementById('btn-iniciar-orden');
     const txtOrden = document.getElementById('md-orden');
@@ -242,7 +267,7 @@
     const txtCentro = document.getElementById('md-molde');
     const txtEquipo = document.getElementById('md-n_sap');
 
-    function openModal(data) {
+    window.openModal = function(data) {
         txtOrden.textContent = data.orden;
         txtDesc.textContent = data.desc;
         txtCentro.textContent = data.centro;
@@ -259,8 +284,7 @@
         modalDetalle.classList.remove('hidden');
     }
 
-    function closeModal() { modalDetalle.classList.add('hidden'); }
-    window.addEventListener('click', (e) => { if (e.target === modalDetalle) closeModal(); });
+    window.closeModal = function() { modalDetalle.classList.add('hidden'); }
     window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 </script>
 {% endblock %}

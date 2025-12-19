@@ -79,61 +79,56 @@ def btn_status_ordenmcm_view(request):
 
 @require_http_methods(["GET", "POST"])
 def mcm_view(request):
-    # 1. Configuración inicial (Valores por defecto)
+    # 1. Configuración inicial
     status_actual = request.POST.get('statusmcm') or request.GET.get('status', '')
     tipo_mntn = 'MCM'
     pre_orden = request.POST.get('numero_orden') or request.GET.get('numero_orden', '')
     pre_defecto = request.POST.get('defecto_sap') or request.GET.get('defecto_sap', '')
     
-    # Intentamos obtener el nombre y el ID de diferentes fuentes (GET o POST)
     pre_molde_nombre = request.GET.get('molde', '') 
-    pre_molde_pk = request.POST.get('molde', '') # Prioridad al POST (Hidden Input)
+    pre_molde_pk = request.POST.get('molde', '') 
 
-    # Lógica de Recuperación: Si tenemos ID pero no Nombre (pasó en un POST fallido), recuperamos el Nombre
     if pre_molde_pk and not pre_molde_nombre:
         try:
             m_obj = Moldes.objects.get(pk=pre_molde_pk)
             pre_molde_nombre = m_obj.numero_molde
-        except:
-            pass
+        except: pass
     
-    # Lógica Inversa: Si tenemos Nombre pero no ID (pasó en un GET inicial), recuperamos el ID
     if not pre_molde_pk and pre_molde_nombre:
         try:
             m = Moldes.objects.filter(numero_molde=pre_molde_nombre).first()
             if m: pre_molde_pk = m.id_molde
         except: pass
 
-    # 2. LÓGICA DE GUARDADO (POST)
+    # 2. LÓGICA DE GUARDADO
     if request.method == 'POST':
         numero_orden = request.POST.get('numero_orden')
         defecto_sap = request.POST.get('defecto_sap')
-        molde_form_id = request.POST.get('molde') # Este es el ID oculto
+        molde_form_id = request.POST.get('molde')
         asignaciones_json_str = request.POST.get('asignaciones_json', '[]')
 
         motivo_ret = request.POST.get('motivo_retorno', '')
         obs_ret = request.POST.get('observaciones_retorno', '')
+        orden_ref = request.POST.get('orden_retorno_ref', '')
+        # Concatenar líderes de retorno a observaciones si existen
+        lideres_ret_str = request.POST.get('lideres_retorno_str', '')
+        if lideres_ret_str:
+            obs_ret += f"\n[Líderes Retorno: {lideres_ret_str}]"
         
         molde_instancia = None
-        
-        # Validación de ID numérico para evitar el error "invalid literal for int() with base 10: 'None'"
         if molde_form_id and str(molde_form_id).isdigit():
             try:
                 molde_instancia = Moldes.objects.get(pk=molde_form_id)
             except Moldes.DoesNotExist:
                 molde_instancia = None
 
-        # Validación final antes de guardar
         if not (numero_orden and defecto_sap and molde_instancia):
-            # Si falla aquí, el código continuará abajo y renderizará la página de nuevo
-            # PERO ahora 'pre_molde_pk' y 'pre_molde_nombre' ya fueron reconstruidos al inicio de la función
-            messages.error(request, 'Error: Faltan campos obligatorios o el Molde no es válido.')
+            messages.error(request, 'Error: Faltan campos obligatorios.')
         else:
             try:
                 with transaction.atomic():
-                    lider_inicial = None
-                    if es_lider(request.user):
-                        lider_inicial = request.user
+                    # Si ya no usas el "Líder Global" de la orden, puedes dejarlo en None o poner al usuario actual
+                    lider_inicial = request.user if es_lider(request.user) else None
 
                     nueva_orden = OrdenMCM.objects.create(
                         numero_orden=numero_orden,
@@ -142,9 +137,10 @@ def mcm_view(request):
                         status=status_actual,
                         tipo_mntn=tipo_mntn,
                         estado='Activa',
-                        lider=lider_inicial,
+                        lider=lider_inicial, # Líder de registro (usuario logueado)
                         ultima_actualizacion=timezone.now(),
                         motivo_retorno=motivo_ret,
+                        orden_retorno_ref=orden_ref,
                         observaciones_retorno=obs_ret
                     )
 
@@ -153,11 +149,20 @@ def mcm_view(request):
 
                     for item in asignaciones_data:
                         nombre = item.get('nombre')
+                        lider_tec = item.get('lider', '') # <--- AQUÍ RECIBIMOS EL LÍDER DEL TÉCNICO
+                        
                         if nombre:
+                            # ESTRATEGIA DE GUARDADO: 
+                            # Concatenamos el líder al nombre para guardarlo en el campo existente
+                            nombre_final = nombre
+                            if lider_tec:
+                                nombre_final = f"{nombre} (L: {lider_tec})"
+
                             detalles_str = json.dumps(item.get('detalles', []))
+                            
                             AsignacionUniversal.objects.create(
                                 content_object=nueva_orden,
-                                nombre_tecnico=nombre,
+                                nombre_tecnico=nombre_final, # Guardamos "Juan (L: Pedro)"
                                 mesa=item.get('mesa', '-'),
                                 detalles_json=detalles_str,
                                 defecto="Ver detalles",
@@ -168,26 +173,23 @@ def mcm_view(request):
                 return redirect('Moldeo:ordenes_en_curso')
             
             except Exception as e:
-                messages.error(request, f'Error interno al guardar: {e}')
+                messages.error(request, f'Error al guardar: {e}')
                 print(f"Error Save: {e}")
 
-    # 3. RENDERIZADO (GET o Error en POST)
+    # 3. RENDERIZADO
     context = {
         'status_actual': status_actual,
         'tipo_mntn': tipo_mntn,
         'pre_orden': pre_orden,
         'pre_defecto': pre_defecto,
-        # Estas dos variables ahora siempre tendrán datos, incluso tras un error
         'pre_molde_nombre': pre_molde_nombre, 
         'pre_molde_pk': pre_molde_pk,
         'lista_defectos': Defectos.objects.all().order_by('nombre_defecto'),
         'moldmakers': Moldmakers.objects.all().order_by('nombre'),
-        'lideres_all': Lideres.objects.all().order_by('nombre'),
+        'lideres_all': Lideres.objects.all().order_by('nombre'), # Importante para el dropdown
         'es_lider_logueado': es_lider(request.user)
     }
-    
     return render(request, 'Moldeo/prueba.html', context)
-
 @require_http_methods(["GET", "POST"])
 def registro_cho_view(request):
     tipo_mntn = 'CHO'
@@ -238,8 +240,7 @@ def registro_cho_view(request):
                         ultima_actualizacion=timezone.now()
                     )
 
-                    # Guardar Asignaciones
-                    # Zip simple si solo hay técnicos y mesas
+                   
                     from itertools import zip_longest
                     datos = zip_longest(l_tecnicos, l_mesas, fillvalue='')
                     
@@ -352,11 +353,26 @@ def api_ordenes_recientes_view(request):
     data = []
     for orden in todas:
         asignaciones = list(orden.asignaciones.all())
-        
+        nombres_defectos = set()
         tecnicos_data = []
         nombres_visibles = [] 
         defectos_visibles = set()
+        for asignacion in orden.asignaciones.filter(activo=True):
+            if asignacion.detalles_json:
+                try:
+                    detalles = json.loads(asignacion.detalles_json)
+                    for item in detalles:
+                        if 'defecto' in item:
+                            nombres_defectos.add(item['defecto'])
+                except:
+                    pass
         
+        # Si encontraron defectos, los unimos con comas. Si no, ponemos el de SAP por defecto.
+        if nombres_defectos:
+          texto_defectos = ", ".join(list(nombres_defectos))
+        else:
+            # Fallback: Si nadie ha registrado nada aún, mostramos el defecto original
+          texto_defectos = getattr(orden, 'defecto_sap', 'Sin defecto')
         for item in asignaciones:
             # 1. Intentar leer JSON complejo
             try:
@@ -406,8 +422,7 @@ def api_ordenes_recientes_view(request):
         tecnicos_data.sort(key=lambda x: x['activo'], reverse=True)
 
         tecnico_str = ", ".join(nombres_visibles) if nombres_visibles else "Sin técnico activo"
-        nombre_lider = orden.lider.username if orden.lider else "Sin Líder Asignado"
-        tiene_lider = bool(orden.lider)
+        
 
         # Encontrar datos del primer técnico activo para mostrar en la tarjeta
         primero_activo = next((t for t in tecnicos_data if t['activo']), None)
@@ -430,10 +445,10 @@ def api_ordenes_recientes_view(request):
             'comentarios': orden.comentarios, 
             'tecnico': tecnico_str,
             'tecnicos_lista': tecnicos_data,
-            
-            'lider': nombre_lider,
-            'tiene_lider': tiene_lider,
-
+            'lista_defectos': texto_defectos,
+            'orden_retorno_ref': orden.orden_retorno_ref,
+            'motivo_retorno': orden.motivo_retorno,
+            'observaciones_retorno': orden.observaciones_retorno,
             # Aquí es donde fallaba antes: ahora 'cavidad' y 'circuito' existen en 'primero_activo'
             'mesa': primero_activo['mesa'] if primero_activo else '-',
             'cavidad': primero_activo['cavidad'] if primero_activo else '-', 
@@ -530,8 +545,7 @@ def api_actualizar_orden_view(request, orden_id):
         # Usamos select_for_update para bloquear la fila mientras editamos
         orden = Modelo.objects.select_for_update().get(id=orden_id)
 
-        # --- LÓGICA DE PAUSA / REANUDAR (Campo: ESTADO) ---
-        # Solo entramos aquí si el JS nos manda 'estado' (Activa/Pausada/Finalizada)
+       
         if 'estado' in data:
             nuevo_estado_flujo = data['estado']
             ahora = timezone.now()
@@ -560,7 +574,7 @@ def api_actualizar_orden_view(request, orden_id):
                 ct = ContentType.objects.get_for_model(orden)
                 AsignacionUniversal.objects.filter(content_type=ct, object_id=orden.id, activo=True).update(activo=False, fecha_fin=ahora)
 
-            # GUARDAR SOLO EL ESTADO (Activa/Pausada)
+           
             orden.estado = nuevo_estado_flujo
             orden.save()
 
@@ -728,10 +742,13 @@ def importar_sap_view(request):
                 messages.error(request, f'Faltan columnas. Se requiere: {required_cols}')
                 return render(request, 'Moldeo/importar_sap.html')
 
-            # Buscar índice de la fecha (Puede llamarse "Bas. start date" o "Basic start date")
+            # Buscar índice de la FECHA y de la HORA
             idx_fecha = headers.get('Bas. start date') or headers.get('Basic start date')
+            idx_hora = headers.get('Start time') # <--- NUEVO: Buscamos la columna de hora
 
             count = 0
+            from datetime import datetime, time # Import necesario para procesar horas
+
             for row in ws.iter_rows(min_row=2, values_only=True):
                 order_val = row[headers['Order']]
                 if not order_val: continue
@@ -740,12 +757,28 @@ def importar_sap_view(request):
                 fecha_val = None
                 if idx_fecha is not None:
                     raw_date = row[idx_fecha]
-                    # openpyxl suele devolver datetime, si es string intentamos no guardar basura
-                    if raw_date and hasattr(raw_date, 'date'): 
-                        fecha_val = raw_date.date()
-                    elif isinstance(raw_date, str):
-                        # Aquí podrías agregar lógica para parsear texto si fuera necesario
-                        pass 
+                    if raw_date:
+                        if hasattr(raw_date, 'date'): 
+                            fecha_val = raw_date.date()
+                        elif isinstance(raw_date, datetime): # A veces openpyxl devuelve datetime
+                            fecha_val = raw_date.date()
+
+                # Procesar HORA (NUEVA LÓGICA)
+                hora_val = None
+                if idx_hora is not None:
+                    raw_time = row[idx_hora]
+                    if raw_time:
+                        # Si es un objeto datetime o time de Python (lo ideal)
+                        if hasattr(raw_time, 'time'):
+                            # Si es datetime, extraemos time(). Si es time, lo usamos directo.
+                            hora_val = raw_time.time() if hasattr(raw_time, 'date') else raw_time
+                        
+                        # Si viene como string (ej: "21:49:00")
+                        elif isinstance(raw_time, str):
+                            try:
+                                hora_val = datetime.strptime(raw_time.strip(), "%H:%M:%S").time()
+                            except ValueError:
+                                pass # Si falla el formato, lo dejamos null
 
                 OrdenSAP.objects.update_or_create(
                     order=str(order_val),
@@ -753,24 +786,26 @@ def importar_sap_view(request):
                         'description': row[headers['Description']],
                         'work_center': row[headers['Work center']],
                         'equipment': str(row[headers.get('Equipment', -1)]) if headers.get('Equipment') else '',
-                        'fecha_inicio': fecha_val # <--- GUARDAMOS LA FECHA
+                        'fecha_inicio': fecha_val,
+                        'hora_inicio': hora_val # <--- GUARDAMOS LA HORA AQUÍ
                     }
                 )
                 count += 1
 
-            messages.success(request, f'Éxito: Se procesaron {count} órdenes correctamente.')
+            messages.success(request, f'Éxito: Se procesaron {count} órdenes correctamente (con fecha y hora).')
             return redirect('Moldeo:panel_principal')
 
         except Exception as e:
             messages.error(request, f'Error al procesar: {e}')
 
     return render(request, 'Moldeo/importar_sap.html')
+
+    return render(request, 'Moldeo/importar_sap.html')
 def lista_sap_view(request):
     # Capturamos lo que el usuario escribe en el buscador
     busqueda = request.GET.get('q', '')
     fecha_filtro = request.GET.get('fecha', '')
-    # PASO 1: Recolectar órdenes registradas de TODAS las tablas
-    # Usamos values_list(..., flat=True) para obtener solo una lista de strings ['1001', '1002']
+ 
     ids_mcm = OrdenMCM.objects.values_list('numero_orden', flat=True)
     ids_cho = OrdenCHO.objects.values_list('numero_orden', flat=True)
     ids_tpm = OrdenTPM.objects.values_list('numero_orden', flat=True)
@@ -827,11 +862,9 @@ def api_buscar_orden_info(request):
     if not numero:
         return JsonResponse({'success': False, 'message': 'Falta número'})
     
-    # Buscamos la orden
     orden = OrdenMCM.objects.filter(numero_orden=numero).last()
     
     if orden:
-        # Recuperar asignaciones (Técnicos/Detalles)
         lista_asignaciones = []
         for asig in orden.asignaciones.all():
             detalles = []
@@ -839,11 +872,25 @@ def api_buscar_orden_info(request):
                 import json
                 try:
                     detalles = json.loads(asig.detalles_json)
+                except: pass
+            
+            # LÓGICA DE SEPARACIÓN (Parsing)
+            raw_name = asig.nombre_tecnico
+            nombre_real = raw_name
+            lider_real = ""
+            
+            # Si el nombre tiene el formato "Nombre (L: Lider)"
+            if "(L:" in raw_name:
+                try:
+                    parts = raw_name.split("(L:")
+                    nombre_real = parts[0].strip() # "Juan Perez"
+                    lider_real = parts[1].replace(")", "").strip() # "Pedro"
                 except:
                     pass
-            
+
             lista_asignaciones.append({
-                'nombre': asig.nombre_tecnico,
+                'nombre': nombre_real,
+                'lider': lider_real, # Enviamos el líder limpio al JS
                 'mesa': asig.mesa,
                 'detalles': detalles
             })
@@ -855,7 +902,34 @@ def api_buscar_orden_info(request):
             'comentarios': orden.comentarios or '',
             'motivo_retorno': orden.motivo_retorno or '',
             'observaciones_retorno': orden.observaciones_retorno or '',
-            'asignaciones': lista_asignaciones # <--- ENVIAMOS TODO EL DETALLE
+            'asignaciones': lista_asignaciones
         })
     else:
         return JsonResponse({'success': False, 'message': 'Orden no encontrada'})
+    
+@require_http_methods(["GET"])
+def api_filtrar_ordenes_mcm(request):
+    """
+    Retorna una lista simple de órdenes FINALIZADAS para el autocompletado.
+    """
+    q = request.GET.get('q', '')
+    
+    # CAMBIO AQUÍ: Ahora busca si hay al menos 1 caracter (antes era < 3)
+    if not q: 
+        return JsonResponse([], safe=False)
+    
+    qs = OrdenMCM.objects.filter(
+        numero_orden__icontains=q,
+        estado='Finalizada' 
+    ).order_by('-fecha_creacion')[:10]
+    
+    data = []
+    for o in qs:
+        nombre_molde = o.molde.numero_molde if o.molde else 'N/A'
+        data.append({
+            'numero': o.numero_orden,
+            'molde': nombre_molde,
+            'defecto': o.defecto_sap
+        })
+        
+    return JsonResponse(data, safe=False)
