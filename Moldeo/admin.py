@@ -35,7 +35,13 @@ class MoldmakersAdmin(admin.ModelAdmin):
     list_display = ('id_mold_m', 'nombre')
 
 
+@admin.register(Maquinas)
+class MaquinasAdmin(admin.ModelAdmin):
+    list_display = ('wc', 'mn')
 
+@admin.register(Moldes)
+class MoldeAdmin(admin.ModelAdmin):
+    list_display = ('id_molde', 'numero_molde')
 
 @admin.register(Retorno)
 class RetornoAdmin(admin.ModelAdmin):

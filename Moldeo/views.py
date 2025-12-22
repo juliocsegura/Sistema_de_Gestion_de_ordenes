@@ -34,7 +34,7 @@ def Registrar_Orden_view(request):
     defecto = request.GET.get('defecto', '') or request.GET.get('defecto_sap', '')
     molde_str = request.GET.get('molde', '') # Nombre (Ej: M123)
     status_url = request.GET.get('status', '100')
-
+    maquina = request.POST.get('maquina','') or request.GET.get('maquina', '')
     # BUSCAR ID DEL MOLDE (Crucial)
     pre_molde_pk = ''
     if molde_str:
@@ -46,6 +46,7 @@ def Registrar_Orden_view(request):
     ctx = {
         'pre_orden': orden_sap,
         'pre_defecto': defecto,
+        'pre_maquina': maquina,
         'pre_molde_nombre': molde_str,
         'pre_molde_pk': pre_molde_pk, # <--- Esto llena el input hidden
         'status_actual': status_url,
@@ -65,7 +66,7 @@ def Orden_en_curso_view(request):
     context = { 
         'lista_defectos': lista_defectos,
         'moldmakers': lista_tecnicos,
-        'es_lider_logueado': es_lider
+        'lideres_all': Lideres.objects.all().order_by('nombre'),
     }
     return render(request, 'Moldeo/Ordenes_en_curso.html', context)
 
@@ -73,7 +74,9 @@ def btn_status_ordenmcm_view(request):
     context = {
         'pre_orden': request.GET.get('numero_orden', ''),
         'pre_defecto': request.GET.get('defecto_sap', ''),
-        'pre_molde': request.GET.get('molde', '')
+        'pre_molde': request.GET.get('molde', ''),
+        
+        'pre_maquina': request.GET.get('maquina', '')
     }
     return render(request, 'Moldeo/btn_status_mcm.html', context)
 
@@ -84,7 +87,7 @@ def mcm_view(request):
     tipo_mntn = 'MCM'
     pre_orden = request.POST.get('numero_orden') or request.GET.get('numero_orden', '')
     pre_defecto = request.POST.get('defecto_sap') or request.GET.get('defecto_sap', '')
-    
+    pre_maquina= request.POST.get('maquina') or request.GET.get('maquina', '')
     pre_molde_nombre = request.GET.get('molde', '') 
     pre_molde_pk = request.POST.get('molde', '') 
 
@@ -106,7 +109,7 @@ def mcm_view(request):
         defecto_sap = request.POST.get('defecto_sap')
         molde_form_id = request.POST.get('molde')
         asignaciones_json_str = request.POST.get('asignaciones_json', '[]')
-
+        maquina_input = request.POST.get('maquina', '')
         motivo_ret = request.POST.get('motivo_retorno', '')
         obs_ret = request.POST.get('observaciones_retorno', '')
         orden_ref = request.POST.get('orden_retorno_ref', '')
@@ -136,6 +139,7 @@ def mcm_view(request):
                         molde=molde_instancia,
                         status=status_actual,
                         tipo_mntn=tipo_mntn,
+                        maquina=maquina_input,
                         estado='Activa',
                         lider=lider_inicial, # Líder de registro (usuario logueado)
                         ultima_actualizacion=timezone.now(),
@@ -182,6 +186,7 @@ def mcm_view(request):
         'tipo_mntn': tipo_mntn,
         'pre_orden': pre_orden,
         'pre_defecto': pre_defecto,
+        'pre_maquina': pre_maquina,
         'pre_molde_nombre': pre_molde_nombre, 
         'pre_molde_pk': pre_molde_pk,
         'lista_defectos': Defectos.objects.all().order_by('nombre_defecto'),
@@ -403,7 +408,7 @@ def api_ordenes_recientes_view(request):
                 'mesa': item.mesa or '-',
                 'activo': item.activo,
                 'fecha_fin': item.fecha_fin.strftime('%H:%M') if item.fecha_fin else None,
-                
+                'lider': str(item.lider) if hasattr(item, 'lider') and item.lider else (str(orden.lider) if orden.lider else None),
                 'detalles': detalles_obj, # Lista completa para el Modal
                 
                 # Agregamos estos campos para evitar el KeyError
@@ -449,11 +454,12 @@ def api_ordenes_recientes_view(request):
             'orden_retorno_ref': orden.orden_retorno_ref,
             'motivo_retorno': orden.motivo_retorno,
             'observaciones_retorno': orden.observaciones_retorno,
+            'maquina': orden.maquina if orden.maquina else None,
             # Aquí es donde fallaba antes: ahora 'cavidad' y 'circuito' existen en 'primero_activo'
             'mesa': primero_activo['mesa'] if primero_activo else '-',
             'cavidad': primero_activo['cavidad'] if primero_activo else '-', 
             'circuito': primero_activo['circuito'] if primero_activo else '-',
-            
+             
             'duracion_segundos': getattr(orden, 'duracion_segundos', 0),
             'ultima_actualizacion_iso': orden.ultima_actualizacion.isoformat() if hasattr(orden, 'ultima_actualizacion') and orden.ultima_actualizacion else None,
         })
@@ -464,20 +470,37 @@ def api_ordenes_recientes_view(request):
 def historial_finalizadas_view(request):
     def format_duration(seconds):
         if not seconds: return "00:00:00"
-        
-        # Agregamos int() para quitar decimales antes de calcular
         seconds = int(seconds) 
-        
         m, s = divmod(seconds, 60)
         h, m = divmod(m, 60)
         return f"{h:02d}:{m:02d}:{s:02d}"
-    # Prefetch único
+
+    # 1. --- LOGICA NUEVA: MAPA DE RETORNOS ---
+    # Buscamos en TODAS las tablas (activas y finalizadas) quién está referenciando a una orden vieja
+    # Queremos pares: (Referencia_Vieja, Orden_Nueva_Que_La_Creo)
+    
+    referencias = {} # Diccionario: Clave=OrdenVieja -> Valor=OrdenNueva
+    
+    # Buscamos en MCM
+    refs_mcm = OrdenMCM.objects.exclude(orden_retorno_ref__isnull=True).exclude(orden_retorno_ref__exact='').values_list('orden_retorno_ref', 'numero_orden')
+    # Buscamos en CHO, TPM, PREP...
+    refs_cho = OrdenCHO.objects.exclude(orden_retorno_ref__isnull=True).exclude(orden_retorno_ref__exact='').values_list('orden_retorno_ref', 'numero_orden')
+    refs_tpm = OrdenTPM.objects.exclude(orden_retorno_ref__isnull=True).exclude(orden_retorno_ref__exact='').values_list('orden_retorno_ref', 'numero_orden')
+    refs_prep = OrdenPREP.objects.exclude(orden_retorno_ref__isnull=True).exclude(orden_retorno_ref__exact='').values_list('orden_retorno_ref', 'numero_orden')
+
+    # Llenamos el diccionario maestro
+    # Si la orden '1050' generó la '1055', el diccionario será: {'1050': '1055'}
+    for ref, nueva in list(chain(refs_mcm, refs_cho, refs_tpm, refs_prep)):
+        referencias[str(ref)] = str(nueva)
+
+    # ------------------------------------------
+
     p_asignaciones = Prefetch('asignaciones', queryset=AsignacionUniversal.objects.all())
     
-    qs_mcm = OrdenMCM.objects.filter(estado='Finalizada').select_related('molde').prefetch_related(p_asignaciones).all()
-    qs_cho = OrdenCHO.objects.filter(estado='Finalizada').select_related('molde').prefetch_related(p_asignaciones).all()
-    qs_tpm = OrdenTPM.objects.filter(estado='Finalizada').select_related('molde').prefetch_related(p_asignaciones).all()
-    qs_prep = OrdenPREP.objects.filter(estado='Finalizada').select_related('molde').prefetch_related(p_asignaciones).all()
+    qs_mcm = OrdenMCM.objects.filter(estado='Finalizada').select_related('molde', 'lider').prefetch_related(p_asignaciones).all()
+    qs_cho = OrdenCHO.objects.filter(estado='Finalizada').select_related('molde', 'lider').prefetch_related(p_asignaciones).all()
+    qs_tpm = OrdenTPM.objects.filter(estado='Finalizada').select_related('molde', 'lider').prefetch_related(p_asignaciones).all()
+    qs_prep = OrdenPREP.objects.filter(estado='Finalizada').select_related('molde', 'lider').prefetch_related(p_asignaciones).all()
 
     todas = list(chain(qs_mcm, qs_cho, qs_tpm, qs_prep))
     todas.sort(key=lambda o: getattr(o, 'fecha_cierre', o.ultima_actualizacion) or o.fecha_creacion, reverse=True)
@@ -487,50 +510,69 @@ def historial_finalizadas_view(request):
         asignaciones = list(orden.asignaciones.all())
         fecha_inicio = orden.fecha_creacion
         fecha_fin = getattr(orden, 'fecha_cierre', orden.ultima_actualizacion)
+        
         lista_detallada = []
         nombres_simples = []
-        defectos_reales = set()
-        # 1. Tiempo Acumulado (El que cuenta el cronómetro, descontando pausas)
+        
         tiempo_activo_segundos = getattr(orden, 'duracion_segundos', 0)
-
-        # 2. Tiempo Real (Resta simple: Fin - Inicio)
         tiempo_real_segundos = 0
         if fecha_inicio and fecha_fin:
-            diferencia = fecha_fin - fecha_inicio
-            tiempo_real_segundos = diferencia.total_seconds()
+            tiempo_real_segundos = (fecha_fin - fecha_inicio).total_seconds()
+            
         for item in asignaciones:
+            detalles_str = ""
+            if item.detalles_json:
+                try:
+                    import json
+                    d_obj = json.loads(item.detalles_json)
+                    nombres_defectos = [d.get('defecto') for d in d_obj if d.get('defecto')]
+                    if nombres_defectos: detalles_str = ", ".join(nombres_defectos)
+                except: pass
+            if not detalles_str: detalles_str = item.defecto or '-'
+
             lista_detallada.append({
                 'nombre': item.nombre_tecnico,
                 'mesa': item.mesa or '-',       
                 'cavidad': item.cavidad or '-',
                 'circuito': item.circuito or '-',
-                'defecto': item.defecto or '-',
-                'inicio': item.fecha_inicio.strftime('%d/%m %H:%M') if item.fecha_inicio else '-',
-                'fin': item.fecha_fin.strftime('%d/%m %H:%M') if item.fecha_fin else 'Activo'
+                'defecto': detalles_str,
+                'inicio': item.fecha_inicio.strftime('%H:%M') if item.fecha_inicio else '-',
+                'fin': item.fecha_fin.strftime('%H:%M') if item.fecha_fin else 'Activo'
             })
             if item.nombre_tecnico: nombres_simples.append(item.nombre_tecnico)
-            if item.defecto: defectos_reales.add(item.defecto)
+
+        tecnico_tabla = ", ".join(list(set(nombres_simples)))
         
-        tecnico_tabla = ", ".join(list(set(nombres_simples))) # Nombres únicos
-        tiempo_activo_segundos = getattr(orden, 'duracion_segundos', 0)
+        # --- BUSCAMOS SI ESTA ORDEN GENERÓ UN RETORNO ---
+        # Preguntamos: ¿El número de esta orden aparece como referencia en alguna otra?
+        retorno_generado = referencias.get(str(orden.numero_orden), None)
+        # ------------------------------------------------
+
         datos.append({
             'id': orden.id,
             'tipo': orden.tipo_mntn,
             'numero_orden': orden.numero_orden,
             'molde': orden.molde.numero_molde if orden.molde else 'N/A',
             'defecto': getattr(orden, 'defecto_sap', '-'),
-            'defecto_real': ", ".join(defectos_reales),
+            'lider': str(orden.lider) if orden.lider else 'Sin Asignar',
             'tecnico': tecnico_tabla,
             'lista_tecnicos': lista_detallada,
             'fecha_inicio': fecha_inicio,
             'fecha_fin': fecha_fin,
-            'tiempo_activo_fmt': format_duration(tiempo_activo_segundos), # Cronómetro
-            'tiempo_real_fmt': format_duration(tiempo_real_segundos),     # Inicio a Fin
-            'comentarios': orden.comentarios
+            'tiempo_activo_fmt': format_duration(tiempo_activo_segundos),
+            'tiempo_real_fmt': format_duration(tiempo_real_segundos),    
+            'comentarios': orden.comentarios,
+
+            # Datos propios (Si ella fue retorno)
+            'orden_retorno_ref': getattr(orden, 'orden_retorno_ref', None),
+            'motivo_retorno': getattr(orden, 'motivo_retorno', ''),
+            'observaciones_retorno': getattr(orden, 'observaciones_retorno', ''),
+
+            # --- NUEVO DATO: SI ELLA PROVOCÓ UN RETORNO ---
+            'genero_retorno': retorno_generado  # Contendrá el número de la nueva orden (ej: "1055") o None
         })
 
     return render(request, 'Moldeo/ordenes_finalizadas.html', {'ordenes': datos})
-
 @require_http_methods(["POST"])
 @transaction.atomic
 def api_actualizar_orden_view(request, orden_id):
@@ -802,44 +844,68 @@ def importar_sap_view(request):
 
    
 def lista_sap_view(request):
-    # Capturamos lo que el usuario escribe en el buscador
+    # --- 1. Filtros y Búsqueda (Tu lógica estándar) ---
     busqueda = request.GET.get('q', '')
     fecha_filtro = request.GET.get('fecha', '')
  
-    ids_mcm = OrdenMCM.objects.values_list('numero_orden', flat=True)
-    ids_cho = OrdenCHO.objects.values_list('numero_orden', flat=True)
-    ids_tpm = OrdenTPM.objects.values_list('numero_orden', flat=True)
-    ids_prep = OrdenPREP.objects.values_list('numero_orden', flat=True)
+    ids_registrados = list(chain(
+        OrdenMCM.objects.values_list('numero_orden', flat=True),
+        OrdenCHO.objects.values_list('numero_orden', flat=True),
+        OrdenTPM.objects.values_list('numero_orden', flat=True),
+        OrdenPREP.objects.values_list('numero_orden', flat=True)
+    ))
+    
+    ordenes = OrdenSAP.objects.exclude(order__in=ids_registrados)
 
-    # Unimos todas las listas en una sola usando chain
-    ordenes_registradas = list(chain(ids_mcm, ids_cho, ids_tpm, ids_prep))
-
-    # PASO 2: Consultar OrdenSAP EXCLUYENDO (.exclude) todas las registradas
-    ordenes = OrdenSAP.objects.exclude(order__in=ordenes_registradas)
-    filtros_activos = False
-    # PASO 3: Aplicar el buscador del usuario sobre la lista ya filtrada
     if busqueda:
         ordenes = ordenes.filter(
             Q(order__icontains=busqueda) |
-            Q(description__icontains=busqueda) |
-            Q(equipment__icontains=busqueda) |
-            Q(work_center__icontains=busqueda)|
-            Q(fecha_inicio__icontains=busqueda)
+            Q(work_center__icontains=busqueda) | # Busca por Molde
+            Q(description__icontains=busqueda)
         )
+    
     if fecha_filtro:
         ordenes = ordenes.filter(fecha_inicio=fecha_filtro)
-        filtros_activos = True
 
-    # 4. Limitar resultados si no hay filtros (Para no trabar la página)
-    if not filtros_activos:
-        ordenes = ordenes.order_by('-fecha_inicio') # Mostrar las 100 más recientes por defecto
-    else:
-        ordenes = ordenes.order_by('-fecha_inicio')
+    # Ordenar (más recientes primero)
+    ordenes = ordenes.order_by('-fecha_inicio')[:150] 
+
+    # --- 2. LA MAGIA: ASIGNAR MÁQUINAS A LOS MOLDES ---
+    
+    # A. Traemos todos los moldes que tienen máquina asignada
+    #    select_related('maquina') hace que sea súper rápido (una sola consulta a la DB)
+    moldes_con_maquina = Moldes.objects.select_related('maquina').filter(maquina__isnull=False)
+    
+    # B. Creamos un "Diccionario Maestro"
+    #    Clave = Nombre del Molde (Limpio) -> Valor = Nombre de la Máquina
+    diccionario_maquinas = {}
+    for m in moldes_con_maquina:
+        nombre_molde = str(m.numero_molde).strip()
+        # Usamos WC que es donde guardamos el nombre (ej: "A26")
+        nombre_maquina = m.maquina.wc
+        diccionario_maquinas[nombre_molde] = nombre_maquina
+
+    # C. Pegamos la etiqueta a cada orden
+    lista_final = []
+    for orden in ordenes:
+        # ¿Qué molde pide esta orden?
+        molde_solicitado = str(orden.work_center).strip() if orden.work_center else ""
+        
+        # Buscamos en el diccionario
+        maquina_encontrada = diccionario_maquinas.get(molde_solicitado)
+        
+        # Guardamos el dato en una variable temporal dentro del objeto
+        if maquina_encontrada:
+            orden.maquina_relacionada = maquina_encontrada
+        else:
+            orden.maquina_relacionada = None # No tiene máquina asignada
+            
+        lista_final.append(orden)
 
     context = {
-        'ordenes': ordenes,
+        'ordenes': lista_final,
         'busqueda': busqueda,
-        'fecha': fecha_filtro # <--- Enviamos la fecha para mantenerla en el input
+        'fecha': fecha_filtro
     }
     return render(request, 'Moldeo/lista_sap.html', context)
 def imprimir_formato_view(request, orden_id, tipo):

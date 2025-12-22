@@ -68,8 +68,15 @@ class Moldmakers(models.Model):
 class Moldes(models.Model):
     id_molde = models.AutoField(db_column='id_Molde', primary_key=True, blank=True, null=False)  # Field name made lowercase.
     numero_molde = models.TextField(unique=True, blank=True, null=True)
+    maquina = models.ForeignKey(
+        'Maquinas',                 # Nombre del modelo al que apunta
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        db_column='maquina_id',     # Nombre exacto de la columna en SQLite
+        related_name='moldes_asignados'
+    )
     
-
     class Meta:
         managed = False
         db_table = 'Moldes'
@@ -227,6 +234,15 @@ class OrdenBase(models.Model):
         blank=True, 
         related_name='%(class)s_lideradas' # Esto evita conflictos de nombres
     )
+    motivo_retorno = models.CharField(max_length=100, blank=True, null=True)
+    observaciones_retorno = models.TextField(blank=True, null=True)
+    orden_retorno_ref = models.CharField(
+        max_length=50, 
+        blank=True, 
+        null=True, 
+        help_text="Número de la orden anterior que causó el retorno"
+    )
+    maquina = models.CharField(max_length=50, blank=True, null=True)
     class Meta:
         abstract = True # No crea una tabla "OrdenBase" en la BD
 
@@ -238,14 +254,7 @@ class OrdenMCM(OrdenBase):
     defecto_real = models.TextField()
     molde =models.ForeignKey(Moldes, on_delete=models.SET_NULL,null=True,blank=True,related_name='ordenes_mcm',db_constraint=False)
     status=models.CharField(max_length=5,blank=True, null=True)
-    motivo_retorno = models.CharField(max_length=100, blank=True, null=True)
-    observaciones_retorno = models.TextField(blank=True, null=True)
-    orden_retorno_ref = models.CharField(
-        max_length=50, 
-        blank=True, 
-        null=True, 
-        help_text="Número de la orden anterior que causó el retorno"
-    )
+   
     def __str__(self):
         return f"Orden MCM {self.numero_orden}"
 

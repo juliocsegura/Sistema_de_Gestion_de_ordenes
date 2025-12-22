@@ -22,17 +22,17 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 justify-center gap-6 sm:gap-10">
             
-            <a href="{% url 'Moldeo:status_ordenes' %}?type=mcm&numero_orden={{ pre_orden }}&defecto_sap={{ pre_defecto }}&molde={{ pre_molde_nombre }}" 
+            <a href="{% url 'Moldeo:status_ordenes' %}?type=mcm&numero_orden={{ pre_orden }}&defecto_sap={{ pre_defecto }}&molde={{ pre_molde_nombre }}&maquina={{ pre_maquina }}" 
                class="flex-1 text-center bg-red-600 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-red-500">
                 MCM
             </a>
             
-            <a href="{% url 'Moldeo:registrar_tpm' %}?type=tpm&numero_orden={{ pre_orden }}&defecto_sap={{ pre_defecto }}&molde={{ pre_molde }}" 
+            <a href="{% url 'Moldeo:registrar_tpm' %}?type=tpm&numero_orden={{ pre_orden }}&defecto_sap={{ pre_defecto }}&molde={{ pre_molde }}&maquina={{ pre_maquina }}" 
                class="flex-1 text-center bg-yellow-300 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-yellow-200">
                 TPM
             </a>
 
-            <a href="{% url 'Moldeo:registrar_cho' %}?type=cho&numero_orden={{ pre_orden }}&defecto_sap={{ pre_defecto }}&molde={{ pre_molde }}" 
+            <a href="{% url 'Moldeo:registrar_cho' %}?type=cho&numero_orden={{ pre_orden }}&defecto_sap={{ pre_defecto }}&molde={{ pre_molde }}&maquina={{ pre_maquina }}" 
                class="flex-1 text-center bg-orange-400 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-orange-300">
                 CHO
             </a>

@@ -52,6 +52,14 @@
                         <input type="text" value="{{ pre_molde_nombre }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold">
                         <input type="hidden" name="molde" value="{{ pre_molde_pk|default:'' }}">
                     </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-400 font-bold mb-2">Máquina</label>
+                        <input type="text" 
+                            name="maquina" 
+                            value="{{ pre_maquina }}" 
+                            class="w-full bg-gray-700 text-green-400 font-bold border border-gray-600 rounded px-3 py-2"
+                            readonly>
+                    </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-400 mb-1">Defecto</label>
                         <input type="text" name="defecto_sap" value="{{ pre_defecto }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold">

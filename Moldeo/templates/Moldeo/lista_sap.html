@@ -85,9 +85,9 @@
                         orden: '{{ orden.order }}',
                         desc: '{{ orden.description|escapejs }}',
                         equipo: '{{ orden.equipment|default:'-' }}',
-                        centro: '{{ orden.work_center|default:'-' }}'
+                        centro: '{{ orden.work_center|default:'-' }}',
+                        maquina: '{{ orden.maquina_relacionada|default:'' }}'
                     })">
-                    
                     <td class="p-4 whitespace-nowrap font-bold text-blue-400 group-hover:text-blue-300">
                         {{ orden.order }}
                     </td>
@@ -106,8 +106,19 @@
                     <td class="p-4 whitespace-nowrap font-mono text-yellow-600 group-hover:text-yellow-500">
                         {{ orden.equipment|default:"-" }}
                     </td>
-                    <td class="p-4 whitespace-nowrap text-gray-400 font-bold">
-                        {{ orden.work_center }}
+                    
+                    <td class="p-4 whitespace-nowrap text-gray-300">
+                        <div class="flex flex-col">
+                            <span class="font-bold text-white text-base">{{ orden.work_center }}</span>
+                            
+                            {% if orden.maquina_relacionada %}
+                                <span class="mt-1 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-green-900/50 text-green-400 border border-green-700 w-fit">
+                                    MAQ: {{ orden.maquina_relacionada }}
+                                </span>
+                            {% else %}
+                                <span class="mt-1 text-xs text-gray-600 italic">Sin Asignar</span>
+                            {% endif %}
+                        </div>
                     </td>
                 </tr>
                 {% empty %}
@@ -142,10 +153,18 @@
                         <p class="text-xs text-gray-400 uppercase tracking-wider font-bold">Defecto</p>
                         <p id="md-defecto" class="text-lg text-gray-100 mt-1"></p>
                     </div>
-                    <div class="bg-gray-700/50 p-4 rounded-lg">
-                        <p class="text-xs text-gray-400 uppercase tracking-wider font-bold">Molde</p>
-                        <p id="md-molde" class="text-lg text-gray-100 mt-1"></p>
+
+                    <div class="bg-gray-700/50 p-4 rounded-lg flex justify-between items-center border border-gray-600">
+                        <div>
+                            <p class="text-xs text-gray-400 uppercase tracking-wider font-bold">Molde</p>
+                            <p id="md-molde" class="text-lg text-white mt-1"></p>
+                        </div>
+                        <div class="text-right pl-4 border-l border-gray-600">
+                            <p class="text-xs text-green-400 uppercase tracking-wider font-bold">Máquina</p>
+                            <p id="md-maquina" class="text-2xl font-bold text-green-300 mt-1">--</p>
+                        </div>
                     </div>
+
                     <div class="bg-gray-700/50 p-4 rounded-lg md:col-span-2 border border-yellow-600/30">
                         <p class="text-xs text-yellow-500 uppercase tracking-wider font-bold">Numero De SAP</p>
                         <p id="md-n_sap" class="text-2xl font-mono text-yellow-400 mt-1 font-bold"></p>
@@ -266,18 +285,29 @@
     const txtDesc = document.getElementById('md-defecto');
     const txtCentro = document.getElementById('md-molde');
     const txtEquipo = document.getElementById('md-n_sap');
+    
+    // NUEVO: Referencia al texto de máquina en el modal
+    const txtMaquina = document.getElementById('md-maquina');
 
     window.openModal = function(data) {
+        // Llenar datos básicos
         txtOrden.textContent = data.orden;
         txtDesc.textContent = data.desc;
         txtCentro.textContent = data.centro;
         txtEquipo.textContent = data.equipo;
 
+        // NUEVO: Llenar la máquina en el modal
+        if (txtMaquina) {
+            txtMaquina.textContent = data.maquina || "Sin Asignar";
+        }
+
+        // Lógica del botón Iniciar
         btnIniciar.onclick = function() {
             const params = new URLSearchParams({
                 orden_sap: data.orden,
                 defecto: data.desc,
-                molde: data.centro 
+                molde: data.centro,
+                maquina: data.maquina // <--- IMPORTANTE: Enviamos la máquina a la siguiente página
             }).toString();
             window.location.href = `/moldeo/registro/?${params}`; 
         };
