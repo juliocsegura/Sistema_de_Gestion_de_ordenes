@@ -331,7 +331,7 @@ class OrdenSAP(models.Model):
     work_center = models.CharField(max_length=50, blank=True, null=True) 
     equipment = models.CharField(max_length=50, blank=True, null=True)  
     fecha_inicio = models.DateField(null=True, blank=True)
-     
+    hora_inicio = models.TimeField(null=True, blank=True)
 
     def __str__(self):
         return self.order  

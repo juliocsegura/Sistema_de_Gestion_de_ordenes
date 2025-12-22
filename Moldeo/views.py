@@ -800,7 +800,7 @@ def importar_sap_view(request):
 
     return render(request, 'Moldeo/importar_sap.html')
 
-    return render(request, 'Moldeo/importar_sap.html')
+   
 def lista_sap_view(request):
     # Capturamos lo que el usuario escribe en el buscador
     busqueda = request.GET.get('q', '')
