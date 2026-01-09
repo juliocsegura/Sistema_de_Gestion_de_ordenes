@@ -322,7 +322,7 @@
         // DATOS MAESTROS
         const tecnicosData = [{% for t in moldmakers %}{ nombre: "{{ t.nombre|escapejs }}" },{% endfor %}];
         const lideresData = [{% for l in lideres_all %}{ nombre: "{{ l.nombre|escapejs }}" },{% endfor %}]; 
-        const defectosData = [{% if lista_defectos %}{% for d in lista_defectos %}{ nombre: "{{ d.nombre_defecto|escapejs }}" },{% endfor %}{% else %}{ nombre: "Rebaba" }{% endif %}];
+        const defectosData = [{% if lista_defectos %}{% for d in lista_defectos %}{ nombre_defecto: "{{ d.nombre_defecto|escapejs }}" },{% endfor %}{% else %}{ nombre_defecto: "Rebaba" }{% endif %}];
         
         // VARIABLES GLOBALES
         const tabsBar = document.getElementById('tech-tabs-bar');

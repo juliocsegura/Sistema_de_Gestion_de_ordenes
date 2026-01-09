@@ -277,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. DATOS DESDE DJANGO
     const tecnicosData = [{% for t in moldmakers %}{ nombre: "{{ t.nombre|escapejs }}" },{% endfor %}];
     const lideresData = [{% for l in lideres_all %}{ nombre: "{{ l.nombre|escapejs }}" },{% endfor %}];
-    const defectosData = [{% if lista_defectos %}{% for d in lista_defectos %}{ nombre: "{{ d.nombre_defecto|escapejs }}" },{% endfor %}{% endif %}];
+    const defectosData = [{% if lista_defectos %}{% for d in lista_defectos %}{ nombre: "{{ d.nombre|escapejs }}" },{% endfor %}{% endif %}];
 
     // Variables de Estado
     let currentOrdenId = null;

@@ -1,13 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 import openpyxl
+import pandas as pd
+from datetime import datetime, time
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, Prefetch
 from django.db import transaction, models
-from .models import (
-    Moldmakers, OrdenMCM, OrdenCHO, OrdenTPM, OrdenPREP, 
-    Moldes, OrdenSAP, Defectos, AsignacionUniversal,Lideres # Updated imports
-)
+from .models import (Moldmakers, OrdenMCM, OrdenCHO, OrdenTPM, OrdenPREP, Maquinas, NumerosParte, Moldes, OrdenSAP, Defectos, AsignacionUniversal,Lideres)
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
 from django.views.decorators.http import require_http_methods 
 from django.utils import timezone
@@ -422,6 +421,7 @@ def api_ordenes_recientes_view(request):
                 for det in detalles_obj:
                     if det.get('defecto'):
                         defectos_visibles.add(det.get('defecto'))
+            
         
         # Ordenar: Activos primero
         tecnicos_data.sort(key=lambda x: x['activo'], reverse=True)
@@ -760,87 +760,210 @@ def api_gestionar_tecnicos(request, orden_id):
     except Exception as e:
         print(f"ERROR API: {e}") # Ver error en terminal
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
-def importar_sap_view(request):
-    if request.method == 'POST' and request.FILES.get('archivo_sap'):
-        excel_file = request.FILES['archivo_sap']
-        
-        if not excel_file.name.endswith('.xlsx'):
-            messages.error(request, 'Error: El archivo debe ser un Excel (.xlsx)')
-            return render(request, 'Moldeo/importar_sap.html')
+def carga_masiva_view(request):
+    """
+    Vista maestra para cargar cualquier tipo de archivo (SAP o Catálogos).
+    Utiliza el selector 'modelo_destino' del HTML para saber qué lógica aplicar.
+    """
+    if request.method == 'POST':
+        # 1. Obtener el archivo (soporta ambos nombres por compatibilidad)
+        excel_file = request.FILES.get('archivo_excel') or request.FILES.get('archivo_sap')
+        modelo_destino = request.POST.get('modelo_destino')
+
+        if not excel_file:
+            messages.error(request, "Por favor selecciona un archivo.")
+            return render(request, 'Moldeo/subir_excel.html')
 
         try:
-            wb = openpyxl.load_workbook(excel_file, data_only=True)
-            ws = wb['Sheet1'] if 'Sheet1' in wb.sheetnames else wb.active
+            registros_creados = 0
 
-            # Mapear encabezados
-            headers = {}
-            for cell in ws[1]:
-                if cell.value:
-                    headers[str(cell.value).strip()] = cell.column - 1
+            # ==========================================
+            # CASO A: ACTUALIZACIÓN SAP (Usamos openpyxl)
+            # ==========================================
+            if modelo_destino == 'sap':
+                if not excel_file.name.endswith('.xlsx'):
+                    messages.error(request, 'Para SAP el archivo debe ser .xlsx')
+                    return render(request, 'Moldeo/subir_excel.html')
 
-            # Verificar columnas obligatorias
-            required_cols = ['Order', 'Description', 'Work center']
-            if not all(col in headers for col in required_cols):
-                messages.error(request, f'Faltan columnas. Se requiere: {required_cols}')
-                return render(request, 'Moldeo/importar_sap.html')
+                wb = openpyxl.load_workbook(excel_file, data_only=True)
+                ws = wb['Sheet1'] if 'Sheet1' in wb.sheetnames else wb.active
 
-            # Buscar índice de la FECHA y de la HORA
-            idx_fecha = headers.get('Bas. start date') or headers.get('Basic start date')
-            idx_hora = headers.get('Start time') # <--- NUEVO: Buscamos la columna de hora
+                # Mapear encabezados
+                headers = {}
+                for cell in ws[1]:
+                    if cell.value:
+                        headers[str(cell.value).strip()] = cell.column - 1
 
-            count = 0
-            from datetime import datetime, time # Import necesario para procesar horas
+                # Columnas requeridas
+                if 'Order' not in headers:
+                    messages.error(request, "El archivo SAP no tiene la columna 'Order'.")
+                    return render(request, 'Moldeo/subir_excel.html')
 
-            for row in ws.iter_rows(min_row=2, values_only=True):
-                order_val = row[headers['Order']]
-                if not order_val: continue
+                # Índices opcionales
+                idx_fecha = headers.get('Bas. start date') or headers.get('Basic start date')
+                idx_hora = headers.get('Start time')
+                idx_equipo = headers.get('Equipment')
 
-                # Procesar Fecha
-                fecha_val = None
-                if idx_fecha is not None:
-                    raw_date = row[idx_fecha]
-                    if raw_date:
-                        if hasattr(raw_date, 'date'): 
-                            fecha_val = raw_date.date()
-                        elif isinstance(raw_date, datetime): # A veces openpyxl devuelve datetime
-                            fecha_val = raw_date.date()
+                for row in ws.iter_rows(min_row=2, values_only=True):
+                    try:
+                        order_val = row[headers['Order']]
+                        if not order_val: continue
 
-                # Procesar HORA (NUEVA LÓGICA)
-                hora_val = None
-                if idx_hora is not None:
-                    raw_time = row[idx_hora]
-                    if raw_time:
-                        # Si es un objeto datetime o time de Python (lo ideal)
-                        if hasattr(raw_time, 'time'):
-                            # Si es datetime, extraemos time(). Si es time, lo usamos directo.
-                            hora_val = raw_time.time() if hasattr(raw_time, 'date') else raw_time
-                        
-                        # Si viene como string (ej: "21:49:00")
-                        elif isinstance(raw_time, str):
-                            try:
-                                hora_val = datetime.strptime(raw_time.strip(), "%H:%M:%S").time()
-                            except ValueError:
-                                pass # Si falla el formato, lo dejamos null
+                        # Procesar Fecha
+                        fecha_val = None
+                        if idx_fecha is not None:
+                            raw_date = row[idx_fecha]
+                            if raw_date:
+                                if hasattr(raw_date, 'date'): fecha_val = raw_date.date()
+                                elif isinstance(raw_date, datetime): fecha_val = raw_date.date()
 
-                OrdenSAP.objects.update_or_create(
-                    order=str(order_val),
-                    defaults={
-                        'description': row[headers['Description']],
-                        'work_center': row[headers['Work center']],
-                        'equipment': str(row[headers.get('Equipment', -1)]) if headers.get('Equipment') else '',
-                        'fecha_inicio': fecha_val,
-                        'hora_inicio': hora_val # <--- GUARDAMOS LA HORA AQUÍ
-                    }
-                )
-                count += 1
+                        # Procesar Hora
+                        hora_val = None
+                        if idx_hora is not None:
+                            raw_time = row[idx_hora]
+                            if raw_time:
+                                if hasattr(raw_time, 'time'):
+                                    hora_val = raw_time.time() if hasattr(raw_time, 'date') else raw_time
+                                elif isinstance(raw_time, str):
+                                    try:
+                                        hora_val = datetime.strptime(raw_time.strip(), "%H:%M:%S").time()
+                                    except: pass
 
-            messages.success(request, f'Éxito: Se procesaron {count} órdenes correctamente (con fecha y hora).')
-            return redirect('Moldeo:panel_principal')
+                        # Procesar Equipo
+                        equipment_val = str(row[idx_equipo]).strip() if idx_equipo is not None and row[idx_equipo] else ''
+
+                        OrdenSAP.objects.update_or_create(
+                            order=str(order_val),
+                            defaults={
+                                'description': row[headers.get('Description', -1)] if 'Description' in headers else '',
+                                'work_center': row[headers.get('Work center', -1)] if 'Work center' in headers else '',
+                                'equipment': equipment_val,
+                                'fecha_inicio': fecha_val,
+                                'hora_inicio': hora_val
+                            }
+                        )
+                        registros_creados += 1
+                    except Exception as e:
+                        print(f"Error fila SAP: {e}")
+                        continue
+
+            # ==========================================
+            # CASO B: CATÁLOGOS (Usamos pandas)
+            # ==========================================
+            else:
+                # Leer Excel o CSV
+                if excel_file.name.endswith('.csv'):
+                    df = pd.read_csv(excel_file)
+                else:
+                    df = pd.read_excel(excel_file)
+                
+                # Normalizar columnas (minúsculas y sin espacios)
+                df.columns = df.columns.str.strip().str.lower()
+
+                # --- 1. MOLDES COMPLETO ---
+                if modelo_destino == 'moldes':
+                    for _, row in df.iterrows():
+                        # Maquina
+                        nombre_maq = str(row.get('maquina', '')).strip()
+                        instancia_maquina = None
+                        if nombre_maq and nombre_maq.lower() != 'nan':
+                            instancia_maquina, _ = Maquinas.objects.get_or_create(nombre=nombre_maq)
+
+                        # Molde
+                        nombre_molde = str(row.get('molde', '')).strip()
+                        if nombre_molde and nombre_molde.lower() != 'nan':
+                            molde_sap = str(row.get('molde sap', '')).strip()
+                            if molde_sap.lower() == 'nan': molde_sap = None
+                            
+                            proyecto = str(row.get('proyecto', '')).strip()
+                            if proyecto.lower() == 'nan': proyecto = None
+                            
+                            try: cavidades = int(row.get('cavidades', 0))
+                            except: cavidades = 0
+
+                            molde_obj, _ = Moldes.objects.update_or_create(
+                                nombre=nombre_molde,
+                                defaults={
+                                    'molde_sap': molde_sap,
+                                    'proyecto': proyecto,
+                                    'cavidades': cavidades,
+                                    'maquina': instancia_maquina,
+                                    'activo': True
+                                }
+                            )
+
+                            # Número de Parte
+                            num_parte = str(row.get('numeros de parte', '')).strip()
+                            if num_parte and num_parte.lower() != 'nan':
+                                NumerosParte.objects.get_or_create(
+                                    numero_parte=num_parte,
+                                    molde=molde_obj
+                                )
+                            registros_creados += 1
+
+                # --- 2. DEFECTOS (Actualizado con Columnas Extra) ---
+                elif modelo_destino == 'defectos':
+                    # Espera: DEFECTOS, Main Activity, ESTATUS, ACTIVIDAD
+                    for _, row in df.iterrows():
+                        nombre = str(row.get('defectos', '')).strip()
+                        if not nombre or nombre.lower() == 'nan': continue
+
+                        cat_ingles = str(row.get('main activity', '')).strip()
+                        if cat_ingles.lower() == 'nan': cat_ingles = None
+
+                        cod_estatus = str(row.get('estatus', '')).strip()
+                        if cod_estatus.endswith('.0'): cod_estatus = cod_estatus[:-2] # Quitar decimales de Excel
+                        if cod_estatus.lower() == 'nan': cod_estatus = None
+
+                        actividad = str(row.get('actividad', '')).strip()
+                        if actividad.lower() == 'nan': actividad = None
+
+                        Defectos.objects.update_or_create(
+                            nombre=nombre,
+                            defaults={
+                                'categoria_ingles': cat_ingles,
+                                'codigo_estatus': cod_estatus,
+                                'actividad_asociada': actividad,
+                                'activo': True
+                            }
+                        )
+                        registros_creados += 1
+
+                # --- 3. OTROS CATÁLOGOS SIMPLES ---
+                elif modelo_destino == 'maquinas':
+                    for _, row in df.iterrows():
+                        nombre = str(row.get('maquina', '')).strip()
+                        if nombre and nombre.lower() != 'nan':
+                            Maquinas.objects.get_or_create(nombre=nombre)
+                            registros_creados += 1
+
+                elif modelo_destino == 'tecnicos':
+                    for _, row in df.iterrows():
+                        nombre = str(row.get('nombre', '')).strip()
+                        if nombre and nombre.lower() != 'nan':
+                            Moldmakers.objects.get_or_create(nombre=nombre)
+                            registros_creados += 1
+
+                elif modelo_destino == 'lideres':
+                    for _, row in df.iterrows():
+                        nombre = str(row.get('nombre', '')).strip()
+                        if nombre and nombre.lower() != 'nan':
+                            Lideres.objects.get_or_create(nombre=nombre)
+                            registros_creados += 1
+
+            messages.success(request, f'Proceso finalizado. Registros procesados: {registros_creados}')
+            
+            # Si fue SAP, redirigir a la lista SAP, si no, quedarse aquí
+            if modelo_destino == 'sap':
+                return redirect('Moldeo:lista_sap')
+            else:
+                return redirect('Moldeo:carga_masiva')
 
         except Exception as e:
-            messages.error(request, f'Error al procesar: {e}')
+            messages.error(request, f"Error crítico: {str(e)}")
+            return render(request, 'Moldeo/subir_excel.html')
 
-    return render(request, 'Moldeo/importar_sap.html')
+    return render(request, 'Moldeo/subir_excel.html')
 
    
 def lista_sap_view(request):
@@ -867,21 +990,16 @@ def lista_sap_view(request):
     if fecha_filtro:
         ordenes = ordenes.filter(fecha_inicio=fecha_filtro)
 
-    # Ordenar (más recientes primero)
-    ordenes = ordenes.order_by('-fecha_inicio')[:150] 
+  
+    ordenes = ordenes.order_by('-fecha_inicio')
 
-    # --- 2. LA MAGIA: ASIGNAR MÁQUINAS A LOS MOLDES ---
-    
-    # A. Traemos todos los moldes que tienen máquina asignada
-    #    select_related('maquina') hace que sea súper rápido (una sola consulta a la DB)
+   
     moldes_con_maquina = Moldes.objects.select_related('maquina').filter(maquina__isnull=False)
-    
-    # B. Creamos un "Diccionario Maestro"
-    #    Clave = Nombre del Molde (Limpio) -> Valor = Nombre de la Máquina
+
     diccionario_maquinas = {}
     for m in moldes_con_maquina:
         nombre_molde = str(m.numero_molde).strip()
-        # Usamos WC que es donde guardamos el nombre (ej: "A26")
+      
         nombre_maquina = m.maquina.wc
         diccionario_maquinas[nombre_molde] = nombre_maquina
 
@@ -980,7 +1098,7 @@ def api_filtrar_ordenes_mcm(request):
     """
     q = request.GET.get('q', '')
     
-    # CAMBIO AQUÍ: Ahora busca si hay al menos 1 caracter (antes era < 3)
+  
     if not q: 
         return JsonResponse([], safe=False)
     

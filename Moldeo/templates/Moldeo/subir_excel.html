@@ -1,0 +1,98 @@
+{% extends 'Moldeo/base.html' %}
+
+{% block title %}Carga Masiva de Datos{% endblock %}
+
+{% block content %}
+<div class="container mx-auto max-w-2xl px-4 py-16">
+    
+    <div class="bg-gray-800 p-8 rounded-lg shadow-xl border border-gray-700">
+        <div class="flex items-center justify-center gap-3 mb-6">
+            <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            <h2 class="text-3xl font-bold text-white text-center">Carga Masiva de Datos</h2>
+        </div>
+        
+        <p class="text-gray-400 mb-6 text-center text-sm">
+            Selecciona el tipo de datos y sube el archivo (Excel o CSV).<br>
+            El sistema procesará y vinculará los registros automáticamente.
+        </p>
+
+        {% if messages %}
+            <div class="mb-6 space-y-2">
+                {% for message in messages %}
+                    <div class="p-4 rounded-lg text-sm font-bold border 
+                        {% if message.tags == 'success' %}bg-green-900/50 text-green-200 border-green-600
+                        {% elif message.tags == 'error' %}bg-red-900/50 text-red-200 border-red-600
+                        {% else %}bg-blue-900/50 text-blue-200 border-blue-600{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            <div>
+                <label class="block text-xs font-bold text-blue-400 uppercase mb-2 ml-1">1. Selecciona el destino</label>
+                <select name="modelo_destino" class="w-full bg-gray-900 border border-gray-600 text-white text-sm rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none transition" required>
+                    <option value="" disabled selected>-- ¿Qué vas a cargar? --</option>
+                    <option value="sap" class="bg-blue-900 text-white font-bold">⚡ Órdenes SAP (Diario)</option>
+                    <option value="moldes">📁 Moldes (Relaciona Máquina y Números de Parte)</option>
+                    <option value="defectos">⚠️ Defectos (Catálogo)</option>
+                    <option value="maquinas">🤖 Máquinas (Catálogo)</option>
+                    <option value="tecnicos">👷 Técnicos (Moldmakers)</option>
+                    <option value="lideres">👔 Líderes</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-blue-400 uppercase mb-2 ml-1">2. Sube el archivo</label>
+                <div class="flex items-center justify-center w-full">
+                    <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-700 hover:bg-gray-600 transition group">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                            <svg class="w-10 h-10 mb-3 text-gray-400 group-hover:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                            <p class="mb-2 text-sm text-gray-400 group-hover:text-gray-200"><span class="font-semibold">Haz clic para subir</span> o arrastra</p>
+                            <p class="text-xs text-gray-500">Soporta: .XLSX, .CSV</p>
+                        </div>
+                        <input id="dropzone-file" name="archivo_excel" type="file" class="hidden" accept=".xlsx, .xls, .csv" required />
+                    </label>
+                </div>
+                <p id="file-name" class="text-center text-emerald-400 font-mono text-sm mt-2 h-5"></p>
+            </div>
+
+            <div class="flex justify-between gap-4 pt-2">
+                <a href="javascript:history.back()" class="w-1/2 text-center py-3 px-4 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-bold transition">
+                    Cancelar
+                </a>
+                <button type="submit" class="w-1/2 py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold transition shadow-lg transform active:scale-95">
+                    Procesar Datos
+                </button>
+            </div>
+        </form>
+        
+        <div class="mt-8 border-t border-gray-700 pt-4">
+            <p class="text-xs text-gray-500 font-bold mb-1">Requisitos de Columnas (1ra fila):</p>
+            <ul class="text-[10px] text-gray-400 space-y-1 list-disc list-inside">
+                <li><span class="text-blue-300">Moldes:</span> Molde, Maquina, Numeros de Parte, Molde SAP (Opcional)</li>
+                <li><span class="text-blue-300">Defectos:</span> Defectos, Estatus (Opcional), Actividad (Opcional)</li>
+                <li><span class="text-blue-300">Otros:</span> Nombre (o nombre de la columna principal)</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    const fileInput = document.getElementById('dropzone-file');
+    const fileNameDisplay = document.getElementById('file-name');
+    
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            fileNameDisplay.textContent = "📄 " + e.target.files[0].name;
+            fileNameDisplay.classList.add("animate-pulse");
+        } else {
+            fileNameDisplay.textContent = "";
+            fileNameDisplay.classList.remove("animate-pulse");
+        }
+    });
+</script>
+{% endblock %}

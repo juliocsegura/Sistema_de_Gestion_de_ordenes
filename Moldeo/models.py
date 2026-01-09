@@ -2,199 +2,121 @@ from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from itertools import chain 
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User
 
-
-# Create your models here.
-class Actividades(models.Model):
-    id_actividad = models.AutoField(primary_key=True, blank=True, null=False)
-    nombre_actividad = models.TextField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'Actividades'
-
-
-class Defectos(models.Model):
-    id_defecto = models.AutoField(primary_key=True, blank=True, null=False)
-    nombre_defecto = models.TextField(blank=True, null=True)
-    main_activity = models.TextField(db_column='Main_activity', blank=True, null=True)  # Field name made lowercase.
-
-    class Meta:
-        managed = False
-        db_table = 'Defectos'
-
-
-class Estatus(models.Model):
-    id_estatus = models.AutoField(primary_key=True, blank=True, null=False)
-    numero_estatus = models.TextField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'Estatus'
-
-
 class Lideres(models.Model):
-    id_lider = models.AutoField(primary_key=True, blank=True, null=False)
-    nombre = models.TextField(blank=True, null=True)
+    nombre = models.CharField(max_length=150)
+    activo = models.BooleanField(default=True) # Para mostrar/ocultar en dropdowns
+    id_empleado = models.CharField(max_length=50, null=True, blank=True)
+
+    def __str__(self):
+        return self.nombre
 
     class Meta:
-        managed = False
-        db_table = 'Lideres'
+        verbose_name = "Líder"
+        verbose_name_plural = "Líderes"
 
+class Moldmakers(models.Model): # Técnicos
+    nombre = models.CharField(max_length=150)
+    activo = models.BooleanField(default=True)
+    num_empleado = models.CharField(max_length=50, null=True, blank=True)
 
+    def __str__(self):
+        return self.nombre
+
+    class Meta:
+        verbose_name = "Técnico (Moldmaker)"
+        verbose_name_plural = "Técnicos (Moldmakers)"
+
+# --- 1. CATÁLOGO DE MÁQUINAS ---
 class Maquinas(models.Model):
-    id_maquinas = models.AutoField(db_column='id_Maquinas', primary_key=True, blank=True, null=False)  # Field name made lowercase.
-    wc = models.TextField(db_column='WC', blank=True, null=True)  # Field name made lowercase.
-    mn = models.TextField(db_column='MN', blank=True, null=True)  # Field name made lowercase.
-    wc2 = models.TextField(db_column='WC2', blank=True, null=True)  # Field name made lowercase.
+    nombre = models.CharField(max_length=50, unique=True)
+    activo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.nombre
 
     class Meta:
-        managed = False
-        db_table = 'Maquinas'
+        verbose_name = "Máquina"
+        verbose_name_plural = "Máquinas"
 
 
-class Moldmakers(models.Model):
-    id_mold_m = models.AutoField(db_column='id_Mold_m', primary_key=True, blank=True, null=False)  # Field name made lowercase.
-    nombre = models.TextField(db_column='Nombre', blank=True, null=True)  # Field name made lowercase.
-    
-    class Meta:
-        managed = False
-        db_table = 'MoldMakers'
-
-
+# --- 2. CATÁLOGO DE MOLDES ---
 class Moldes(models.Model):
-    id_molde = models.AutoField(db_column='id_Molde', primary_key=True, blank=True, null=False)  # Field name made lowercase.
-    numero_molde = models.TextField(unique=True, blank=True, null=True)
+    # Ejemplo CSV: M1046113
+    nombre = models.CharField(max_length=100, unique=True, verbose_name="Número de Molde")
+    
+    # Ejemplo CSV: 21-1046113-00000
+    molde_sap = models.CharField(max_length=100, blank=True, null=True, verbose_name="Molde SAP")
+    
+    # Ejemplo CSV: OTROS, 2P, 4P
+    proyecto = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Ejemplo CSV: 4, 8, 16
+    cavidades = models.IntegerField(default=0, blank=True, null=True)
+    
+    # Relación: Un molde se asigna a una Máquina (puede ser null si no está asignado)
     maquina = models.ForeignKey(
-        'Maquinas',                 # Nombre del modelo al que apunta
+        Maquinas, 
         on_delete=models.SET_NULL, 
         null=True, 
-        blank=True, 
-        db_column='maquina_id',     # Nombre exacto de la columna en SQLite
-        related_name='moldes_asignados'
+        blank=True,
+        related_name='moldes'
     )
     
-    class Meta:
-        managed = False
-        db_table = 'Moldes'
+    activo = models.BooleanField(default=True)
+
     def __str__(self):
-            # Devuelve el numero_molde. Si es nulo, devuelve una cadena vacía.
-            return str(self.numero_molde) if self.numero_molde else "Sin Nombre"
-
-    @property
-    def ordenes(self):
-        """
-        Esta propiedad une todas las órdenes (MCM, CHO, TPM) en una sola lista.
-        Uso: mi_molde.ordenes
-        """
-        # Obtenemos las listas de cada tabla usando los nombres únicos del Paso 1
-        lista_mcm = self.ordenes_mcm.all()
-        lista_cho = self.ordenes_cho.all()
-        lista_tpm = self.ordenes_tpm.all()
-        
-        # Las unimos en una sola lista
-        return list(chain(lista_mcm, lista_cho, lista_tpm))
-
-class NumerosDeParte(models.Model):
-    id_np = models.AutoField(primary_key=True, blank=True, null=False)
-    id_molde = models.CharField(max_length=50, blank=True, null=True)  # Field name made lowercase.  # This field type is a guess.
-    numero_parte = models.TextField(blank=True, null=True)
-    terminacion = models.TextField(blank=True, null=True)
-    inicio = models.TextField(blank=True, null=True)
-    number_part = models.TextField(blank=True, null=True)
-    junto = models.TextField(blank=True, null=True)
+        return f"{self.nombre} ({self.molde_sap})"
 
     class Meta:
-        managed = False
-        db_table = 'Numeros_de_parte'
+        verbose_name = "Molde"
+        verbose_name_plural = "Moldes"
 
 
-class Retorno(models.Model):
-    id_retorno = models.AutoField(primary_key=True, blank=True, null=False)
-    retorno_opcion = models.TextField(blank=True, null=True)
+# --- 3. NÚMEROS DE PARTE (Relación Uno a Muchos con Molde) ---
+class NumerosParte(models.Model):
+    # Ejemplo CSV: 2203460-1
+    numero_parte = models.CharField(max_length=100)
+    
+    # Relación: Este número de parte pertenece a ESTE molde.
+    # related_name='numeros_parte' permite acceder desde el molde: molde.numeros_parte.all()
+    molde = models.ForeignKey(
+        Moldes, 
+        on_delete=models.CASCADE, 
+        related_name='numeros_parte'
+    )
 
-    class Meta:
-        managed = False
-        db_table = 'Retorno'
-
-
-class RetornoInfo(models.Model):
-    id_retorno_info = models.AutoField(db_column='id_Retorno_info', primary_key=True, blank=True, null=False)  # Field name made lowercase.
-    info_retorno = models.TextField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'Retorno_info'
-
-
-class Semana(models.Model):
-    id_semana = models.AutoField(primary_key=True, blank=True, null=False)
-    semana_natural = models.TextField(blank=True, null=True)
-    semana_fiscal = models.TextField(blank=True, null=True)
+    def __str__(self):
+        return self.numero_parte
 
     class Meta:
-        managed = False
-        db_table = 'Semana'
+        verbose_name = "Número de Parte"
+        verbose_name_plural = "Números de Parte"
 
 
-class Zonas(models.Model):
-    id_zona = models.AutoField(db_column='id_Zona', primary_key=True, blank=True, null=False)  # Field name made lowercase.
-    zona = models.TextField(db_column='Zona', blank=True, null=True)  # Field name made lowercase.
-    wc = models.TextField(db_column='WC', blank=True, null=True)  # Field name made lowercase.
-    mn = models.TextField(db_column='MN', blank=True, null=True)  # Field name made lowercase.
+# --- 4. CATÁLOGO DE DEFECTOS ---
+class Defectos(models.Model):
+    # Ejemplo CSV: ARRASTRE
+    nombre_defecto = models.CharField(max_length=200, unique=True)
+    
+    # Ejemplo CSV: Drag Mark (Main Activity)
+    categoria_ingles = models.CharField(max_length=200, blank=True, null=True, verbose_name="Categoría (Inglés)")
+    
+    # Ejemplo CSV: 110 (ESTATUS)
+    codigo_estatus = models.CharField(max_length=50, blank=True, null=True, verbose_name="Código Estatus")
+    
+    # Ejemplo CSV: CAMBIO DE CONFIGURACION (ACTIVIDAD)
+    actividad_asociada = models.TextField(blank=True, null=True, verbose_name="Actividad Asociada")
 
-    class Meta:
-        managed = False
-        db_table = 'Zonas'
+    activo = models.BooleanField(default=True)
 
-
-
-class Bitacora(models.Model):
-    fecha = models.DateField()
-    orden = models.CharField(max_length=50)
-    maquina = models.CharField(max_length=50)
-    molde = models.CharField(max_length=50)
-    parte_actual = models.CharField(max_length=50)
-    parte_entrante = models.CharField(max_length=50)
-    defecto1 = models.CharField(max_length=100)
-    cavidad1 = models.CharField(max_length=50)
-    defecto2 = models.CharField(max_length=100)
-    cavidad2 = models.CharField(max_length=50)
-    defecto3 = models.CharField(max_length=100)
-    cavidad3 = models.CharField(max_length=50)
-    tecnico1 = models.CharField(max_length=50)
-    tecnico2 = models.CharField(max_length=50)
-    tecnico3 = models.CharField(max_length=50)
-    tecnico4 = models.CharField(max_length=50)
-    tecnico5 = models.CharField(max_length=50)
-    tecnico6 = models.CharField(max_length=50)
-    tecnico7 = models.CharField(max_length=50)
-    tecnico8 = models.CharField(max_length=50)
-    tecnico9 = models.CharField(max_length=50)
-    lider1 = models.CharField(max_length=50)
-    lider2 = models.CharField(max_length=50)
-    fecha_paro = models.DateTimeField(blank=True, null=True)
-    fecha_entrega = models.DateTimeField(blank=True, null=True)
-    duracion = models.FloatField(blank=True, null=True)
-    hora_entrega = models.TimeField(blank=True, null=True)
-    retorno = models.CharField(max_length=50)
-    estatus = models.CharField(max_length=50)
-    info_retorno = models.CharField(max_length=100)
-    defecto_retorno = models.CharField(max_length=100)
-    lider_retorno = models.CharField(max_length=50)
-    tecnico_retorno = models.CharField(max_length=50)
-    estatus2 = models.CharField(max_length=50)
-    actividad = models.CharField(max_length=50)
-    prioridad = models.CharField(max_length=50)
-    comentarios = models.TextField()
+    def __str__(self):
+        return self.nombre
 
     class Meta:
-        managed = False
-        db_table = 'bitacora_bitacora'
-
+        verbose_name = "Defecto"
+        verbose_name_plural = "Defectos"
 
 # --- 1. MODELO BASE ABSTRACTO ---
 # Campos comunes para TODAS las órdenes (MCM, CHO, TPM, etc.)

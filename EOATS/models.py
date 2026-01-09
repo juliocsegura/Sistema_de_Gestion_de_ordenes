@@ -1,17 +1,3 @@
-# This is an auto-generated Django model module.
-
-# You'll have to do the following manually to clean this up:
-
-#   * Rearrange models' order
-
-#   * Make sure each model has one field with primary_key=True
-
-#   * Make sure each ForeignKey and OneToOneField has `on_delete` set to the desired behavior
-
-#   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
-
-# Feel free to rename the models, but don't rename db_table values or field names.
-
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -19,10 +5,13 @@ from django.dispatch import receiver
 import barcode
 from barcode.writer import ImageWriter
 from io import BytesIO
+
+# --- DEFINICIÓN DE ESTATUS ---
 STATUS_PRODUCCION = 'produccion'
 STATUS_MANTENIMIENTO = 'mantenimiento'
 STATUS_DISPONIBLE = 'disponible'
 STATUS_PREPARACION = 'preparacion'
+
 STATUS_CHOICES = [
     (STATUS_PRODUCCION, 'En Producción'),
     (STATUS_MANTENIMIENTO, 'En Mantenimiento'),
@@ -30,53 +19,37 @@ STATUS_CHOICES = [
     (STATUS_PREPARACION, 'Falta Preparacion'),
 ]
 
-
-
+# --- MODELO EOATS ---
 class Eoats(models.Model):
-
     id_eoat = models.AutoField(primary_key=True)
-
     numero_eoat = models.CharField(max_length=100, unique=True, blank=True, null=True)
-
-    locacion = models.CharField(db_column='Locacion', max_length=100, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
+    locacion = models.CharField(db_column='Locacion', max_length=100, blank=True, null=True)
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
         default=STATUS_PREPARACION
-
     )
     codigo_barras = models.ImageField(
-        upload_to='codigos_eoat/',  # Se guardará en MEDIA_ROOT/codigos_eoat/
+        upload_to='codigos_eoat/',
         blank=True, 
         null=True,
-        editable=False # No queremos editar esto en el admin
+        editable=False
     )
+
     class Meta:
-
-        managed = False
-
+        managed = True  # Ahora Django administra esta tabla
         db_table = 'eoats'
+
     def save(self, *args, **kwargs):
-        # 1. Revisar si tenemos un numero_eoat para codificar
-        if self.numero_eoat and self.numero_eoat.strip():
-            
-            # 2. Crear un buffer de bytes en memoria (para no crear un archivo temporal)
-            buffer = BytesIO()
-            
-            # 3. Generar el código de barras (Code128 es una buena elección)
-            # Usamos "write_text: True" para que el número aparezca debajo del código
-            codigo = barcode.get('code128', self.numero_eoat, writer=ImageWriter())
-            codigo.write(buffer, options={"write_text": True})
-            
-            # 4. Definir el nombre del archivo
-            file_name = f'{self.numero_eoat}.png'
-            
-            # 5. Guardar el contenido del buffer en el campo ImageField
-            # Usamos save=False para evitar un bucle infinito al llamar a save()
-            #self.codigo_barras.save(file_name, File(buffer), save=False)
-        
-        # 6. Llamar al método save() original para guardar el objeto en la BD
+        # Generación de código de barras
+        # if self.numero_eoat and self.numero_eoat.strip():
+        #     buffer = BytesIO()
+        #     codigo = barcode.get('code128', self.numero_eoat, writer=ImageWriter())
+        #     codigo.write(buffer, options={"write_text": True})
+        #     file_name = f'{self.numero_eoat}.png'
+        #     # self.codigo_barras.save(file_name, File(buffer), save=False)
         super().save(*args, **kwargs)
+
     def get_status_css_class(self):
         if self.status == STATUS_PRODUCCION:
             return 'bg-blue-100 text-blue-800'
@@ -84,134 +57,93 @@ class Eoats(models.Model):
             return 'bg-yellow-100 text-yellow-800'
         elif self.status == STATUS_DISPONIBLE:
             return 'bg-green-100 text-green-800'
-        elif self.status== STATUS_PREPARACION:
+        elif self.status == STATUS_PREPARACION:
             return 'bg-red-100 text-red-800'
         return 'bg-gray-100 text-gray-800'
+
     def __str__(self):
-        return self.numero_eoat
-    
+        return self.numero_eoat if self.numero_eoat else "EOAT sin número"
+
+# --- FOTOS EOAT ---
 class FotoEoat(models.Model):
-    # El EOAT al que pertenece esta foto
-    eoat_fotos = models.ForeignKey(Eoats, 
-        on_delete=models.CASCADE, 
-        related_name= 'fotos'  # ¡Este nombre es clave!
-    )
-    
-    # El campo para subir la imagen
+    # IMPORTANTE: Usamos 'Eoats' como string para evitar NameError
+    eoat_fotos = models.ForeignKey('Eoats', on_delete=models.CASCADE, related_name='fotos')
     imagen = models.ImageField(upload_to='Eoats/')
     descripcion = models.CharField(max_length=200, blank=True, null=True)
 
     def __str__(self):
         return f"Foto de {self.eoat_fotos.numero_eoat}"
 
-
+# --- PREVENTIVOS ---
 class Preventivos(models.Model):
-
     id_preventivo = models.AutoField(primary_key=True)
-
     semana = models.IntegerField(blank=True, null=True)
-
     eoat = models.TextField(blank=True, null=True)
-
     locacion = models.TextField(blank=True, null=True)
-
     tipo = models.TextField(blank=True, null=True )
-
-    fecha_preventivo = models.DateTimeField(auto_now_add=True,blank=True, null=True)
-
+    fecha_preventivo = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     comentarios = models.TextField(blank=True, null=True)
-
-    numero_orden = models.CharField(max_length=100,blank=True, null=True)
-
+    numero_orden = models.CharField(max_length=100, blank=True, null=True)
     antes = models.TextField(blank=True, null=True)
-
     despues = models.TextField(blank=True, null=True)
+    maquina = models.CharField(max_length=100, blank=True, null=True)
+    retorno = models.CharField(max_length=100, blank=True, null=True)
+    retorno_info = models.CharField(max_length=100, blank=True, null=True)
+    tecnico = models.CharField(max_length=100, blank=True, null=True)
+    hora_paro = models.CharField(max_length=100, blank=True, null=True)
+    hora_entrega = models.CharField(max_length=100, blank=True, null=True)
 
-    maquina= models.CharField(max_length=100,blank=True, null=True)
-    retorno= models.CharField(max_length=100,blank=True, null=True)
-    retorno_info= models.CharField(max_length=100,blank=True, null=True)
-    tecnico = models.CharField(max_length=100,blank=True, null=True)
-    hora_paro = models.CharField(max_length=100,blank=True, null=True)
-    hora_entrega = models.CharField(max_length=100,blank=True, null=True)
     class Meta:
-
         managed = True
         ordering = ['-fecha_preventivo']
-
         db_table = 'preventivos'
 
-
-
-
-
+# --- REFACCIONES ---
 class Refacciones(models.Model):
-
     id_refaccion = models.AutoField(primary_key=True)
-
-    numero_sap = models.CharField(db_column='numero_SAP', max_length=100,blank=True, null=True)  # Field name made lowercase.
-
+    numero_sap = models.CharField(db_column='numero_SAP', max_length=100, blank=True, null=True)
     numero_proveedor = models.CharField(max_length=100, blank=True, null=True)
-
     descripcion = models.TextField(blank=True, null=True)
-
     proveedor = models.CharField(blank=True, null=True)
-
     min = models.IntegerField(blank=True, null=True)
-
     max = models.IntegerField(blank=True, null=True)
-
-    locacion = models.CharField(max_length=100,blank=True, null=True)
-
+    locacion = models.CharField(max_length=100, blank=True, null=True)
     disponible = models.IntegerField(blank=True, null=True)
-
-    cu = models.FloatField( blank=True, null=True)
-
-    moneda = models.CharField(max_length=100,blank=True, null=True)
-
-
+    cu = models.FloatField(blank=True, null=True)
+    moneda = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
-
-        managed = False
-
+        managed = True  # Ahora Django administra esta tabla
         db_table = 'refacciones'
 
+# --- MOVIMIENTOS ---
 class Movimientos(models.Model):
-   eoat = models.ForeignKey(Eoats, on_delete=models.CASCADE, related_name='movimientos')
-   usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-   estado_anterior = models.CharField(max_length=20, choices=STATUS_CHOICES, null=True, blank=True)
-   estado_nuevo = models.CharField(max_length=20, choices=STATUS_CHOICES)
-   comentarios = models.TextField(blank=True, null=True)
-   fecha = models.DateTimeField(auto_now_add=True)
+    # IMPORTANTE: Usamos 'Eoats' como string
+    eoat = models.ForeignKey('Eoats', on_delete=models.CASCADE, related_name='movimientos')
+    usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    estado_anterior = models.CharField(max_length=20, choices=STATUS_CHOICES, null=True, blank=True)
+    estado_nuevo = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    comentarios = models.TextField(blank=True, null=True)
+    fecha = models.DateTimeField(auto_now_add=True)
 
-   class Meta:
-       
+    class Meta:
         ordering = ['-fecha']
 
-   def __str__(self):
+    def __str__(self):
         return f"{self.eoat.numero_eoat}: {self.estado_anterior} -> {self.estado_nuevo}"
 
+# --- PLAN DE CARGA ---
 class RegistroPlanCargado(models.Model):
-    """
-    Almacena los datos PROCESADOS del archivo Excel/CSV cargado.
-    Incluye el molde transformado y el status de mantenimiento.
-    """
     id = models.AutoField(primary_key=True)
     maquina = models.CharField(max_length=100, blank=True, null=True)
-    
-    # Almacenará el molde transformado (ej. 21-12345)
     molde = models.CharField(max_length=100, blank=True, null=True) 
-    
     fecha = models.DateField(blank=True, null=True)
     tipo_plan = models.CharField(max_length=10, blank=True, null=True, default='PREP')
-    # Campo de Status añadido
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
         default=STATUS_PREPARACION,
-        
     )
-    
     fecha_carga = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Carga")
 
     class Meta:
@@ -220,7 +152,6 @@ class RegistroPlanCargado(models.Model):
         ordering = ['maquina', 'molde']
 
     def get_status_css_class(self):
-        """ Copiamos la lógica de Eoats para mostrar colores en la plantilla """
         if self.status == STATUS_PRODUCCION:
             return 'bg-blue-100 text-blue-800'
         elif self.status == STATUS_MANTENIMIENTO:
@@ -233,28 +164,15 @@ class RegistroPlanCargado(models.Model):
 
     def __str__(self):
         return f"Registro: {self.molde} - {self.tipo_plan} ({self.status}) en {self.maquina} para {self.fecha}"
+
+# --- SEÑALES (SIGNALS) ---
 @receiver(post_save, sender=Eoats)
 def limpiar_plan_al_terminar(sender, instance, **kwargs):
-    """
-    Esta función se ejecuta automáticamente DESPUÉS de que se guarda un EOAT.
-    Si el estado del EOAT guardado es 'DISPONIBLE', busca en la tabla
-    de registros del plan y borra la entrada correspondiente.
-    """
-    
-    # Comprobamos si el estado del EOAT que se guardó es DISPONIBLE
     if instance.status == STATUS_DISPONIBLE:
         try:
-            # Buscamos el registro en el plan que coincida con el número de EOAT
             registro_a_borrar = RegistroPlanCargado.objects.filter(molde=instance.numero_eoat)
-            
             if registro_a_borrar.exists():
-                # Borramos el registro del plan
                 registro_a_borrar.delete()
                 print(f"Señal: EOAT {instance.numero_eoat} pasó a DISPONIBLE. Registro del plan eliminado.")
-                
-        except RegistroPlanCargado.DoesNotExist:
-            # No se encontró, no hacemos nada
-            pass
         except Exception as e:
-            # Imprime cualquier otro error en la consola del servidor
             print(f"Error en la señal limpiar_plan_al_terminar: {e}")
