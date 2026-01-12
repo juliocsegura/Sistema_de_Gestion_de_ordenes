@@ -61,7 +61,7 @@
                             readonly>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-400 mb-1">Defecto</label>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Defecto SAP</label>
                         <input type="text" name="defecto_sap" value="{{ pre_defecto }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold">
                     </div>
                     <div>
@@ -159,7 +159,7 @@
                             <div class="flex justify-between items-center">
                                 <div>
                                     <p class="text-gray-300"><span class="text-yellow-400 font-bold">Molde:</span> <span id="res-molde"></span></p>
-                                    <p class="text-gray-300"><span class="text-yellow-400 font-bold">Defecto:</span> <span id="res-defecto"></span></p>
+                                    <p class="text-gray-300"><span class="text-yellow-400 font-bold">Actividad:</span> <span id="res-defecto"></span></p>
                                 </div>
                                 <button type="button" id="btn-ver-detalles" class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded border border-blue-500 font-bold shadow hover:shadow-lg transition animate-pulse">
                                     Cargar Tarjetas de Técnicos
@@ -232,7 +232,7 @@
         <button type="button" class="btn-remove-defect-card absolute top-2 right-2 text-gray-600 hover:text-red-400 p-1 text-xl font-bold">&times;</button>
         
         <div class="mb-3 relative group-combo-def pr-6">
-            <label class="block text-[9px] text-blue-400 uppercase font-bold mb-1">Defecto</label>
+            <label class="block text-[9px] text-blue-400 uppercase font-bold mb-1">Actividad</label>
             <input type="text" class="input-defecto w-full bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white font-bold validate-required" placeholder="Seleccionar..." autocomplete="off">
             <div class="combo-list-def hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 z-50 max-h-40 overflow-y-auto shadow-xl rounded-b"></div>
         </div>
@@ -758,7 +758,7 @@
                 switchDefectTab(card, defectId);
             };
 
-            // Iniciar con un defecto
+         
             btnAddDefect.click();
         }
 
@@ -816,7 +816,6 @@
             container.appendChild(locRow);
         }
 
-        // --- HELPERS UI ---
         function updateLabels(defCard, defectName) {
             const lblCav = defCard.querySelector('.label-cav');
             const lblCirc = defCard.querySelector('.label-circ');
@@ -902,28 +901,25 @@
             input.addEventListener('click', (e) => { e.stopPropagation(); closeAllMenus(); render(input.value); });
         }
 
-        // ==========================================
-        // 6. SUBMIT
-        // ==========================================
         const form = document.getElementById('form-registro');
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             
-            // 1. Observaciones
+            
             const autoObs = document.getElementById('txt-observaciones-auto').value;
             const manualObs = document.getElementById('txt-observaciones-manual').value;
             let combinedObs = autoObs;
             if(manualObs.trim()) { combinedObs += "\n\n[Notas Adicionales]:\n" + manualObs; }
             document.getElementById('final-observaciones').value = combinedObs;
 
-            // 2. Retorno
+           
             const ordenBuscada = document.getElementById('input-buscar-orden').value;
             const contenedorRetorno = document.getElementById('contenedor-resumen-visual');
             if(ordenBuscada && !contenedorRetorno.classList.contains('hidden')) {
                  document.getElementById('input-orden-ref-final').value = ordenBuscada;
             }
 
-            // 3. Validación de Técnicos
+          
             const cards = contentArea.querySelectorAll('.tech-card-wrapper');
             if(cards.length === 0) { alert("Agrega un técnico."); switchTab('general'); return; }
 
@@ -1004,9 +1000,6 @@
             activateTechTab(card.id.replace('card-',''));
         });
 
-        // ==========================================
-        // 7. LÓGICA DE CIERRE DE MODAL
-        // ==========================================
         const modal = document.getElementById('orden-modal');
         const btnCerrar = document.getElementById('modal-close-btn');
 

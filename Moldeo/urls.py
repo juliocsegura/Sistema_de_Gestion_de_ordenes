@@ -14,6 +14,7 @@ urlpatterns = [
     path('api/get-moldes/', views.api_get_moldes, name='api_get_moldes'),
     path('Ordenes_en_curso', views.Orden_en_curso_view, name='ordenes_en_curso'),
     path('Status_Ordenes', views.btn_status_ordenmcm_view, name='status_ordenes'),
+    path('Status_OrdenesTPM', views.btn_status_ordentpm_view, name='status_ordenestpm'),
     path('configuracion/importar-sap/', views.carga_masiva_view, name='carga_masiva'),
     path('catalogo-sap/', views.lista_sap_view, name='lista_sap'),
     path('orden/<int:orden_id>/<str:tipo>/imprimir/', views.imprimir_formato_view, name='imprimir_formato'),

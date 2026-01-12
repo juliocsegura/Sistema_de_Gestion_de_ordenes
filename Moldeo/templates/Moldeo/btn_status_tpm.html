@@ -1,0 +1,61 @@
+<!-- 1. Heredamos TODO de 'base.html' -->
+{% extends 'Moldeo/base.html' %}
+
+<!-- 2. (Opcional) Cambiamos el título de la pestaña del navegador -->
+{% block title %}Registro{% endblock %}
+
+<!-- 3. Definimos el contenido específico para esta página -->
+ {% block content %}
+        <!-- 2. BOTONES GRANDES -->
+        <div class="container mx-auto max-w-5xl px-4 py-16">
+            <div class="mb-6">
+                <a href="javascript:history.back()" 
+                class="inline-flex items-center bg-gray-600 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                    <!-- Icono de flecha izquierda -->
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Regresar
+                </a>
+            </div>
+            {% if pre_orden %}
+                <div class="bg-blue-900/50 border border-blue-500 text-blue-100 p-4 rounded-lg mb-8 text-center shadow-lg">
+                    <p class="font-bold text-lg">Iniciando Orden SAP: {{ pre_orden }}</p>
+                    <p class="text-sm text-blue-300">Selecciona el área para continuar con los datos cargados.</p>
+                </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 justify-center gap-6 sm:gap-10">
+                <!-- Botón Registrar -->
+                <a 
+                id="btn-203"
+                href="{% url 'Moldeo:registrar_tpm' %}?status=206&numero_orden={{ pre_orden }}&defecto_sap={{ pre_defecto }}&molde={{ pre_molde }}&maquina={{ pre_maquina }}" 
+                class="flex-1 text-center bg-yellow-300 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-yellow-200">
+                    TPM 2
+                </a>
+                
+                <!-- Botón En Curso -->
+                <a 
+                id="btn-204"
+                href="{% url 'Moldeo:registrar_tpm' %}?status=206&numero_orden={{ pre_orden }}&defecto_sap={{ pre_defecto }}&molde={{ pre_molde }}&maquina={{ pre_maquina }}" 
+                class="flex-1 text-center bg-yellow-300 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-yellow-200">
+                    TPM 3
+                </a>
+                <!-- Botón Registrar -->
+                <a
+                id="btn-206" 
+                href="{% url 'Moldeo:registrar_tpm' %}?status=206&numero_orden={{ pre_orden }}&defecto_sap={{ pre_defecto }}&molde={{ pre_molde }}&maquina={{ pre_maquina }}" 
+                class="flex-1 text-center bg-yellow-300 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-yellow-200">
+                    TPM 4
+                </a>
+                
+                <!-- Botón En Curso -->
+                <a
+                id="btn-212" 
+                href="{% url 'Moldeo:registrar_tpm' %}?status=206&numero_orden={{ pre_orden }}&defecto_sap={{ pre_defecto }}&molde={{ pre_molde }}&maquina={{ pre_maquina }}" 
+                class="flex-1 text-center bg-yellow-300 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-yellow-200">
+                    TPM 5
+                </a>
+            </div>
+        </div>
+{%endblock%}

@@ -38,7 +38,7 @@ def Registrar_Orden_view(request):
     pre_molde_pk = ''
     if molde_str:
         try:
-            m = Moldes.objects.filter(numero_molde=molde_str).first()
+            m = Moldes.objects.filter(nombre=molde_str).first()
             if m: pre_molde_pk = m.id_molde
         except: pass
 
@@ -78,197 +78,260 @@ def btn_status_ordenmcm_view(request):
         'pre_maquina': request.GET.get('maquina', '')
     }
     return render(request, 'Moldeo/btn_status_mcm.html', context)
+def btn_status_ordentpm_view(request):
+    context = {
+        'pre_orden': request.GET.get('numero_orden', ''),
+        'pre_defecto': request.GET.get('defecto_sap', ''),
+        'pre_molde': request.GET.get('molde', ''),
+        
+        'pre_maquina': request.GET.get('maquina', '')
+    }
+    return render(request, 'Moldeo/btn_status_tpm.html', context)
 
 @require_http_methods(["GET", "POST"])
 def mcm_view(request):
-    # 1. Configuración inicial
+    # 1. RECUPERAR PARÁMETROS INICIALES (GET o POST)
     status_actual = request.POST.get('statusmcm') or request.GET.get('status', '')
-    tipo_mntn = 'MCM'
     pre_orden = request.POST.get('numero_orden') or request.GET.get('numero_orden', '')
     pre_defecto = request.POST.get('defecto_sap') or request.GET.get('defecto_sap', '')
-    pre_maquina= request.POST.get('maquina') or request.GET.get('maquina', '')
+    pre_maquina = request.POST.get('maquina') or request.GET.get('maquina', '')
+    
+    # Manejo inteligente del Molde (Nombre vs ID)
     pre_molde_nombre = request.GET.get('molde', '') 
-    pre_molde_pk = request.POST.get('molde', '') 
+    pre_molde_pk = request.POST.get('molde', '')
 
-    if pre_molde_pk and not pre_molde_nombre:
+    molde_obj = None
+
+    # Caso A: Tenemos ID (POST), buscamos el objeto
+    if pre_molde_pk:
         try:
-            m_obj = Moldes.objects.get(pk=pre_molde_pk)
-            pre_molde_nombre = m_obj.numero_molde
+            molde_obj = Moldes.objects.get(pk=pre_molde_pk)
+            pre_molde_nombre = molde_obj.nombre
+            if not pre_maquina and molde_obj.maquina: # Autocompletar máquina si falta
+                pre_maquina = molde_obj.maquina.nombre
         except: pass
     
-    if not pre_molde_pk and pre_molde_nombre:
+    # Caso B: Tenemos Nombre (GET), buscamos ID y Máquina
+    elif pre_molde_nombre:
         try:
-            m = Moldes.objects.filter(numero_molde=pre_molde_nombre).first()
-            if m: pre_molde_pk = m.id_molde
+            molde_obj = Moldes.objects.filter(nombre=pre_molde_nombre).first()
+            if molde_obj: 
+                pre_molde_pk = molde_obj.pk
+                if not pre_maquina and molde_obj.maquina:
+                    pre_maquina = molde_obj.maquina.nombre
         except: pass
 
-    # 2. LÓGICA DE GUARDADO
+    # 2. LÓGICA DE GUARDADO (POST)
     if request.method == 'POST':
+        # Recuperamos datos del formulario
         numero_orden = request.POST.get('numero_orden')
         defecto_sap = request.POST.get('defecto_sap')
-        molde_form_id = request.POST.get('molde')
-        asignaciones_json_str = request.POST.get('asignaciones_json', '[]')
-        maquina_input = request.POST.get('maquina', '')
+        molde_id = request.POST.get('molde')
+        asignaciones_json = request.POST.get('asignaciones_json', '[]')
+        
+        # Recuperar máquina (del input o del objeto molde)
+        maquina_final = request.POST.get('maquina')
+        if not maquina_final and molde_obj:
+             maquina_final = molde_obj.maquina.nombre if molde_obj.maquina else ''
+
+        # Recuperar datos de retorno
         motivo_ret = request.POST.get('motivo_retorno', '')
         obs_ret = request.POST.get('observaciones_retorno', '')
         orden_ref = request.POST.get('orden_retorno_ref', '')
-        # Concatenar líderes de retorno a observaciones si existen
-        lideres_ret_str = request.POST.get('lideres_retorno_str', '')
-        if lideres_ret_str:
-            obs_ret += f"\n[Líderes Retorno: {lideres_ret_str}]"
-        
-        molde_instancia = None
-        if molde_form_id and str(molde_form_id).isdigit():
-            try:
-                molde_instancia = Moldes.objects.get(pk=molde_form_id)
-            except Moldes.DoesNotExist:
-                molde_instancia = None
 
-        if not (numero_orden and defecto_sap and molde_instancia):
-            messages.error(request, 'Error: Faltan campos obligatorios.')
+        # Validaciones
+        if not numero_orden:
+            messages.error(request, 'Error: Falta el Número de Orden.')
+        elif not molde_obj:
+            messages.error(request, 'Error: El Molde no es válido o no existe.')
         else:
             try:
                 with transaction.atomic():
-                    # Si ya no usas el "Líder Global" de la orden, puedes dejarlo en None o poner al usuario actual
-                    lider_inicial = request.user if es_lider(request.user) else None
-
+                    # Crear la Orden
                     nueva_orden = OrdenMCM.objects.create(
                         numero_orden=numero_orden,
                         defecto_sap=defecto_sap,
-                        molde=molde_instancia,
+                        molde=molde_obj,
                         status=status_actual,
-                        tipo_mntn=tipo_mntn,
-                        maquina=maquina_input,
+                        tipo_mntn='MCM',
+                        maquina=maquina_final, # Usamos la máquina recuperada
                         estado='Activa',
-                        lider=lider_inicial, # Líder de registro (usuario logueado)
                         ultima_actualizacion=timezone.now(),
                         motivo_retorno=motivo_ret,
                         orden_retorno_ref=orden_ref,
                         observaciones_retorno=obs_ret
                     )
 
-                    import json
-                    asignaciones_data = json.loads(asignaciones_json_str)
-
+                    # Procesar Técnicos (JSON)
+                    asignaciones_data = json.loads(asignaciones_json)
+                    
                     for item in asignaciones_data:
                         nombre = item.get('nombre')
-                        lider_tec = item.get('lider', '') # <--- AQUÍ RECIBIMOS EL LÍDER DEL TÉCNICO
+                        lider_tec = item.get('lider', '')
+                        mesa = item.get('mesa', '-')
                         
                         if nombre:
-                            # ESTRATEGIA DE GUARDADO: 
-                            # Concatenamos el líder al nombre para guardarlo en el campo existente
-                            nombre_final = nombre
-                            if lider_tec:
-                                nombre_final = f"{nombre} (L: {lider_tec})"
-
+                            # Formato nombre: "Juan Perez (L: Carlos)"
+                            nombre_guardar = f"{nombre} (L: {lider_tec})" if lider_tec else nombre
                             detalles_str = json.dumps(item.get('detalles', []))
-                            
+
                             AsignacionUniversal.objects.create(
                                 content_object=nueva_orden,
-                                nombre_tecnico=nombre_final, # Guardamos "Juan (L: Pedro)"
-                                mesa=item.get('mesa', '-'),
+                                nombre_tecnico=nombre_guardar,
+                                mesa=mesa,
                                 detalles_json=detalles_str,
                                 defecto="Ver detalles",
                                 activo=True
                             )
 
-                messages.success(request, f'Orden MCM {numero_orden} registrada con éxito.')
+                messages.success(request, f'Orden MCM {numero_orden} registrada correctamente.')
                 return redirect('Moldeo:ordenes_en_curso')
-            
-            except Exception as e:
-                messages.error(request, f'Error al guardar: {e}')
-                print(f"Error Save: {e}")
 
-    # 3. RENDERIZADO
+            except Exception as e:
+                messages.error(request, f'Error crítico al guardar: {str(e)}')
+                print(f"DEBUG ERROR SAVE: {e}")
+
+    # 3. RENDERIZADO (GET o Fallo POST)
     context = {
         'status_actual': status_actual,
-        'tipo_mntn': tipo_mntn,
+        'tipo_mntn': 'MCM',
         'pre_orden': pre_orden,
         'pre_defecto': pre_defecto,
-        'pre_maquina': pre_maquina,
+        'pre_maquina': pre_maquina, # Pasamos la máquina recuperada
         'pre_molde_nombre': pre_molde_nombre, 
         'pre_molde_pk': pre_molde_pk,
-        'lista_defectos': Defectos.objects.all().order_by('nombre_defecto'),
-        'moldmakers': Moldmakers.objects.all().order_by('nombre'),
-        'lideres_all': Lideres.objects.all().order_by('nombre'), # Importante para el dropdown
-        'es_lider_logueado': es_lider(request.user)
+        'lista_defectos': Defectos.objects.filter(activo=True).order_by('nombre_defecto'),
+        'moldmakers': Moldmakers.objects.filter(activo=True).order_by('nombre'),
+        'lideres_all': Lideres.objects.filter(activo=True).order_by('nombre'),
     }
     return render(request, 'Moldeo/prueba.html', context)
 @require_http_methods(["GET", "POST"])
 def registro_cho_view(request):
+    # 1. Configuración Inicial y Recuperación de Datos
+    status_actual = '110' # Valor por defecto para CHO
     tipo_mntn = 'CHO'
-    status_actual = '110'
-    pre_orden = request.GET.get('numero_orden', '')
-    pre_molde_nombre = request.GET.get('molde', '')
-    tecnicos_list = Moldmakers.objects.all().order_by('nombre')
     
-    pre_molde_pk = ''
-    if pre_molde_nombre:
+    pre_orden = request.POST.get('numero_orden') or request.GET.get('numero_orden', '')
+    pre_defecto = request.POST.get('defecto_sap') or request.GET.get('defecto_sap', '')
+    pre_maquina = request.POST.get('maquina') or request.GET.get('maquina', '')
+    
+    # Manejo inteligente del Molde (Nombre vs ID)
+    pre_molde_nombre = request.GET.get('molde', '') 
+    pre_molde_pk = request.POST.get('molde', '')
+    
+    molde_obj = None
+    partes_data = [] # Lista para el dropdown
+
+    # Búsqueda inteligente del Molde
+    if pre_molde_pk:
         try:
-            m = Moldes.objects.filter(numero_molde=pre_molde_nombre).first()
-            if m: pre_molde_pk = m.id_molde
+            molde_obj = Moldes.objects.get(pk=pre_molde_pk)
+            pre_molde_nombre = molde_obj.nombre
+        except: pass
+    elif pre_molde_nombre:
+        try:
+            molde_obj = Moldes.objects.filter(nombre=pre_molde_nombre).first()
+            if molde_obj: pre_molde_pk = molde_obj.pk
         except: pass
 
+    # Obtener Números de Parte si tenemos molde
+    if molde_obj:
+        qs_partes = NumerosParte.objects.filter(molde=molde_obj).values_list('numero_parte', flat=True)
+        partes_data = [{'nombre': p} for p in qs_partes]
+    
+    partes_json = json.dumps(partes_data)
+
+    # 2. PROCESAMIENTO POST
     if request.method == 'POST':
         numero_orden = request.POST.get('numero_orden')
-        molde_form_id = request.POST.get('molde')
+        defecto_sap = request.POST.get('defecto_sap')
+        # Datos específicos de CHO
+        parte_saliente = request.POST.get('parte_saliente', '')
+        parte_entrante = request.POST.get('parte_entrante', '')
         
-        # Arrays del formulario (Asegúrate de actualizar tu HTML de CHO para usar estos names)
-        # Si el HTML de CHO aún usa los viejos names, cámbialos aquí temporalmente o actualiza el HTML
-        l_tecnicos = request.POST.getlist('tecnico_nombre[]') 
-        l_mesas = request.POST.getlist('mesa[]')
-        # CHO suele ser más simple, pero usamos la misma estructura para consistencia
+        # Recuperar máquina (del input o del objeto)
+        maquina_input = request.POST.get('maquina', '')
+        if not maquina_input and molde_obj and molde_obj.maquina:
+            maquina_input = molde_obj.maquina.nombre
 
-        molde_instancia = None
-        lider_inicial = None
-        if request.user.is_authenticated and es_lider(request.user):
-            lider_inicial = request.user
-        if molde_form_id:
-            try:
-                molde_instancia = Moldes.objects.get(pk=molde_form_id)
-            except Moldes.DoesNotExist:
-                molde_instancia = None
-
-        if not (numero_orden and molde_instancia):
-            messages.error(request, 'Error: Faltan campos obligatorios.')
+        # Recuperar Asignaciones (JSON stringify desde el front o arrays antiguos)
+        # Asumiremos que actualizas el HTML para usar el mismo JSON que MCM, 
+        # pero mantenemos compatibilidad básica si usas arrays simples.
+        asignaciones_json = request.POST.get('asignaciones_json', '')
+        
+        if not (numero_orden and molde_obj):
+            messages.error(request, 'Error: Faltan campos obligatorios (Orden o Molde).')
         else:
             try:
                 with transaction.atomic():
+                    # Crear Orden CHO
                     nueva_orden = OrdenCHO.objects.create(
                         numero_orden=numero_orden,
-                        molde=molde_instancia,
+                        defecto_sap=defecto_sap,
+                        molde=molde_obj,
                         tipo_mntn=tipo_mntn,
-                        lider=lider_inicial,
                         status=status_actual,
                         estado='Activa',
+                        maquina=maquina_input,
+                        parte_saliente=parte_saliente, # <--- Nuevo
+                        parte_entrante=parte_entrante, # <--- Nuevo
                         ultima_actualizacion=timezone.now()
                     )
 
-                   
-                    from itertools import zip_longest
-                    datos = zip_longest(l_tecnicos, l_mesas, fillvalue='')
-                    
-                    for tec, mesa in datos:
-                        if tec and tec.strip():
-                            AsignacionUniversal.objects.create(
-                                content_object=nueva_orden,
-                                nombre_tecnico=tec.strip(),
-                                mesa=mesa.strip() if mesa else '',
-                                activo=True
-                            )
+                    # Guardar Técnicos
+                    if asignaciones_json:
+                        # Si viene el JSON complejo (con mesa, lider, etc.)
+                        data = json.loads(asignaciones_json)
+                        for item in data:
+                            nombre = item.get('nombre')
+                            lider_tec = item.get('lider', '')
+                            mesa = item.get('mesa', '-')
+                            
+                            if nombre:
+                                nombre_final = f"{nombre} (L: {lider_tec})" if lider_tec else nombre
+                                # En CHO a veces no hay "detalles" de defectos, guardamos vacío o lo que venga
+                                detalles_str = json.dumps(item.get('detalles', []))
+                                
+                                AsignacionUniversal.objects.create(
+                                    content_object=nueva_orden,
+                                    nombre_tecnico=nombre_final,
+                                    mesa=mesa,
+                                    detalles_json=detalles_str,
+                                    activo=True
+                                )
+                    else:
+                        # Fallback: Arrays simples (si tu HTML es antiguo)
+                        l_tecnicos = request.POST.getlist('tecnico_nombre[]')
+                        l_mesas = request.POST.getlist('mesa[]')
+                        from itertools import zip_longest
+                        for tec, mes in zip_longest(l_tecnicos, l_mesas, fillvalue=''):
+                            if tec and tec.strip():
+                                AsignacionUniversal.objects.create(
+                                    content_object=nueva_orden,
+                                    nombre_tecnico=tec.strip(),
+                                    mesa=mes.strip(),
+                                    activo=True
+                                )
 
                 messages.success(request, f'Orden CHO {numero_orden} registrada.')
                 return redirect('Moldeo:ordenes_en_curso')
-            except Exception as e:
-                messages.error(request, f'Error: {e}')
 
+            except Exception as e:
+                messages.error(request, f'Error al guardar: {e}')
+                print(f"Error CHO: {e}")
+
+    # 3. RENDERIZADO
     context = {
         'tipo_mntn': tipo_mntn,
         'status_actual': status_actual,
         'pre_orden': pre_orden,
         'pre_molde_nombre': pre_molde_nombre,
         'pre_molde_pk': pre_molde_pk,
-        'moldmakers': tecnicos_list
+        'pre_defecto': pre_defecto,
+        'pre_maquina': molde_obj.maquina.nombre if molde_obj and molde_obj.maquina else '',
+        'moldmakers': Moldmakers.objects.all().order_by('nombre'),
+        'lideres_all': Lideres.objects.filter(activo=True).order_by('nombre'),
+        'partes_json': partes_json # Enviamos el JSON para los combos
     }
     return render(request, 'Moldeo/registro_cho.html', context)
 
@@ -434,7 +497,7 @@ def api_ordenes_recientes_view(request):
         
         nombre_molde = "N/A"
         if orden.molde:
-            try: nombre_molde = orden.molde.numero_molde
+            try: nombre_molde = orden.molde.nombre
             except: nombre_molde = "Ref Error"
 
         data.append({
@@ -552,7 +615,7 @@ def historial_finalizadas_view(request):
             'id': orden.id,
             'tipo': orden.tipo_mntn,
             'numero_orden': orden.numero_orden,
-            'molde': orden.molde.numero_molde if orden.molde else 'N/A',
+            'molde': orden.molde.nombre if orden.molde else 'N/A',
             'defecto': getattr(orden, 'defecto_sap', '-'),
             'lider': str(orden.lider) if orden.lider else 'Sin Asignar',
             'tecnico': tecnico_tabla,
@@ -760,13 +823,16 @@ def api_gestionar_tecnicos(request, orden_id):
     except Exception as e:
         print(f"ERROR API: {e}") # Ver error en terminal
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
+def encontrar_encabezados(df_preview, keywords):
+    """Busca la fila donde aparecen las palabras clave y retorna su índice."""
+    for idx, row in df_preview.iterrows():
+        fila_str = [str(val).strip() for val in row.values]
+        if all(any(k.lower() in s.lower() for s in fila_str) for k in keywords):
+            return idx
+    return None
+
 def carga_masiva_view(request):
-    """
-    Vista maestra para cargar cualquier tipo de archivo (SAP o Catálogos).
-    Utiliza el selector 'modelo_destino' del HTML para saber qué lógica aplicar.
-    """
     if request.method == 'POST':
-        # 1. Obtener el archivo (soporta ambos nombres por compatibilidad)
         excel_file = request.FILES.get('archivo_excel') or request.FILES.get('archivo_sap')
         modelo_destino = request.POST.get('modelo_destino')
 
@@ -776,195 +842,240 @@ def carga_masiva_view(request):
 
         try:
             registros_creados = 0
-
+            
             # ==========================================
-            # CASO A: ACTUALIZACIÓN SAP (Usamos openpyxl)
+            # CASO A: ACTUALIZACIÓN SAP
             # ==========================================
             if modelo_destino == 'sap':
+                # ... (Lógica SAP sin cambios, funciona bien) ...
                 if not excel_file.name.endswith('.xlsx'):
                     messages.error(request, 'Para SAP el archivo debe ser .xlsx')
                     return render(request, 'Moldeo/subir_excel.html')
 
                 wb = openpyxl.load_workbook(excel_file, data_only=True)
                 ws = wb['Sheet1'] if 'Sheet1' in wb.sheetnames else wb.active
-
-                # Mapear encabezados
+                
+                header_row = 1
                 headers = {}
-                for cell in ws[1]:
-                    if cell.value:
-                        headers[str(cell.value).strip()] = cell.column - 1
-
-                # Columnas requeridas
+                for r in range(1, 6):
+                    row_vals = [str(cell.value).strip() for cell in ws[r] if cell.value]
+                    if 'Order' in row_vals:
+                        header_row = r
+                        for cell in ws[r]:
+                            if cell.value: headers[str(cell.value).strip()] = cell.column - 1
+                        break
+                
                 if 'Order' not in headers:
-                    messages.error(request, "El archivo SAP no tiene la columna 'Order'.")
-                    return render(request, 'Moldeo/subir_excel.html')
+                    messages.error(request, "Error SAP: No se encontró la columna 'Order'.")
+                    return redirect('Moldeo:carga_masiva')
 
-                # Índices opcionales
                 idx_fecha = headers.get('Bas. start date') or headers.get('Basic start date')
                 idx_hora = headers.get('Start time')
                 idx_equipo = headers.get('Equipment')
 
-                for row in ws.iter_rows(min_row=2, values_only=True):
+                for row in ws.iter_rows(min_row=header_row + 1, values_only=True):
                     try:
                         order_val = row[headers['Order']]
                         if not order_val: continue
-
-                        # Procesar Fecha
+                        
                         fecha_val = None
-                        if idx_fecha is not None:
-                            raw_date = row[idx_fecha]
-                            if raw_date:
-                                if hasattr(raw_date, 'date'): fecha_val = raw_date.date()
-                                elif isinstance(raw_date, datetime): fecha_val = raw_date.date()
+                        if idx_fecha is not None and row[idx_fecha]:
+                            raw = row[idx_fecha]
+                            if hasattr(raw, 'date'): fecha_val = raw.date()
+                            elif isinstance(raw, datetime): fecha_val = raw.date()
 
-                        # Procesar Hora
                         hora_val = None
-                        if idx_hora is not None:
-                            raw_time = row[idx_hora]
-                            if raw_time:
-                                if hasattr(raw_time, 'time'):
-                                    hora_val = raw_time.time() if hasattr(raw_time, 'date') else raw_time
-                                elif isinstance(raw_time, str):
-                                    try:
-                                        hora_val = datetime.strptime(raw_time.strip(), "%H:%M:%S").time()
-                                    except: pass
+                        if idx_hora is not None and row[idx_hora]:
+                            raw = row[idx_hora]
+                            if isinstance(raw, (datetime, time)):
+                                hora_val = raw.time() if isinstance(raw, datetime) else raw
+                            elif isinstance(raw, str):
+                                try: hora_val = datetime.strptime(raw.strip(), "%H:%M:%S").time()
+                                except: pass
 
-                        # Procesar Equipo
-                        equipment_val = str(row[idx_equipo]).strip() if idx_equipo is not None and row[idx_equipo] else ''
+                        equip = str(row[idx_equipo]).strip() if idx_equipo is not None and row[idx_equipo] else ''
 
                         OrdenSAP.objects.update_or_create(
                             order=str(order_val),
                             defaults={
                                 'description': row[headers.get('Description', -1)] if 'Description' in headers else '',
                                 'work_center': row[headers.get('Work center', -1)] if 'Work center' in headers else '',
-                                'equipment': equipment_val,
+                                'equipment': equip,
                                 'fecha_inicio': fecha_val,
                                 'hora_inicio': hora_val
                             }
                         )
                         registros_creados += 1
-                    except Exception as e:
-                        print(f"Error fila SAP: {e}")
-                        continue
+                    except: continue
+
+                messages.success(request, f'SAP Actualizado: {registros_creados} órdenes.')
+                return redirect('Moldeo:panel_principal')
 
             # ==========================================
-            # CASO B: CATÁLOGOS (Usamos pandas)
+            # CASO B: CATÁLOGOS (Pandas)
             # ==========================================
             else:
-                # Leer Excel o CSV
-                if excel_file.name.endswith('.csv'):
-                    df = pd.read_csv(excel_file)
-                else:
-                    df = pd.read_excel(excel_file)
+                df = None
                 
-                # Normalizar columnas (minúsculas y sin espacios)
-                df.columns = df.columns.str.strip().str.lower()
+                # Leer archivo
+                if excel_file.name.endswith('.csv'):
+                    try: df = pd.read_csv(excel_file, encoding='utf-8')
+                    except: df = pd.read_csv(excel_file, encoding='latin-1')
+                else:
+                    xls = pd.ExcelFile(excel_file)
+                    keywords = ['MOLDE', 'MAQUINA'] if modelo_destino == 'moldes' else ['DEFECTOS'] if modelo_destino == 'defectos' else ['nombre']
+                    
+                    for sheet in xls.sheet_names:
+                        preview = pd.read_excel(excel_file, sheet_name=sheet, nrows=10, header=None)
+                        idx = encontrar_encabezados(preview, keywords)
+                        if idx is not None:
+                            df = pd.read_excel(excel_file, sheet_name=sheet, header=idx)
+                            break
+                    
+                    if df is None: df = pd.read_excel(excel_file)
 
-                # --- 1. MOLDES COMPLETO ---
+                # Limpieza de nombres de columnas
+                df.columns = df.columns.astype(str).str.strip()
+                col_names = df.columns.tolist()
+
+                # --- PROCESO MOLDES (CORREGIDO) ---
                 if modelo_destino == 'moldes':
-                    for _, row in df.iterrows():
-                        # Maquina
-                        nombre_maq = str(row.get('maquina', '')).strip()
-                        instancia_maquina = None
-                        if nombre_maq and nombre_maq.lower() != 'nan':
-                            instancia_maquina, _ = Maquinas.objects.get_or_create(nombre=nombre_maq)
+                    # 1. Identificar columnas (Maestro vs Detalle)
+                    # Columna A (Maestra): "MOLDE" (Mayúsculas)
+                    col_maestro = 'MOLDE' if 'MOLDE' in col_names else next((c for c in col_names if c.upper()=='MOLDE'), None)
+                    col_maquina = 'MAQUINA' if 'MAQUINA' in col_names else next((c for c in col_names if c.upper()=='MAQUINA'), None)
+                    
+                    # Columna E (Detalle): "Molde" (Normal)
+                    # OJO: Pandas renombra duplicados. Si hay "MOLDE" y "Molde", el segundo suele ser "Molde.1"
+                    col_detalle = 'Molde' 
+                    if 'Molde' not in col_names and 'Molde.1' in col_names: col_detalle = 'Molde.1'
+                    elif 'Molde' not in col_names and col_maestro: 
+                        # Si no encuentra 'Molde', busca cualquier columna que contenga 'Molde' y no sea la maestra
+                        col_detalle = next((c for c in col_names if 'Molde' in c and c != col_maestro), None)
 
-                        # Molde
-                        nombre_molde = str(row.get('molde', '')).strip()
-                        if nombre_molde and nombre_molde.lower() != 'nan':
-                            molde_sap = str(row.get('molde sap', '')).strip()
-                            if molde_sap.lower() == 'nan': molde_sap = None
-                            
-                            proyecto = str(row.get('proyecto', '')).strip()
-                            if proyecto.lower() == 'nan': proyecto = None
-                            
-                            try: cavidades = int(row.get('cavidades', 0))
-                            except: cavidades = 0
+                    col_parte = 'Numeros de Parte' if 'Numeros de Parte' in col_names else next((c for c in col_names if 'Parte' in c), None)
 
-                            molde_obj, _ = Moldes.objects.update_or_create(
-                                nombre=nombre_molde,
-                                defaults={
-                                    'molde_sap': molde_sap,
-                                    'proyecto': proyecto,
-                                    'cavidades': cavidades,
-                                    'maquina': instancia_maquina,
-                                    'activo': True
-                                }
-                            )
+                    if not col_maestro:
+                        messages.error(request, f"Error: No se encontró la columna maestra 'MOLDE'.")
+                        return redirect('Moldeo:carga_masiva')
 
-                            # Número de Parte
-                            num_parte = str(row.get('numeros de parte', '')).strip()
-                            if num_parte and num_parte.lower() != 'nan':
+                    # ------------------------------------------------
+                    # PASO 1: MAESTRO DE MOLDES (Solo ~363 registros)
+                    # ------------------------------------------------
+                    moldes_ok = 0
+                    # Filtramos filas donde la columna MAESTRA no sea nula/NaN
+                    df_master = df.dropna(subset=[col_maestro])
+                    
+                    for _, row in df_master.iterrows():
+                        nm = str(row[col_maestro]).strip()
+                        # Validación estricta: Ignorar 'nan', 'EOAT', vacíos
+                        if not nm or nm.lower() == 'nan' or nm == 'EOAT': continue
+                        
+                        # Máquina
+                        instancia_maq = None
+                        if col_maquina and str(row[col_maquina]).lower() != 'nan':
+                            maq_nombre = str(row[col_maquina]).strip()
+                            if maq_nombre:
+                                instancia_maq, _ = Maquinas.objects.get_or_create(nombre=maq_nombre)
+                        
+                        # Proyecto
+                        proy = None
+                        if 'PROYECTO' in row and str(row['PROYECTO']).lower() != 'nan':
+                            proy = str(row['PROYECTO']).strip()
+
+                        # Crear/Actualizar solo si el nombre es válido
+                        Moldes.objects.update_or_create(
+                            nombre=nm,
+                            defaults={'maquina': instancia_maq, 'proyecto': proy, 'activo': True}
+                        )
+                        moldes_ok += 1
+
+                    # ------------------------------------------------
+                    # PASO 2: DETALLES Y PARTES (Solo vinculación)
+                    # ------------------------------------------------
+                    partes_ok = 0
+                    if col_detalle and col_parte:
+                        # Filtramos filas donde haya un número de parte
+                        df_det = df.dropna(subset=[col_parte])
+
+                        for _, row in df_det.iterrows():
+                            ref_molde = str(row[col_detalle]).strip()
+                            num_parte = str(row[col_parte]).strip()
+
+                            if not ref_molde or ref_molde.lower() == 'nan': continue
+                            if not num_parte or num_parte.lower() == 'nan': continue
+
+                            # IMPORTANTE: Usamos 'filter().first()' en lugar de 'get_or_create'
+                            # Solo agregamos partes a moldes que YA EXISTEN (creados en Paso 1).
+                            # Esto evita crear "M1046808" duplicados o vacíos si no estaban en la lista maestra.
+                            molde_obj = Moldes.objects.filter(nombre=ref_molde).first()
+
+                            if molde_obj:
+                                # Actualizar datos extra del molde existente
+                                if 'Molde SAP' in row and str(row['Molde SAP']).lower() != 'nan':
+                                    molde_obj.molde_sap = str(row['Molde SAP']).strip()
+                                
+                                if 'Cavidades' in row:
+                                    try:
+                                        c = int(row['Cavidades'])
+                                        if c > 0: molde_obj.cavidades = c
+                                    except: pass
+                                
+                                molde_obj.save()
+
+                                # Crear Parte
                                 NumerosParte.objects.get_or_create(
                                     numero_parte=num_parte,
                                     molde=molde_obj
                                 )
-                            registros_creados += 1
+                                partes_ok += 1
+                            else:
+                                # Opcional: Imprimir moldes huerfanos (existen en detalle pero no en maestro)
+                                # print(f"Ignorado detalle huérfano: {ref_molde}")
+                                pass
 
-                # --- 2. DEFECTOS (Actualizado con Columnas Extra) ---
+                    messages.success(request, f"Proceso OK: {moldes_ok} moldes maestros creados/actualizados. {partes_ok} números de parte vinculados.")
+
+                # --- OTROS ---
                 elif modelo_destino == 'defectos':
-                    # Espera: DEFECTOS, Main Activity, ESTATUS, ACTIVIDAD
-                    for _, row in df.iterrows():
-                        nombre = str(row.get('defectos', '')).strip()
-                        if not nombre or nombre.lower() == 'nan': continue
+                    df.columns = df.columns.str.lower()
+                    if 'defectos' in df.columns:
+                        for _, row in df.iterrows():
+                            nom = str(row['defectos']).strip()
+                            if nom and nom.lower() != 'nan':
+                                Defectos.objects.get_or_create(nombre_defecto=nom, defaults={'activo': True})
+                                registros_creados += 1
+                        messages.success(request, f"{registros_creados} defectos cargados.")
 
-                        cat_ingles = str(row.get('main activity', '')).strip()
-                        if cat_ingles.lower() == 'nan': cat_ingles = None
-
-                        cod_estatus = str(row.get('estatus', '')).strip()
-                        if cod_estatus.endswith('.0'): cod_estatus = cod_estatus[:-2] # Quitar decimales de Excel
-                        if cod_estatus.lower() == 'nan': cod_estatus = None
-
-                        actividad = str(row.get('actividad', '')).strip()
-                        if actividad.lower() == 'nan': actividad = None
-
-                        Defectos.objects.update_or_create(
-                            nombre=nombre,
-                            defaults={
-                                'categoria_ingles': cat_ingles,
-                                'codigo_estatus': cod_estatus,
-                                'actividad_asociada': actividad,
-                                'activo': True
-                            }
-                        )
-                        registros_creados += 1
-
-                # --- 3. OTROS CATÁLOGOS SIMPLES ---
                 elif modelo_destino == 'maquinas':
-                    for _, row in df.iterrows():
-                        nombre = str(row.get('maquina', '')).strip()
-                        if nombre and nombre.lower() != 'nan':
-                            Maquinas.objects.get_or_create(nombre=nombre)
-                            registros_creados += 1
+                    df.columns = df.columns.str.lower()
+                    col = next((c for c in df.columns if 'maquina' in c), None)
+                    if col:
+                        for _, row in df.iterrows():
+                            nm = str(row[col]).strip()
+                            if nm and nm.lower() != 'nan':
+                                Maquinas.objects.get_or_create(nombre=nm)
+                                registros_creados += 1
+                        messages.success(request, f"{registros_creados} máquinas cargadas.")
 
-                elif modelo_destino == 'tecnicos':
+                elif modelo_destino in ['tecnicos', 'lideres']:
+                    df.columns = df.columns.str.lower()
+                    col = 'nombre' if 'nombre' in df.columns else df.columns[0]
+                    Modelo = Moldmakers if modelo_destino == 'tecnicos' else Lideres
                     for _, row in df.iterrows():
-                        nombre = str(row.get('nombre', '')).strip()
-                        if nombre and nombre.lower() != 'nan':
-                            Moldmakers.objects.get_or_create(nombre=nombre)
+                        nm = str(row[col]).strip()
+                        if nm and nm.lower() != 'nan':
+                            Modelo.objects.get_or_create(nombre=nm)
                             registros_creados += 1
+                    messages.success(request, f"{registros_creados} personas cargadas.")
 
-                elif modelo_destino == 'lideres':
-                    for _, row in df.iterrows():
-                        nombre = str(row.get('nombre', '')).strip()
-                        if nombre and nombre.lower() != 'nan':
-                            Lideres.objects.get_or_create(nombre=nombre)
-                            registros_creados += 1
-
-            messages.success(request, f'Proceso finalizado. Registros procesados: {registros_creados}')
-            
-            # Si fue SAP, redirigir a la lista SAP, si no, quedarse aquí
-            if modelo_destino == 'sap':
-                return redirect('Moldeo:lista_sap')
-            else:
-                return redirect('Moldeo:carga_masiva')
+            return redirect('Moldeo:carga_masiva')
 
         except Exception as e:
             messages.error(request, f"Error crítico: {str(e)}")
             return render(request, 'Moldeo/subir_excel.html')
 
     return render(request, 'Moldeo/subir_excel.html')
-
    
 def lista_sap_view(request):
     # --- 1. Filtros y Búsqueda (Tu lógica estándar) ---
@@ -998,9 +1109,9 @@ def lista_sap_view(request):
 
     diccionario_maquinas = {}
     for m in moldes_con_maquina:
-        nombre_molde = str(m.numero_molde).strip()
+        nombre_molde = str(m.nombre).strip()
       
-        nombre_maquina = m.maquina.wc
+        nombre_maquina = m.maquina.nombre
         diccionario_maquinas[nombre_molde] = nombre_maquina
 
     # C. Pegamos la etiqueta a cada orden
@@ -1109,7 +1220,7 @@ def api_filtrar_ordenes_mcm(request):
     
     data = []
     for o in qs:
-        nombre_molde = o.molde.numero_molde if o.molde else 'N/A'
+        nombre_molde = o.molde.nombre if o.molde else 'N/A'
         data.append({
             'numero': o.numero_orden,
             'molde': nombre_molde,

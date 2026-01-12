@@ -112,7 +112,7 @@ class Defectos(models.Model):
     activo = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.nombre
+        return self.nombre_defecto
 
     class Meta:
         verbose_name = "Defecto"
@@ -164,6 +164,7 @@ class OrdenBase(models.Model):
         null=True, 
         help_text="Número de la orden anterior que causó el retorno"
     )
+    defecto_sap = models.CharField(max_length=100)
     maquina = models.CharField(max_length=50, blank=True, null=True)
     class Meta:
         abstract = True # No crea una tabla "OrdenBase" en la BD
@@ -172,7 +173,7 @@ class OrdenBase(models.Model):
         return f"Orden {self.numero_orden,self.tipo_mntn}"
 # --- 2. MODELOS DE ÓRDENES ESPECÍFICAS ---
 class OrdenMCM(OrdenBase):
-    defecto_sap = models.CharField(max_length=100)
+    
     defecto_real = models.TextField()
     molde =models.ForeignKey(Moldes, on_delete=models.SET_NULL,null=True,blank=True,related_name='ordenes_mcm',db_constraint=False)
     status=models.CharField(max_length=5,blank=True, null=True)
@@ -183,6 +184,8 @@ class OrdenMCM(OrdenBase):
 class OrdenCHO(OrdenBase):
   status=models.CharField(max_length=5,blank=True, null=True) 
   molde =models.ForeignKey(Moldes, on_delete=models.SET_NULL,null=True,blank=True,related_name='ordenes_cho',db_constraint=False)
+  parte_saliente = models.CharField(max_length=100, blank=True, null=True)
+  parte_entrante = models.CharField(max_length=100, blank=True, null=True)
  
 class OrdenTPM(OrdenBase):
     status=models.CharField(max_length=5,blank=True, null=True)
