@@ -186,16 +186,18 @@ class OrdenCHO(OrdenBase):
   molde =models.ForeignKey(Moldes, on_delete=models.SET_NULL,null=True,blank=True,related_name='ordenes_cho',db_constraint=False)
   parte_saliente = models.CharField(max_length=100, blank=True, null=True)
   parte_entrante = models.CharField(max_length=100, blank=True, null=True)
+  tipo_tarjeta = models.CharField(max_length=10, default='verde', choices=[('verde', 'Verde'), ('roja', 'Roja')])
  
 class OrdenTPM(OrdenBase):
     status=models.CharField(max_length=5,blank=True, null=True)
     molde =models.ForeignKey(Moldes, on_delete=models.SET_NULL,null=True,blank=True,related_name='ordenes_tpm',db_constraint=False)
+    tipo_tarjeta = models.CharField(max_length=10, default='verde', choices=[('verde', 'Verde'), ('roja', 'Roja')])
     def __str__(self):
             return f"Orden TPM {self.numero_orden}"
 class OrdenPREP(OrdenBase):
     status=models.CharField(max_length=5,blank=True, null=True)
     molde =models.ForeignKey(Moldes, on_delete=models.SET_NULL,null=True,blank=True,related_name='ordenes_prep',db_constraint=False)
-
+    tipo_tarjeta = models.CharField(max_length=10, default='verde', choices=[('verde', 'Verde'), ('roja', 'Roja')])
 class AsignacionUniversal(models.Model):
     # Conexión
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)

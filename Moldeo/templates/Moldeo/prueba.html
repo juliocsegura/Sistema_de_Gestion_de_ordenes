@@ -17,6 +17,7 @@
         {% csrf_token %}
         <input type="hidden" name="asignaciones_json" id="asignaciones-json">
         <input type="hidden" name="orden_retorno_ref" id="input-orden-ref-final">
+        <input type="hidden" name="comentarios_generados" id="comentarios-generados">
         
         <div class="bg-gray-900/50 border-b border-gray-700 px-8 pt-4">
             <nav class="-mb-px flex space-x-8" aria-label="Tabs">
@@ -45,28 +46,24 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 border-b border-gray-700 pb-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-400 mb-1">Orden</label>
-                        <input type="text" name="numero_orden" value="{{ pre_orden }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold">
+                        <input type="text" name="numero_orden" value="{{ pre_orden }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold px-3 py-2">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-400 mb-1">Molde</label>
-                        <input type="text" value="{{ pre_molde_nombre }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold">
+                        <input type="text" value="{{ pre_molde_nombre }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold px-3 py-2">
                         <input type="hidden" name="molde" value="{{ pre_molde_pk|default:'' }}">
                     </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-400 font-bold mb-2">Máquina</label>
-                        <input type="text" 
-                            name="maquina" 
-                            value="{{ pre_maquina }}" 
-                            class="w-full bg-gray-700 text-green-400 font-bold border border-gray-600 rounded px-3 py-2"
-                            readonly>
-                    </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-400 mb-1">Defecto</label>
-                        <input type="text" name="defecto_sap" value="{{ pre_defecto }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold">
+                        <label class="block text-gray-400 font-bold mb-1">Máquina</label>
+                        <input type="text" name="maquina" value="{{ pre_maquina }}" class="w-full bg-gray-700 text-green-400 font-bold border border-gray-600 rounded px-3 py-2" readonly>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-400 mb-1">Status</label>
-                        <input type="text" id="input-status" name="statusmcm" value="{{ status_actual|default:'100' }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold">
+                        <input type="text" id="input-status" name="statusmcm" value="{{ status_actual|default:'100' }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold px-3 py-2">
+                    </div>
+                    <div>
+                         <label class="block text-sm font-medium text-gray-400 mb-1">Defecto (SAP)</label>
+                         <input type="text" name="defecto_sap" value="{{ pre_defecto }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold px-3 py-2">
                     </div>
                 </div>
 
@@ -92,19 +89,16 @@
             <template id="tech-card-template">
                 <div class="tech-card animate-fade-in relative">
                     <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 pr-2">
-                        
                         <div class="md:col-span-5 relative group-combo">
                             <label class="block text-[10px] text-gray-400 uppercase font-bold mb-1 tracking-wider">Nombre Técnico</label>
                             <input type="text" class="input-nombre sync-name w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500 placeholder-gray-500 validate-required" placeholder="Buscar..." autocomplete="off">
                             <div class="combo-list hidden absolute top-full left-0 w-full bg-gray-600 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg"></div>
                         </div>
-
                         <div class="md:col-span-4 relative group-combo-lider">
                             <label class="block text-[10px] text-yellow-500 uppercase font-bold mb-1 tracking-wider">Líder Responsable</label>
                             <input type="text" class="input-lider w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white focus:ring-2 focus:ring-yellow-500 placeholder-gray-500 validate-required" placeholder="Seleccionar..." autocomplete="off">
                             <div class="combo-list-lider hidden absolute top-full left-0 w-full bg-gray-600 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg"></div>
                         </div>
-
                         <div class="md:col-span-3 relative custom-select-container">
                             <label class="block text-[10px] text-gray-400 uppercase font-bold mb-1 tracking-wider">Mesa</label>
                             <input type="text" class="input-mesa input-select w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white text-center focus:ring-2 focus:ring-blue-500 cursor-pointer outline-none validate-required" value="" placeholder="-" readonly>
@@ -117,12 +111,8 @@
                     <div class="bg-gray-900/40 border border-gray-600 rounded-lg p-3">
                         <div class="flex items-center gap-2 border-b border-gray-600 pb-2 mb-3 overflow-x-auto custom-scrollbar">
                             <div class="defect-tabs-container flex gap-1"></div>
-                            
-                            <button type="button" class="btn-add-defect-tab shrink-0 bg-blue-600 hover:bg-blue-500 text-white w-8 h-8 rounded flex items-center justify-center font-bold shadow transition" title="Agregar otro defecto">
-                                +
-                            </button>
+                            <button type="button" class="btn-add-defect-tab shrink-0 bg-blue-600 hover:bg-blue-500 text-white w-8 h-8 rounded flex items-center justify-center font-bold shadow transition" title="Agregar otro defecto">+</button>
                         </div>
-
                         <div class="defect-cards-content relative min-h-[180px]">
                             <div class="empty-defects-state absolute inset-0 flex items-center justify-center text-gray-500 text-xs italic">
                                 Sin defectos registrados. Pulsa "+" para agregar.
@@ -134,45 +124,34 @@
 
             <div id="view-retorno" class="hidden animate-fade-in">
                 <div class="bg-yellow-900/10 border border-yellow-700/50 rounded-lg p-6">
-                    <h3 class="text-xl font-bold text-yellow-500 mb-6 flex items-center gap-2 border-b border-yellow-800 pb-2">
-                        Detalles del Retorno 
-                    </h3>
-
+                    <h3 class="text-xl font-bold text-yellow-500 mb-6 flex items-center gap-2 border-b border-yellow-800 pb-2">Detalles del Retorno</h3>
+                    
                     <div class="mb-6 bg-gray-800/50 p-4 rounded-lg border border-gray-600 relative">
                         <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Buscar Orden Anterior</label>
-                        
                         <div class="relative group-combo-orden">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                             </div>
-                            <input type="text" id="input-buscar-orden" 
-                                   class="w-full bg-gray-900 border border-gray-500 rounded-lg pl-10 pr-10 py-2 text-white focus:ring-2 focus:ring-yellow-500 outline-none placeholder-gray-600" 
-                                   placeholder="Escribe el número (ej: 527...)" autocomplete="off">
-                            
+                            <input type="text" id="input-buscar-orden" class="w-full bg-gray-900 border border-gray-500 rounded-lg pl-10 pr-10 py-2 text-white focus:ring-2 focus:ring-yellow-500 outline-none placeholder-gray-600" placeholder="Escribe el número..." autocomplete="off">
                             <div id="spinner-busqueda" class="absolute inset-y-0 right-0 pr-3 flex items-center hidden">
                                 <svg class="animate-spin h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                             </div>
                             <div id="lista-resultados-orden" class="hidden absolute top-full left-0 w-full bg-gray-800 border border-gray-600 max-h-60 overflow-y-auto z-50 rounded-b-lg shadow-2xl mt-1"></div>
                         </div>
-
                         <div id="resultado-busqueda" class="hidden mt-3 p-3 bg-gray-700/50 rounded border border-gray-600 text-sm animate-fade-in">
                             <div class="flex justify-between items-center">
                                 <div>
                                     <p class="text-gray-300"><span class="text-yellow-400 font-bold">Molde:</span> <span id="res-molde"></span></p>
                                     <p class="text-gray-300"><span class="text-yellow-400 font-bold">Defecto:</span> <span id="res-defecto"></span></p>
                                 </div>
-                                <button type="button" id="btn-ver-detalles" class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded border border-blue-500 font-bold shadow hover:shadow-lg transition animate-pulse">
-                                    Cargar Tarjetas de Técnicos
-                                </button>
+                                <button type="button" id="btn-ver-detalles" class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded border border-blue-500 font-bold shadow hover:shadow-lg transition animate-pulse">Cargar Tarjetas de Técnicos</button>
                             </div>
                         </div>
                     </div>
 
                     <div id="contenedor-resumen-visual" class="hidden mb-6">
                         <div class="flex justify-between items-center mb-2">
-                            <h4 class="text-sm font-bold text-gray-300 uppercase">
-                                Selecciona lo que falló (Máx 2 Técnicos): <span id="contador-seleccion" class="text-yellow-400 text-lg">0</span>/2
-                            </h4>
+                            <h4 class="text-sm font-bold text-gray-300 uppercase">Selecciona lo que falló (Máx 2 Técnicos): <span id="contador-seleccion" class="text-yellow-400 text-lg">0</span>/2</h4>
                             <button type="button" onclick="cerrarResumen()" class="text-xs text-red-400 hover:text-red-300 underline">Limpiar</button>
                         </div>
                         <div id="grid-tarjetas-retorno" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto custom-scrollbar p-1"></div>
@@ -182,35 +161,20 @@
                         <div class="relative">
                             <label class="block text-sm font-bold text-gray-300 mb-2">Defectos de retorno </label>
                             <div class="relative" id="container-motivo-multiselect">
-                                <input type="text" id="input-motivo-display" 
-                                       class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-yellow-500 cursor-pointer caret-transparent" 
-                                       placeholder="-- Seleccionar Defectos --" readonly>
+                                <input type="text" id="input-motivo-display" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-yellow-500 cursor-pointer caret-transparent" placeholder="-- Seleccionar Defectos --" readonly>
                                 <input type="hidden" name="motivo_retorno" id="input-motivo-val">
-                                
-                                <div id="dropdown-motivo-list" class="hidden absolute top-full left-0 w-full bg-gray-800 border border-gray-600 max-h-60 overflow-y-auto z-50 rounded-b-lg shadow-2xl mt-1 p-1">
-                                    </div>
+                                <div id="dropdown-motivo-list" class="hidden absolute top-full left-0 w-full bg-gray-800 border border-gray-600 max-h-60 overflow-y-auto z-50 rounded-b-lg shadow-2xl mt-1 p-1"></div>
                             </div>
                         </div>
-
                         <div class="grid grid-cols-1 gap-4">
                             <div>
-                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">
-                                    Generado Automáticamente (Solo Lectura)
-                                </label>
-                                <textarea id="txt-observaciones-auto" rows="4" 
-                                          class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-400 text-xs font-mono focus:outline-none" 
-                                          readonly placeholder="Selecciona tarjetas arriba para generar este texto..."></textarea>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Generado Automáticamente (Solo Lectura)</label>
+                                <textarea id="txt-observaciones-auto" rows="4" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-400 text-xs font-mono focus:outline-none" readonly placeholder="Selecciona tarjetas arriba para generar este texto..."></textarea>
                             </div>
-                            
                             <div>
-                                <label class="block text-sm font-bold text-gray-300 mb-2">
-                                    Información Adicional
-                                </label>
-                                <textarea id="txt-observaciones-manual" rows="3" 
-                                          class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-yellow-500" 
-                                          placeholder="Escribe aquí cualquier comentario extra..."></textarea>
+                                <label class="block text-sm font-bold text-gray-300 mb-2">Información Adicional</label>
+                                <textarea id="txt-observaciones-manual" rows="3" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-yellow-500" placeholder="Escribe aquí cualquier comentario extra..."></textarea>
                             </div>
-                            
                             <input type="hidden" name="observaciones_retorno" id="final-observaciones">
                         </div>
                     </div>
@@ -230,13 +194,11 @@
 <template id="defect-card-template">
     <div class="defect-card bg-gray-800/80 border border-gray-600 rounded p-3 relative animate-fade-in mb-3">
         <button type="button" class="btn-remove-defect-card absolute top-2 right-2 text-gray-600 hover:text-red-400 p-1 text-xl font-bold">&times;</button>
-        
         <div class="mb-3 relative group-combo-def pr-6">
             <label class="block text-[9px] text-blue-400 uppercase font-bold mb-1">Defecto</label>
             <input type="text" class="input-defecto w-full bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white font-bold validate-required" placeholder="Seleccionar..." autocomplete="off">
             <div class="combo-list-def hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 z-50 max-h-40 overflow-y-auto shadow-xl rounded-b"></div>
         </div>
-        
         <div class="bg-gray-900/50 rounded border border-gray-700/50">
             <div class="grid grid-cols-12 bg-gray-700/50 px-2 py-1 text-[9px] text-gray-400 uppercase font-bold text-center">
                 <div class="col-span-3 label-cav">Cavidad</div>
@@ -251,14 +213,12 @@
 
 <template id="location-row-template">
     <div class="location-row grid grid-cols-12 gap-1 px-2 py-1 border-b border-gray-700/30 last:border-0 items-center animate-fade-in relative">
-        
         <div class="col-span-3 relative custom-select-container">
             <input type="text" class="input-cav input-select w-full bg-transparent border-b border-gray-600 focus:border-blue-500 text-center text-xs text-white placeholder-gray-600 focus:outline-none py-1 cursor-pointer validate-required" placeholder="-" readonly>
             <div class="select-menu hidden absolute top-full left-0 w-full bg-gray-800 border border-gray-600 shadow-2xl rounded max-h-60 overflow-y-auto z-50">
                 {% for i in "x"|rjust:"128" %}<div class="select-option p-2 hover:bg-blue-600 text-white text-center text-xs cursor-pointer border-b border-gray-700 last:border-0" data-value="{{ forloop.counter }}">{{ forloop.counter }}</div>{% endfor %}
             </div>
         </div>
-
         <div class="col-span-3 relative group-circuito">
             <input type="text" class="input-circ w-full bg-transparent border-b border-gray-600 focus:border-yellow-500 text-center text-xs text-white placeholder-gray-600 focus:outline-none py-1 cursor-pointer validate-required" placeholder="-" readonly>
             <div class="circuito-menu hidden absolute top-full left-0 w-64 bg-gray-800 border border-gray-600 shadow-2xl rounded z-[100] p-2 max-h-60 overflow-y-auto">
@@ -266,7 +226,6 @@
                 <div class="grid grid-cols-4 gap-2">{% for i in "x"|rjust:"126" %}<label class="flex items-center justify-center p-1 hover:bg-gray-700 rounded cursor-pointer"><input type="checkbox" value="{{ forloop.counter }}" class="chk-num form-checkbox h-3 w-3 text-yellow-500 bg-gray-900 border-gray-500 rounded mr-1"><span class="text-[10px] text-gray-300">{{ forloop.counter }}</span></label>{% endfor %}</div>
             </div>
         </div>
-
         <div class="col-span-4 flex items-center justify-center gap-3">
             <label class="inline-flex items-center cursor-pointer group">
                 <input type="checkbox" class="input-fijo form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded focus:ring-emerald-500">
@@ -277,7 +236,6 @@
                 <span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Móvil</span>
             </label>
         </div>
-
         <div class="col-span-2 text-center">
             <button type="button" class="btn-remove-loc text-gray-600 hover:text-red-500 font-bold px-2 text-xl">&times;</button>
         </div>
@@ -311,8 +269,6 @@
         document.getElementById('contenedor-resumen-visual').classList.add('hidden');
         document.getElementById('txt-observaciones-auto').value = '';
         document.getElementById('contador-seleccion').innerText = '0';
-        
-        // Resetear multiselect de motivo
         document.getElementById('input-motivo-val').value = '';
         document.getElementById('input-motivo-display').value = '';
         document.querySelectorAll('.chk-motivo').forEach(c => c.checked = false);
@@ -323,7 +279,12 @@
         const tecnicosData = [{% for t in moldmakers %}{ nombre: "{{ t.nombre|escapejs }}" },{% endfor %}];
         const lideresData = [{% for l in lideres_all %}{ nombre: "{{ l.nombre|escapejs }}" },{% endfor %}]; 
         const defectosData = [{% if lista_defectos %}{% for d in lista_defectos %}{ nombre: "{{ d.nombre_defecto|escapejs }}" },{% endfor %}{% else %}{ nombre: "Rebaba" }{% endif %}];
-        
+        const partesData = {{ partes_json|default:"[]"|safe }};
+
+        // SETUP COMBOS NP
+        setupCombobox(document.getElementById('input-saliente'), document.getElementById('list-saliente'), partesData);
+        setupCombobox(document.getElementById('input-entrante'), document.getElementById('list-entrante'), partesData);
+
         // VARIABLES GLOBALES
         const tabsBar = document.getElementById('tech-tabs-bar');
         const contentArea = document.getElementById('tech-cards-content');
@@ -333,7 +294,7 @@
         const badge = document.getElementById('badge-retorno');
         
         let techCounter = 0;
-        let defectCounters = {}; // Contador de defectos por técnico
+        let defectCounters = {}; 
         window.dataOrdenEncontrada = null; 
 
         function checkStatus() {
@@ -346,9 +307,7 @@
         }
         checkStatus();
 
-        // ==========================================
-        // 2. MOTIVO MULTI-SELECT
-        // ==========================================
+        // --- MOTIVO MULTI-SELECT ---
         const inputMotivoDisplay = document.getElementById('input-motivo-display');
         const inputMotivoVal = document.getElementById('input-motivo-val');
         const dropdownMotivoList = document.getElementById('dropdown-motivo-list');
@@ -358,44 +317,24 @@
             defectosData.forEach((def, idx) => {
                 const div = document.createElement('div');
                 div.className = "flex items-center p-2 hover:bg-gray-700 cursor-pointer border-b border-gray-700 last:border-0";
-                div.innerHTML = `
-                    <input type="checkbox" id="motivo-${idx}" value="${def.nombre}" class="chk-motivo form-checkbox h-4 w-4 text-yellow-500 bg-gray-900 border-gray-500 rounded mr-2">
-                    <label for="motivo-${idx}" class="text-sm text-gray-300 w-full cursor-pointer select-none">${def.nombre}</label>
-                `;
-                div.addEventListener('click', (e) => {
-                    if (e.target.tagName !== 'INPUT') {
-                        const chk = div.querySelector('input');
-                        chk.checked = !chk.checked;
-                        updateMotivoDisplay();
-                    }
-                });
+                div.innerHTML = `<input type="checkbox" id="motivo-${idx}" value="${def.nombre}" class="chk-motivo form-checkbox h-4 w-4 text-yellow-500 bg-gray-900 border-gray-500 rounded mr-2"><label for="motivo-${idx}" class="text-sm text-gray-300 w-full cursor-pointer select-none">${def.nombre}</label>`;
+                div.addEventListener('click', (e) => { if (e.target.tagName !== 'INPUT') { const chk = div.querySelector('input'); chk.checked = !chk.checked; updateMotivoDisplay(); } });
                 div.querySelector('input').addEventListener('change', updateMotivoDisplay);
                 dropdownMotivoList.appendChild(div);
             });
-
-            inputMotivoDisplay.addEventListener('click', (e) => {
-                e.stopPropagation();
-                dropdownMotivoList.classList.toggle('hidden');
-            });
-
-            window.addEventListener('click', (e) => {
-                if(!inputMotivoDisplay.contains(e.target) && !dropdownMotivoList.contains(e.target)) {
-                    dropdownMotivoList.classList.add('hidden');
-                }
-            });
+            inputMotivoDisplay.addEventListener('click', (e) => { e.stopPropagation(); dropdownMotivoList.classList.toggle('hidden'); });
+            window.addEventListener('click', (e) => { if(!inputMotivoDisplay.contains(e.target) && !dropdownMotivoList.contains(e.target)) { dropdownMotivoList.classList.add('hidden'); } });
         }
 
         function updateMotivoDisplay() {
             const checked = Array.from(document.querySelectorAll('.chk-motivo:checked')).map(c => c.value);
             inputMotivoVal.value = checked.join(', ');
             inputMotivoDisplay.value = checked.length > 0 ? checked.join(', ') : '';
+            if(checked.length > 0) inputMotivoDisplay.classList.remove('border-red-500');
         }
-
         initMotivoMultiselect();
 
-        // ==========================================
-        // 3. BÚSQUEDA DINÁMICA (RETORNO)
-        // ==========================================
+        // --- BÚSQUEDA DINÁMICA (RETORNO) ---
         const inputBuscar = document.getElementById('input-buscar-orden');
         const listaResultados = document.getElementById('lista-resultados-orden');
         const spinner = document.getElementById('spinner-busqueda');
@@ -409,8 +348,8 @@
             inputBuscar.addEventListener('input', (e) => {
                 const term = e.target.value.trim();
                 clearTimeout(debounceTimer);
+                if(inputBuscar.value) inputBuscar.classList.remove('border-red-500'); 
                 if (term.length < 1) { listaResultados.classList.add('hidden'); return; }
-                
                 spinner.classList.remove('hidden');
                 debounceTimer = setTimeout(async () => {
                     try {
@@ -438,6 +377,7 @@
 
         async function buscarInfoOrden(numeroOrden) {
             inputBuscar.value = numeroOrden;
+            inputBuscar.classList.remove('border-red-500'); 
             listaResultados.classList.add('hidden');
             cerrarResumen(); 
             try {
@@ -456,9 +396,7 @@
             } catch(e) { console.error(e); alert("Error de conexión."); }
         }
 
-        // ==========================================
-        // 4. TARJETAS DE RETORNO (CHIPS)
-        // ==========================================
+        // --- TARJETAS RETORNO (Resumen visual) ---
         const contenedorVisual = document.getElementById('contenedor-resumen-visual');
         const gridTarjetas = document.getElementById('grid-tarjetas-retorno');
         const contadorSeleccion = document.getElementById('contador-seleccion');
@@ -488,8 +426,7 @@
                     </div>
                 `;
             });
-            html += `</div>`;
-            return html;
+            return html + `</div>`;
         }
 
         if(btnVerDetalles) {
@@ -647,8 +584,8 @@
             if (checksPadres.length === 0) textoFinal += "Sin selección de fallas.\n";
 
             Object.values(resumen).forEach(obj => {
-                textoFinal += `\n>> TÉCNICO: ${obj.nombre}\n   LÍDER: ${obj.lider}\n   FALLAS RECURRENTES:\n`;
-                obj.defectos.forEach(d => textoFinal += `   - ${d}\n`);
+                textoFinal += `\n>> TÉCNICO: ${obj.nombre}\n   LÍDER: ${obj.lider}\n   FALLAS RECURRENTES:\n`;
+                obj.defectos.forEach(d => textoFinal += `   - ${d}\n`);
             });
             txtObservacionesAuto.value = textoFinal;
         }
@@ -759,7 +696,7 @@
             };
 
             // Iniciar con un defecto
-            btnAddDefect.click();
+            btnAddDefect.click(); 
         }
 
         window.switchDefectTab = function(techCard, defectId) {
@@ -883,17 +820,14 @@
         }
 
         function setupCombobox(input, list, data, onSelectCallback = null) {
+            if(!input || !list) return;
             const render = (q='') => {
                 list.innerHTML = ''; const f = data.filter(i => i.nombre.toLowerCase().includes(q.toLowerCase()));
                 if(f.length === 0) { list.classList.add('hidden'); return; }
                 list.classList.remove('hidden');
                 f.forEach(item => {
                     const div = document.createElement('div'); div.className = 'p-2 hover:bg-blue-600 cursor-pointer text-xs text-white border-b border-gray-500 bg-gray-700'; div.textContent = item.nombre;
-                    div.onmousedown = (e) => { 
-                        e.preventDefault(); input.value = item.nombre; input.dispatchEvent(new Event('input')); 
-                        if(input.value) input.classList.remove('border-red-500'); list.classList.add('hidden'); 
-                        if (onSelectCallback) onSelectCallback(item.nombre);
-                    };
+                    div.onmousedown = (e) => { e.preventDefault(); input.value = item.nombre; input.dispatchEvent(new Event('input')); if(input.value) input.classList.remove('border-red-500'); list.classList.add('hidden'); if (onSelectCallback) onSelectCallback(item.nombre); };
                     list.appendChild(div);
                 });
             };
@@ -903,27 +837,86 @@
         }
 
         // ==========================================
-        // 6. SUBMIT
+        // 6. SUBMIT (CON TODAS LAS VALIDACIONES)
         // ==========================================
         const form = document.getElementById('form-registro');
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             
-            // 1. Observaciones
+            // --- VALIDACIÓN 1: RETORNO OBLIGATORIO ---
+            const statusVal = statusInput.value.trim();
+            const ordenRetornoInput = document.getElementById('input-buscar-orden');
+            
+            if ((statusVal === '203' || statusVal === '204')) {
+                // 1.1 Orden anterior obligatoria
+                if (!ordenRetornoInput.value.trim()) {
+                    alert("⚠️ Para estatus de Retorno (203/204), debes buscar y seleccionar la orden anterior en la pestaña 'Información de Retorno'.");
+                    switchTab('retorno'); 
+                    ordenRetornoInput.classList.add('border-red-500');
+                    ordenRetornoInput.focus();
+                    return; 
+                }
+
+                // 1.2 Defecto de retorno obligatorio
+                const motivoRetornoVal = document.getElementById('input-motivo-val');
+                const motivoRetornoDisplay = document.getElementById('input-motivo-display');
+
+                if (!motivoRetornoVal.value.trim()) {
+                    alert("⚠️ Para estatus de Retorno, debes seleccionar al menos un 'Defecto de retorno' en la pestaña 'Información de Retorno'.");
+                    switchTab('retorno');
+                    motivoRetornoDisplay.classList.add('border-red-500');
+                    motivoRetornoDisplay.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return;
+                } else {
+                     motivoRetornoDisplay.classList.remove('border-red-500');
+                }
+
+                // 1.3 Validación de SELECCIÓN VISUAL OBLIGATORIA (NUEVO)
+                // Deben haber marcado al menos un checkbox en el grid de tarjetas
+                const defectosRetornoSeleccionados = document.querySelectorAll('#grid-tarjetas-retorno .chk-defecto:checked');
+                
+                if (defectosRetornoSeleccionados.length === 0) {
+                     alert("⚠️ Para estatus de Retorno, debes seleccionar al menos un defecto de la orden anterior en el 'Resumen Visual' (chips/tarjetas).");
+                     switchTab('retorno');
+                     document.getElementById('grid-tarjetas-retorno').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                     return;
+                }
+
+                // 1.4 Validación de CHIPS HIJOS (Detalle)
+                // Si el defecto seleccionado tiene "desglose", al menos un hijo debe estar marcado.
+                for (let i = 0; i < defectosRetornoSeleccionados.length; i++) {
+                    const chk = defectosRetornoSeleccionados[i];
+                    const parentId = chk.id;
+                    const nombreDefecto = chk.dataset.defecto;
+                    const tieneDesglose = chk.dataset.tieneDesglose === "true"; 
+
+                    if (tieneDesglose) {
+                        const subItemsChecked = document.querySelectorAll(`#grid-tarjetas-retorno .chk-sub-item[data-parent-id="${parentId}"]:checked`);
+                        
+                        if (subItemsChecked.length === 0) {
+                            alert(`⚠️ En el defecto de retorno "${nombreDefecto}", debes seleccionar al menos una Cavidad o Circuito específico (opciones detalladas).`);
+                            switchTab('retorno');
+                            chk.closest('.bg-gray-900\\/50').classList.add('border-red-500', 'border-2');
+                            chk.closest('.bg-gray-900\\/50').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            return; 
+                        } else {
+                             chk.closest('.bg-gray-900\\/50').classList.remove('border-red-500', 'border-2');
+                        }
+                    }
+                }
+            }
+            
+            // --- VALIDACIÓN GENERAL ---
             const autoObs = document.getElementById('txt-observaciones-auto').value;
             const manualObs = document.getElementById('txt-observaciones-manual').value;
             let combinedObs = autoObs;
             if(manualObs.trim()) { combinedObs += "\n\n[Notas Adicionales]:\n" + manualObs; }
             document.getElementById('final-observaciones').value = combinedObs;
-
-            // 2. Retorno
-            const ordenBuscada = document.getElementById('input-buscar-orden').value;
-            const contenedorRetorno = document.getElementById('contenedor-resumen-visual');
-            if(ordenBuscada && !contenedorRetorno.classList.contains('hidden')) {
-                 document.getElementById('input-orden-ref-final').value = ordenBuscada;
+            
+            if(ordenRetornoInput && ordenRetornoInput.value) {
+                 document.getElementById('input-orden-ref-final').value = ordenRetornoInput.value;
             }
 
-            // 3. Validación de Técnicos
             const cards = contentArea.querySelectorAll('.tech-card-wrapper');
             if(cards.length === 0) { alert("Agrega un técnico."); switchTab('general'); return; }
 
@@ -931,6 +924,9 @@
             let firstErrorTab = null;
             let totalDefectos = 0;
             const asignaciones = [];
+            let resumenTexto = "--- INICIO DE ORDEN ---\n";
+            const fechaHora = new Date().toLocaleString();
+            resumenTexto += `Fecha: ${fechaHora}\n`;
 
             cards.forEach((wrapper) => {
                 const card = wrapper.querySelector('.tech-card');
@@ -945,15 +941,20 @@
                 const lider = card.querySelector('.input-lider').value.trim();
                 const mesa = card.querySelector('.input-mesa').value.trim();
                 const detalles = [];
-                const defCards = card.querySelectorAll('.defect-card'); // Busca en todos los tabs (ocultos o no)
+                const defCards = card.querySelectorAll('.defect-card');
+                let textoDefectos = ""; // FIX: Variable declarada aquí
 
                 if(defCards.length === 0) { 
                     alert("Faltan defectos para " + (nombre||"un técnico")); isValid = false; cardError = true; 
                 } else {
                     defCards.forEach(dc => {
                         const nomDef = dc.querySelector('.input-defecto').value.trim();
-                        if(!nomDef) { dc.querySelector('.input-defecto').classList.add('border-red-500'); isValid = false; cardError = true; }
-                        else { dc.querySelector('.input-defecto').classList.remove('border-red-500'); }
+                        if(!nomDef) { 
+                            dc.querySelector('.input-defecto').classList.add('border-red-500'); 
+                            isValid = false; cardError = true; 
+                        } else { 
+                            dc.querySelector('.input-defecto').classList.remove('border-red-500'); 
+                        }
                         
                         const rows = dc.querySelectorAll('.location-row');
                         if(rows.length === 0) { alert("Falta ubicación para: " + nomDef); isValid = false; cardError = true; }
@@ -971,11 +972,24 @@
                             } else {
                                 r.querySelector('.input-cav').classList.remove('border-red-500');
                                 r.querySelector('.input-circ').classList.remove('border-red-500');
-                                if(nomDef) { 
-                                    // Guardamos Fijo/Móvil
-                                    detalles.push({ defecto: nomDef, cav: cav, circ: circ, fijo: esFijo, movil: esMovil }); 
-                                    totalDefectos++; 
-                                }
+                            }
+
+                            // --- VALIDACIÓN 2: CHECKBOX LADO ---
+                            if (!esFijo && !esMovil) {
+                                alert(`⚠️ En el defecto "${nomDef}", debes seleccionar al menos un lado (Fijo o Móvil).`);
+                                r.querySelector('.input-fijo').parentElement.classList.add('text-red-500');
+                                r.querySelector('.input-movil').parentElement.classList.add('text-red-500');
+                                isValid = false; 
+                                cardError = true;
+                            } else {
+                                r.querySelector('.input-fijo').parentElement.classList.remove('text-red-500');
+                                r.querySelector('.input-movil').parentElement.classList.remove('text-red-500');
+                            }
+
+                            if (nomDef && cav && circ && (esFijo || esMovil)) { 
+                                detalles.push({ defecto: nomDef, cav: cav, circ: circ, fijo: esFijo, movil: esMovil }); 
+                                textoDefectos += `   - ${nomDef} (Cav:${cav}, Circ:${circ})\n`;
+                                totalDefectos++; 
                             }
                         });
                     });
@@ -987,14 +1001,22 @@
 
                 if(!cardError && nombre && mesa && lider && detalles.length > 0) {
                     asignaciones.push({ nombre, lider, mesa, detalles });
+                    resumenTexto += `\n> TÉCNICO: ${nombre}\n`;
+                    resumenTexto += `  LÍDER: ${lider} | MESA: ${mesa}\n`;
+                    resumenTexto += `  DEFECTOS:\n${textoDefectos}`;
                 }
             });
 
-            if(!isValid) { alert("Faltan campos obligatorios."); if(firstErrorTab) activateTechTab(firstErrorTab); return; }
-            if(totalDefectos === 0) { alert("Registra defectos."); return; }
+            if(!isValid) { 
+                alert("⚠️ Faltan campos obligatorios marcados en rojo."); 
+                if(firstErrorTab) activateTechTab(firstErrorTab); 
+                return; // Detener aquí si hay errores
+            }
+            if(totalDefectos === 0) { alert("Registra defectos válidos."); return; }
             if(asignaciones.length === 0) { alert("Error datos."); return; }
 
             document.getElementById('asignaciones-json').value = JSON.stringify(asignaciones);
+            document.getElementById('comentarios-generados').value = resumenTexto;
             form.submit();
         });
 
@@ -1004,9 +1026,6 @@
             activateTechTab(card.id.replace('card-',''));
         });
 
-        // ==========================================
-        // 7. LÓGICA DE CIERRE DE MODAL
-        // ==========================================
         const modal = document.getElementById('orden-modal');
         const btnCerrar = document.getElementById('modal-close-btn');
 

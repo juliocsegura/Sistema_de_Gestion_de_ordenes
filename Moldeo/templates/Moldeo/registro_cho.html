@@ -16,12 +16,19 @@
     <form id="form-registro" action="" method="POST" class="w-full max-w-7xl mx-auto bg-gray-800 rounded-lg shadow-xl border border-gray-700 overflow-visible" novalidate>
         {% csrf_token %}
         <input type="hidden" name="asignaciones_json" id="asignaciones-json">
-        <input type="hidden" name="orden_retorno_ref" id="input-orden-ref-final">
+        <input type="hidden" name="asignaciones_vinc_json" id="asignaciones-vinc-json">
+        <input type="hidden" name="comentarios_generados" id="comentarios-generados">
         
         <div class="bg-gray-900/50 border-b border-gray-700 px-8 pt-4">
             <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-                <button type="button" class="group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-all border-emerald-500 text-emerald-500 cursor-default">
-                    Datos de la Orden
+                <button type="button" id="tab-btn-general" onclick="switchTab('general')"
+                    class="group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-all border-emerald-500 text-emerald-500">
+                    Datos de la Orden (Principal)
+                </button>
+                <button type="button" id="tab-btn-vinculada" onclick="switchTab('vinculada')"
+                    class="hidden group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-all border-transparent text-gray-400 hover:text-red-400">
+                    <span class="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded mr-2 font-bold">ROJA</span>
+                    Orden Vinculada
                 </button>
             </nav>
         </div>
@@ -36,128 +43,152 @@
             {% endif %}
 
             <div id="view-general" class="animate-fade-in">
-                
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 border-b border-gray-700 pb-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-400 mb-1">Orden</label>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Orden Principal</label>
                         <input type="text" name="numero_orden" value="{{ pre_orden }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold px-3 py-2">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-400 mb-1">Molde</label>
                         <input type="text" value="{{ pre_molde_nombre }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold px-3 py-2">
-                        <input type="hidden" name="molde" value="{{ pre_molde_pk|default:'' }}">
+                        <input type="hidden" name="molde" id="input-molde-id" value="{{ pre_molde_pk|default:'' }}">
                     </div>
                     <div>
                         <label class="block text-gray-400 font-bold mb-1">Máquina</label>
                         <input type="text" name="maquina" value="{{ pre_maquina }}" class="w-full bg-gray-700 text-green-400 font-bold border border-gray-600 rounded px-3 py-2" readonly>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-400 mb-1">Defecto</label>
-                        <input type="text" name="defecto_sap" value="{{ pre_defecto }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold">
-                    </div>
-                    <div>
                         <label class="block text-sm font-medium text-gray-400 mb-1">Status</label>
                         <input type="text" id="input-status" name="statusmcm" value="{{ status_actual|default:'110' }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold px-3 py-2">
                     </div>
 
-                    <div class="relative group-combo-saliente">
-                        <label class="block text-sm font-medium text-blue-400 mb-1">NP Saliente (Sale)</label>
-                        <input type="text" name="parte_saliente" id="input-saliente" 
-                               class="block w-full bg-gray-800 border-gray-500 text-white rounded-md font-bold px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none placeholder-gray-500" 
-                               placeholder="Buscar o Seleccionar NP..." autocomplete="off">
-                        <div id="list-saliente" class="hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg mt-1"></div>
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-blue-400 mb-1">NP Saliente (Principal)</label>
+                        <input type="text" name="parte_saliente" id="input-saliente-main" class="block w-full bg-gray-800 border-gray-500 text-white rounded-md font-bold px-3 py-2 outline-none placeholder-gray-500" placeholder="Buscar NP..." autocomplete="off">
+                        <div id="list-saliente-main" class="hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg mt-1"></div>
+                    </div>
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-emerald-400 mb-1">NP Entrante (Principal)</label>
+                        <input type="text" name="parte_entrante" id="input-entrante-main" class="block w-full bg-gray-800 border-gray-500 text-white rounded-md font-bold px-3 py-2 outline-none placeholder-gray-500" placeholder="Buscar NP..." autocomplete="off">
+                        <div id="list-entrante-main" class="hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg mt-1"></div>
                     </div>
 
-                    <div class="relative group-combo-entrante">
-                        <label class="block text-sm font-medium text-emerald-400 mb-1">NP Entrante (Entra)</label>
-                        <input type="text" name="parte_entrante" id="input-entrante" 
-                               class="block w-full bg-gray-800 border-gray-500 text-white rounded-md font-bold px-3 py-2 focus:ring-2 focus:ring-emerald-500 outline-none placeholder-gray-500" 
-                               placeholder="Buscar o Seleccionar NP..." autocomplete="off">
-                        <div id="list-entrante" class="hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg mt-1"></div>
+                    <div class="col-span-1 sm:col-span-2 mt-6 border-t border-gray-700 pt-6">
+                        <label class="block text-sm font-bold text-gray-300 mb-3 text-center uppercase tracking-wider">Selección de Tarjeta</label>
+                        <div class="flex justify-center gap-6 mb-4">
+                            <label class="cursor-pointer relative group">
+                                <input type="radio" name="tipo_tarjeta" value="verde" class="peer sr-only" onchange="toggleCardType('verde')" checked>
+                                <div class="w-32 h-16 bg-gray-800 border-2 border-gray-600 rounded-lg flex items-center justify-center peer-checked:bg-green-900/40 peer-checked:border-green-500 transition-all">
+                                    <span class="text-gray-400 font-bold peer-checked:text-green-400">VERDE</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer relative group">
+                                <input type="radio" name="tipo_tarjeta" value="roja" class="peer sr-only" onchange="toggleCardType('roja')">
+                                <div class="w-32 h-16 bg-gray-800 border-2 border-gray-600 rounded-lg flex items-center justify-center peer-checked:bg-red-900/40 peer-checked:border-red-500 transition-all">
+                                    <span class="text-gray-400 font-bold peer-checked:text-red-400">ROJA</span>
+                                </div>
+                            </label>
+                        </div>
+                        <p class="text-center text-xs text-gray-500 italic" id="txt-help-tarjeta">Tarjeta Verde: Mantenimiento estándar.</p>
                     </div>
                 </div>
 
                 <div class="space-y-4">
                     <div class="flex justify-between items-center bg-gray-700/30 p-2 rounded-t-lg border-b border-gray-600">
-                        <h3 class="text-lg font-bold text-white pl-2">Técnicos Asignados</h3>
-                        <button type="button" id="btn-add-tech" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-4 rounded shadow transition transform hover:scale-105 flex items-center gap-1">
-                            <span class="text-lg leading-none">+</span> Nuevo Técnico
-                        </button>
+                        <h3 class="text-lg font-bold text-emerald-400 pl-2">Técnicos (Orden Principal)</h3>
+                        <button type="button" onclick="createNewTechCard('main')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-4 rounded shadow flex items-center gap-1"><span class="text-lg leading-none">+</span> Nuevo Técnico</button>
+                    </div>
+                    <div class="bg-gray-900/30 rounded-b-lg border border-gray-600 min-h-[250px] flex flex-col overflow-visible">
+                        <div class="flex overflow-x-auto bg-gray-800 border-b border-gray-600 p-1 space-x-1 custom-scrollbar" id="tech-tabs-bar-main"></div>
+                        <div id="tech-cards-content-main" class="p-4 flex-1 relative overflow-visible">
+                            <div class="empty-state absolute inset-0 flex flex-col items-center justify-center text-gray-500 italic pointer-events-none"><span>No hay técnicos asignados. Agrega uno arriba.</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-vinculada" class="hidden animate-fade-in">
+                <div class="bg-red-900/10 border border-red-700/50 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-red-500 mb-6 border-b border-red-800 pb-2">Configuración de Tarjeta Roja</h3>
+                    
+                    <div class="mb-8">
+                        <label class="block text-sm font-bold text-red-400 uppercase mb-2">1. Seleccionar Orden Pendiente</label>
+                        <div class="relative">
+                            <input type="text" id="input-orden-vinculada" class="w-full bg-gray-900 border border-red-500 text-white rounded-md font-bold px-4 py-3 focus:ring-2 focus:ring-red-500 outline-none placeholder-red-300/30" placeholder="Buscar orden pendiente..." autocomplete="off">
+                            <input type="hidden" name="orden_vinculada_id" id="orden-vinculada-id">
+                            <div id="list-ordenes-pendientes" class="hidden absolute top-full left-0 w-full bg-gray-800 border border-red-500 z-50 max-h-48 overflow-y-auto shadow-xl rounded-b-lg"></div>
+                        </div>
                     </div>
 
-                    <div class="bg-gray-900/30 rounded-b-lg border border-gray-600 min-h-[350px] flex flex-col overflow-visible">
-                        <div class="flex overflow-x-auto bg-gray-800 border-b border-gray-600 p-1 space-x-1 custom-scrollbar" id="tech-tabs-bar"></div>
-                        <div id="tech-cards-content" class="p-4 flex-1 relative overflow-visible">
-                            <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-gray-500 italic pointer-events-none">
-                                <span>No hay técnicos asignados. Agrega uno arriba.</span>
+                    <div id="wrapper-inputs-vinculada" class="opacity-50 pointer-events-none transition-opacity">
+                        <div class="bg-gray-800 p-4 rounded border border-gray-600 flex items-center mb-6">
+                            <input type="checkbox" name="copiar_tecnicos" id="check-copiar-tecnicos" value="true" checked class="w-5 h-5 text-red-600 bg-gray-700 border-gray-500 rounded cursor-pointer">
+                            <label for="check-copiar-tecnicos" class="ml-3 text-sm text-gray-300 cursor-pointer select-none">Asignar mismos técnicos de la orden principal.</label>
+                        </div>
+
+                        <div class="space-y-4 border-t border-red-800/50 pt-4">
+                            <div class="flex justify-between items-center bg-red-900/30 p-2 rounded-t-lg border-b border-red-800">
+                                <h3 class="text-lg font-bold text-red-300 pl-2">Técnicos (Orden Vinculada)</h3>
+                                <button type="button" onclick="createNewTechCard('vinc')" class="bg-red-700 hover:bg-red-600 text-white text-xs font-bold py-2 px-4 rounded shadow flex items-center gap-1"><span class="text-lg leading-none">+</span> Nuevo Técnico</button>
+                            </div>
+                            <div class="bg-gray-900/30 rounded-b-lg border border-red-800 min-h-[200px] flex flex-col overflow-visible">
+                                <div class="flex overflow-x-auto bg-gray-800 border-b border-red-800 p-1 space-x-1 custom-scrollbar" id="tech-tabs-bar-vinc"></div>
+                                <div id="tech-cards-content-vinc" class="p-4 flex-1 relative overflow-visible">
+                                    <div class="empty-state absolute inset-0 flex flex-col items-center justify-center text-gray-500 italic pointer-events-none"><span>Sin técnicos en orden vinculada.</span></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <template id="tech-card-template">
-                <div class="tech-card animate-fade-in relative">
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 pr-2">
-                        <div class="md:col-span-5 relative group-combo">
-                            <label class="block text-[10px] text-gray-400 uppercase font-bold mb-1 tracking-wider">Nombre Técnico</label>
-                            <input type="text" class="input-nombre sync-name w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500 placeholder-gray-500 validate-required" placeholder="Buscar..." autocomplete="off">
-                            <div class="combo-list hidden absolute top-full left-0 w-full bg-gray-600 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg"></div>
-                        </div>
-
-                        <div class="md:col-span-4 relative group-combo-lider">
-                            <label class="block text-[10px] text-yellow-500 uppercase font-bold mb-1 tracking-wider">Líder Responsable</label>
-                            <input type="text" class="input-lider w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white focus:ring-2 focus:ring-yellow-500 placeholder-gray-500 validate-required" placeholder="Seleccionar..." autocomplete="off">
-                            <div class="combo-list-lider hidden absolute top-full left-0 w-full bg-gray-600 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg"></div>
-                        </div>
-
-                        <div class="md:col-span-3 relative custom-select-container">
-                            <label class="block text-[10px] text-gray-400 uppercase font-bold mb-1 tracking-wider">Mesa</label>
-                            <input type="text" class="input-mesa input-select w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white text-center focus:ring-2 focus:ring-blue-500 cursor-pointer outline-none validate-required" value="" placeholder="-" readonly>
-                            <div class="select-menu hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 shadow-2xl rounded max-h-48 overflow-y-auto z-50">
-                                {% for i in "x"|rjust:"20" %}<div class="select-option p-2 hover:bg-blue-600 text-white text-center text-sm cursor-pointer border-b border-gray-600 last:border-0" data-value="{{ forloop.counter }}">{{ forloop.counter }}</div>{% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-gray-900/40 border border-gray-600 rounded-lg p-3">
-                        <div class="flex items-center gap-2 border-b border-gray-600 pb-2 mb-3 overflow-x-auto custom-scrollbar">
-                            <div class="defect-tabs-container flex gap-1"></div>
-                            
-                            <button type="button" class="btn-add-defect-tab shrink-0 bg-blue-600 hover:bg-blue-500 text-white w-8 h-8 rounded flex items-center justify-center font-bold shadow transition" title="Agregar otro defecto">
-                                +
-                            </button>
-                        </div>
-
-                        <div class="defect-cards-content relative min-h-[180px]">
-                            <div class="empty-defects-state absolute inset-0 flex items-center justify-center text-gray-500 text-xs italic">
-                                Sin defectos registrados. Pulsa "+" para agregar.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </template>
-            
             <div class="pt-6 border-t border-gray-700 mt-8 mb-8">
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xl font-bold py-4 px-6 rounded-lg shadow-lg transform transition hover:scale-[1.01] flex items-center justify-center gap-3">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-                    Guardar Orden CHO
-                </button>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xl font-bold py-4 px-6 rounded-lg shadow-lg flex items-center justify-center gap-3">Guardar Orden(es)</button>
             </div>
         </div>
     </form>
 </div>
 
+<template id="tech-card-template">
+    <div class="tech-card animate-fade-in relative">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 pr-2">
+            <div class="md:col-span-5 relative group-combo">
+                <label class="block text-[10px] text-gray-400 uppercase font-bold mb-1 tracking-wider">Nombre Técnico</label>
+                <input type="text" class="input-nombre sync-name w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500 placeholder-gray-500 validate-required" placeholder="Buscar..." autocomplete="off">
+                <div class="combo-list hidden absolute top-full left-0 w-full bg-gray-600 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg"></div>
+            </div>
+            <div class="md:col-span-4 relative group-combo-lider">
+                <label class="block text-[10px] text-yellow-500 uppercase font-bold mb-1 tracking-wider">Líder Responsable</label>
+                <input type="text" class="input-lider w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white focus:ring-2 focus:ring-yellow-500 placeholder-gray-500 validate-required" placeholder="Seleccionar..." autocomplete="off">
+                <div class="combo-list-lider hidden absolute top-full left-0 w-full bg-gray-600 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg"></div>
+            </div>
+            <div class="md:col-span-3 relative custom-select-container">
+                <label class="block text-[10px] text-gray-400 uppercase font-bold mb-1 tracking-wider">Mesa</label>
+                <input type="text" class="input-mesa input-select w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white text-center focus:ring-2 focus:ring-blue-500 cursor-pointer outline-none validate-required" value="" placeholder="-" readonly>
+                <div class="select-menu hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 shadow-2xl rounded max-h-48 overflow-y-auto z-50">
+                    {% for i in "x"|rjust:"20" %}<div class="select-option p-2 hover:bg-blue-600 text-white text-center text-sm cursor-pointer border-b border-gray-600 last:border-0" data-value="{{ forloop.counter }}">{{ forloop.counter }}</div>{% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 border-b border-gray-600 pb-2 mb-3">
+             <button type="button" class="btn-add-defect-tab bg-blue-600 hover:bg-blue-500 text-white w-6 h-6 rounded text-xs shadow flex items-center justify-center font-bold" title="Agregar Defecto">+</button>
+             <span class="text-xs text-gray-500">Defectos</span>
+             <div class="defect-tabs-container flex gap-1 ml-2 overflow-x-auto custom-scrollbar"></div>
+        </div>
+        <div class="defect-cards-content relative min-h-[50px]">
+             <div class="empty-defects-state absolute inset-0 flex items-center justify-center text-gray-500 text-xs italic">Cargando defecto...</div>
+        </div>
+    </div>
+</template>
+
 <template id="defect-card-template">
     <div class="defect-card bg-gray-800/80 border border-gray-600 rounded p-3 relative animate-fade-in mb-3">
         <button type="button" class="btn-remove-defect-card absolute top-2 right-2 text-gray-600 hover:text-red-400 p-1 text-xl font-bold">&times;</button>
-        
         <div class="mb-3 relative group-combo-def pr-6">
             <label class="block text-[9px] text-blue-400 uppercase font-bold mb-1">Defecto</label>
             <input type="text" class="input-defecto w-full bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white font-bold validate-required" placeholder="Seleccionar..." autocomplete="off">
             <div class="combo-list-def hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 z-50 max-h-40 overflow-y-auto shadow-xl rounded-b"></div>
         </div>
-        
         <div class="bg-gray-900/50 rounded border border-gray-700/50">
             <div class="grid grid-cols-12 bg-gray-700/50 px-2 py-1 text-[9px] text-gray-400 uppercase font-bold text-center">
                 <div class="col-span-3 label-cav">Cavidad</div>
@@ -181,19 +212,23 @@
         <div class="col-span-3 relative group-circuito">
             <input type="text" class="input-circ w-full bg-transparent border-b border-gray-600 focus:border-yellow-500 text-center text-xs text-white placeholder-gray-600 focus:outline-none py-1 cursor-pointer validate-required" placeholder="-" readonly>
             <div class="circuito-menu hidden absolute top-full left-0 w-64 bg-gray-800 border border-gray-600 shadow-2xl rounded z-[100] p-2 max-h-60 overflow-y-auto">
-                <label class="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded cursor-pointer border-b border-gray-600 mb-2"><input type="checkbox" value="Todas" class="chk-todas form-checkbox h-4 w-4 text-yellow-600 bg-gray-900 border-gray-500 rounded"><span class="text-xs text-white font-bold">TODAS</span></label>
-                <div class="grid grid-cols-4 gap-2">{% for i in "x"|rjust:"126" %}<label class="flex items-center justify-center p-1 hover:bg-gray-700 rounded cursor-pointer"><input type="checkbox" value="{{ forloop.counter }}" class="chk-num form-checkbox h-3 w-3 text-yellow-500 bg-gray-900 border-gray-500 rounded mr-1"><span class="text-[10px] text-gray-300">{{ forloop.counter }}</span></label>{% endfor %}</div>
+                <label class="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded cursor-pointer border-b border-gray-600 mb-2">
+                    <input type="checkbox" value="Todas" class="chk-todas form-checkbox h-4 w-4 text-yellow-600 bg-gray-900 border-gray-500 rounded">
+                    <span class="text-xs text-white font-bold">TODAS</span>
+                </label>
+                <div class="grid grid-cols-4 gap-2">
+                    {% for i in "x"|rjust:"126" %}
+                    <label class="flex items-center justify-center p-1 hover:bg-gray-700 rounded cursor-pointer">
+                        <input type="checkbox" value="{{ forloop.counter }}" class="chk-num form-checkbox h-3 w-3 text-yellow-500 bg-gray-900 border-gray-500 rounded mr-1">
+                        <span class="text-[10px] text-gray-300">{{ forloop.counter }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
             </div>
         </div>
         <div class="col-span-4 flex items-center justify-center gap-3">
-            <label class="inline-flex items-center cursor-pointer group">
-                <input type="checkbox" class="input-fijo form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded focus:ring-emerald-500">
-                <span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Fijo</span>
-            </label>
-            <label class="inline-flex items-center cursor-pointer group">
-                <input type="checkbox" class="input-movil form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded focus:ring-emerald-500">
-                <span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Móvil</span>
-            </label>
+            <label class="inline-flex items-center cursor-pointer group"><input type="checkbox" class="input-fijo form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded"><span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Fijo</span></label>
+            <label class="inline-flex items-center cursor-pointer group"><input type="checkbox" class="input-movil form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded"><span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Móvil</span></label>
         </div>
         <div class="col-span-2 text-center">
             <button type="button" class="btn-remove-loc text-gray-600 hover:text-red-500 font-bold px-2 text-xl">&times;</button>
@@ -205,174 +240,347 @@
 
 {% block scripts %}
 <script>
+    const contexts = {
+        main: { tabs: 'tech-tabs-bar-main', content: 'tech-cards-content-main', empty: '#tech-cards-content-main .empty-state' },
+        vinc: { tabs: 'tech-tabs-bar-vinc', content: 'tech-cards-content-vinc', empty: '#tech-cards-content-vinc .empty-state' }
+    };
+    let techGlobalCounter = 0;
+    let defectCounters = {}; 
+
+    // DATOS DE DEFECTOS (Separados para CHO y Rojo)
+    const defectChoList = [{ nombre: "CAMBIO DE CONFIGURACION" }];
+    const defectAllList = [{% if lista_defectos %}{% for d in lista_defectos %}{ nombre: "{{ d.nombre_defecto|escapejs }}" },{% endfor %}{% else %}{ nombre: "Falla General" }{% endif %}];
+
+    function switchTab(tabName) {
+        const viewGeneral = document.getElementById('view-general');
+        const viewVinculada = document.getElementById('view-vinculada');
+        const btnGeneral = document.getElementById('tab-btn-general');
+        const btnVinculada = document.getElementById('tab-btn-vinculada');
+
+        if(tabName === 'general') {
+            viewGeneral.classList.remove('hidden'); viewVinculada.classList.add('hidden');
+            btnGeneral.classList.replace('border-transparent', 'border-emerald-500'); btnGeneral.classList.replace('text-gray-400', 'text-emerald-500');
+            btnVinculada.classList.replace('border-red-500', 'border-transparent'); btnVinculada.classList.replace('text-red-400', 'text-gray-400');
+        } else {
+            viewGeneral.classList.add('hidden'); viewVinculada.classList.remove('hidden');
+            btnVinculada.classList.replace('border-transparent', 'border-red-500'); btnVinculada.classList.replace('text-gray-400', 'text-red-400');
+            btnGeneral.classList.replace('border-emerald-500', 'border-transparent'); btnGeneral.classList.replace('text-emerald-500', 'text-gray-400');
+        }
+    }
+
+    window.toggleCardType = function(type) {
+        const btnTabVinculada = document.getElementById('tab-btn-vinculada');
+        const txtHelp = document.getElementById('txt-help-tarjeta');
+        if (type === 'roja') {
+            btnTabVinculada.classList.remove('hidden');
+            txtHelp.innerText = "Tarjeta Roja: Permite vincular y cerrar una orden pendiente en paralelo.";
+            cargarOrdenesPendientes(); 
+        } else {
+            btnTabVinculada.classList.add('hidden');
+            txtHelp.innerText = "Tarjeta Verde: Mantenimiento estándar.";
+            switchTab('general');
+            document.getElementById('input-orden-vinculada').value = '';
+            document.getElementById('orden-vinculada-id').value = '';
+            document.getElementById('wrapper-inputs-vinculada').classList.add('opacity-50', 'pointer-events-none');
+        }
+    }
+
+    async function cargarOrdenesPendientes() {
+        const moldeId = document.getElementById('input-molde-id').value;
+        if(!moldeId) return;
+        try {
+            const res = await fetch(`/moldeo/api/ordenes-pendientes/?molde_id=${moldeId}`);
+            const data = await res.json();
+            const listContainer = document.getElementById('list-ordenes-pendientes');
+            const inputDisplay = document.getElementById('input-orden-vinculada');
+            
+            const renderLista = (q='') => {
+                listContainer.innerHTML = '';
+                const f = data.ordenes.filter(o => o.numero.toString().toLowerCase().includes(q.toLowerCase()));
+                if(f.length === 0) listContainer.innerHTML = '<div class="p-2 text-xs text-gray-500">Sin resultados.</div>';
+                
+                f.forEach(o => {
+                    const div = document.createElement('div');
+                    div.className = "p-2 hover:bg-red-800 cursor-pointer text-sm text-white border-b border-red-700/30";
+                    div.innerHTML = `<div class="font-bold">${o.numero}</div><div class="text-[10px] text-gray-400">${o.descripcion}</div>`;
+                    div.onclick = () => {
+                        inputDisplay.value = o.numero;
+                        document.getElementById('orden-vinculada-id').value = o.numero;
+                        listContainer.classList.add('hidden');
+                        document.getElementById('wrapper-inputs-vinculada').classList.remove('opacity-50', 'pointer-events-none');
+                    };
+                    listContainer.appendChild(div);
+                });
+                listContainer.classList.remove('hidden');
+            };
+            inputDisplay.oninput = (e) => renderLista(e.target.value);
+            inputDisplay.onfocus = () => renderLista(inputDisplay.value);
+            window.addEventListener('click', (e) => { if(!inputDisplay.contains(e.target) && !listContainer.contains(e.target)) listContainer.classList.add('hidden'); });
+        } catch(e) { console.error(e); }
+    }
+
+    function createNewTechCard(contextKey) {
+        const cfg = contexts[contextKey];
+        if(!cfg) return;
+        const containerTabs = document.getElementById(cfg.tabs);
+        const containerCards = document.getElementById(cfg.content);
+        const emptyMsg = document.querySelector(cfg.empty);
+        if(emptyMsg) emptyMsg.style.display = 'none';
+        
+        techGlobalCounter++;
+        const currentId = `card-${contextKey}-${techGlobalCounter}`; 
+        
+        const tabBtn = document.createElement('div');
+        tabBtn.className = "tech-tab-btn flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-t-lg border-t-2 border-transparent cursor-pointer bg-gray-800 text-gray-400 shrink-0 select-none";
+        tabBtn.innerHTML = `<span>Nuevo Técnico</span> <button type="button" class="ml-2 hover:text-red-400">&times;</button>`;
+        tabBtn.onclick = (e) => {
+            if(e.target.tagName === 'BUTTON') { 
+                if(confirm("¿Eliminar técnico?")) {
+                    tabBtn.remove(); document.getElementById(currentId).remove();
+                    if(containerTabs.children.length === 0 && emptyMsg) emptyMsg.style.display = 'flex';
+                    else if(containerTabs.children.length > 0) containerTabs.firstElementChild.click();
+                }
+            } else { 
+                Array.from(containerTabs.children).forEach(t => { t.classList.remove('bg-gray-700','text-white','border-blue-500','border-red-500'); t.classList.add('bg-gray-800','text-gray-400','border-transparent'); });
+                Array.from(containerCards.children).forEach(c => { if(!c.classList.contains('empty-state')) c.classList.add('hidden'); });
+                const activeColor = (contextKey === 'main') ? 'border-blue-500' : 'border-red-500';
+                tabBtn.classList.add('bg-gray-700','text-white', activeColor); tabBtn.classList.remove('bg-gray-800','text-gray-400','border-transparent');
+                document.getElementById(currentId).classList.remove('hidden');
+            }
+        };
+        containerTabs.appendChild(tabBtn);
+
+        const tmpl = document.getElementById('tech-card-template');
+        const clone = tmpl.content.cloneNode(true);
+        const cardDiv = clone.querySelector('.tech-card');
+        cardDiv.id = currentId;
+        cardDiv.classList.add('tech-card-wrapper', 'hidden'); 
+        cardDiv.querySelector('.input-nombre').addEventListener('input', (e) => { tabBtn.querySelector('span').innerText = e.target.value.substring(0,10) || 'Nuevo'; });
+
+        // Pasamos el contexto (main o vinc) para saber qué lista de defectos usar
+        initCardLogic(cardDiv, currentId, contextKey);
+        containerCards.appendChild(cardDiv);
+        tabBtn.click(); 
+    }
+
+    function initCardLogic(card, uniqueId, contextKey) {
+        defectCounters[uniqueId] = 0;
+        if(window.TECNICOS_DATA) setupCombobox(card.querySelector('.input-nombre'), card.querySelector('.combo-list'), window.TECNICOS_DATA);
+        if(window.LIDERES_DATA) setupCombobox(card.querySelector('.input-lider'), card.querySelector('.combo-list-lider'), window.LIDERES_DATA);
+        
+        const mesaInp = card.querySelector('.input-mesa'); const mesaMenu = card.querySelector('.select-menu');
+        mesaInp.onclick = (e) => { e.stopPropagation(); closeAllMenus(); mesaMenu.classList.remove('hidden'); };
+        mesaMenu.onclick = (e) => { if(e.target.classList.contains('select-option')){ mesaInp.value = e.target.dataset.value; mesaMenu.classList.add('hidden'); } };
+
+        const btnAddDefect = card.querySelector('.btn-add-defect-tab');
+        const defectTabsContainer = card.querySelector('.defect-tabs-container');
+        const defectContentArea = card.querySelector('.defect-cards-content');
+
+        // Seleccionar lista de defectos correcta
+        const currentDefectList = (contextKey === 'main') ? defectChoList : defectAllList;
+
+        if(btnAddDefect) {
+            btnAddDefect.onclick = () => {
+                defectCounters[uniqueId]++;
+                const count = defectCounters[uniqueId];
+                const defectId = `${uniqueId}-def-${count}`;
+                card.querySelector('.empty-defects-state').classList.add('hidden');
+
+                const tabButton = document.createElement('button');
+                tabButton.type = 'button'; tabButton.id = `tab-btn-${defectId}`;
+                tabButton.className = "defect-tab-btn flex items-center gap-1 px-2 py-1 text-[10px] font-bold rounded bg-gray-800 text-gray-400 border border-gray-600 hover:bg-gray-700 transition shrink-0";
+                tabButton.innerHTML = `<span class="tab-lbl">Defecto ${count}</span> <span class="ml-1 text-red-400 hover:text-white" onclick="removeDefectTab('${defectId}', '${uniqueId}', event)">&times;</span>`;
+                tabButton.onclick = (e) => { if(e.target.tagName === 'SPAN' && e.target.innerText === '×') return; switchDefectTab(card, defectId); };
+                defectTabsContainer.appendChild(tabButton);
+
+                const defTemplate = document.getElementById('defect-card-template');
+                const defClone = defTemplate.content.cloneNode(true);
+                const defCard = defClone.querySelector('.defect-card');
+                defCard.id = `content-${defectId}`; defCard.classList.add('hidden');
+                
+                const inputDefecto = defCard.querySelector('.input-defecto');
+                // Inicializar combo con la lista específica (CHO vs ROJA)
+                setupCombobox(inputDefecto, defCard.querySelector('.combo-list-def'), currentDefectList, (val) => { 
+                    updateLabels(defCard, val); 
+                    tabButton.querySelector('.tab-lbl').innerText = val.substring(0,10)+'...'; 
+                });
+                
+                inputDefecto.addEventListener('input', (e) => { updateLabels(defCard, e.target.value); tabButton.querySelector('.tab-lbl').innerText = e.target.value.substring(0,10)+'...'; });
+                
+                defCard.querySelector('.btn-remove-defect-card').onclick = (e) => removeDefectTab(defectId, uniqueId, e);
+                const locContainer = defCard.querySelector('.location-rows-container');
+                defCard.querySelector('.btn-add-location-row').onclick = () => createNewLocationRow(locContainer);
+                createNewLocationRow(locContainer); 
+
+                defectContentArea.appendChild(defCard);
+                switchDefectTab(card, defectId);
+            };
+            btnAddDefect.click(); // Auto-crear un defecto
+        }
+    }
+
+    // --- FUNCIONES GLOBALES ---
+    window.switchDefectTab = function(techCard, defectId) {
+        const allTabs = techCard.querySelectorAll('.defect-tab-btn'); const allContents = techCard.querySelectorAll('.defect-card');
+        allTabs.forEach(btn => { btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-500'); btn.classList.add('bg-gray-800', 'text-gray-400', 'border-gray-600'); });
+        allContents.forEach(c => c.classList.add('hidden'));
+        const activeTab = techCard.querySelector(`#tab-btn-${defectId}`); const activeContent = techCard.querySelector(`#content-${defectId}`);
+        if(activeTab && activeContent) { activeTab.classList.replace('bg-gray-800', 'bg-blue-600'); activeTab.classList.replace('text-gray-400', 'text-white'); activeTab.classList.replace('border-gray-600', 'border-blue-500'); activeContent.classList.remove('hidden'); }
+    };
+
+    window.removeDefectTab = function(defectId, techId, e) {
+        if(e) e.stopPropagation(); if(!confirm("¿Eliminar defecto?")) return;
+        document.getElementById(`tab-btn-${defectId}`)?.remove(); document.getElementById(`content-${defectId}`)?.remove();
+        const card = document.getElementById(techId); const tabs = card.querySelectorAll('.defect-tab-btn');
+        if(tabs.length > 0) tabs[0].click(); else card.querySelector('.empty-defects-state').classList.remove('hidden');
+    };
+
+    window.createNewLocationRow = function(container) {
+        const locTempl = document.getElementById('location-row-template');
+        const locClone = locTempl.content.cloneNode(true);
+        const row = locClone.querySelector('.location-row');
+        row.querySelector('.btn-remove-loc').onclick = () => row.remove();
+        
+        // Setup dropdown cavidad
+        const inpCav = row.querySelector('.input-cav'); const menuCav = row.querySelector('.select-menu');
+        inpCav.onclick = (e) => { e.stopPropagation(); closeAllMenus(); menuCav.classList.remove('hidden'); };
+        menuCav.onclick = (e) => { if(e.target.classList.contains('select-option')) { inpCav.value = e.target.dataset.value; menuCav.classList.add('hidden'); } };
+        
+        // Setup Multiselect Circuito
+        setupCircuitoMultiselect(row);
+        
+        container.appendChild(row);
+    }
+
+    function setupCircuitoMultiselect(row) {
+        const input = row.querySelector('.input-circ');
+        const menu = row.querySelector('.circuito-menu');
+        const chkTodas = menu.querySelector('.chk-todas');
+        const chkNums = menu.querySelectorAll('.chk-num');
+        
+        input.addEventListener('click', (e) => { e.stopPropagation(); closeAllMenus(); menu.classList.remove('hidden'); });
+        menu.addEventListener('click', (e) => e.stopPropagation());
+        
+        const update = () => {
+            if (chkTodas.checked) { 
+                input.value = "Todas"; 
+                chkNums.forEach(c => c.checked = false); 
+            } else { 
+                const v = Array.from(chkNums).filter(c => c.checked).map(c => c.value); 
+                input.value = v.join(', '); 
+            }
+            input.classList.remove('border-red-500');
+        };
+        
+        chkTodas.addEventListener('change', () => { if(chkTodas.checked) chkNums.forEach(c => c.checked = false); update(); });
+        chkNums.forEach(c => { c.addEventListener('change', () => { if(c.checked) chkTodas.checked = false; update(); }); });
+    }
+
+    function updateLabels(defCard, val) {
+        const lblCav = defCard.querySelector('.label-cav'); const lblCirc = defCard.querySelector('.label-circ');
+        const term = val.toLowerCase();
+        if (term.includes('hot runner') || term.includes('colada')) { lblCav.textContent = 'Drop'; lblCirc.textContent = 'Zona'; } 
+        else if (term.includes('sensor')) { lblCav.textContent = 'PG'; lblCirc.textContent = 'EO'; } 
+        else { lblCav.textContent = 'Cavidad'; lblCirc.textContent = 'Circuito'; }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
-        // DATOS MAESTROS
-        const tecnicosData = [{% for t in moldmakers %}{ nombre: "{{ t.nombre|escapejs }}" },{% endfor %}];
-        const lideresData = [{% for l in lideres_all %}{ nombre: "{{ l.nombre|escapejs }}" },{% endfor %}]; 
-        const defectosData = [{% if lista_defectos %}{% for d in lista_defectos %}{ nombre: "{{ d.nombre_defecto|escapejs }}" },{% endfor %}{% else %}{ nombre: "CAMBIO DE CONFIGURACION" }{% endif %}];
+        window.TECNICOS_DATA = [{% for t in moldmakers %}{ nombre: "{{ t.nombre|escapejs }}" },{% endfor %}];
+        window.LIDERES_DATA = [{% for l in lideres_all %}{ nombre: "{{ l.nombre|escapejs }}" },{% endfor %}]; 
         const partesData = {{ partes_json|default:"[]"|safe }};
 
-        // SETUP COMBOS NP
-        setupCombobox(document.getElementById('input-saliente'), document.getElementById('list-saliente'), partesData);
-        setupCombobox(document.getElementById('input-entrante'), document.getElementById('list-entrante'), partesData);
+        ['input-saliente-main','input-entrante-main'].forEach(id => {
+            const el = document.getElementById(id); const ls = document.getElementById(id.replace('input','list'));
+            if(el && ls) setupCombobox(el, ls, partesData);
+        });
 
-        // VARIABLES GLOBALES
-        const tabsBar = document.getElementById('tech-tabs-bar');
-        const contentArea = document.getElementById('tech-cards-content');
-        const emptyState = document.getElementById('empty-state');
-        let techCounter = 0;
-        let defectCounters = {}; 
+        function closeAllMenus() { document.querySelectorAll('.combo-list, .combo-list-lider, .select-menu, .combo-list-def, [id^="list-"], .circuito-menu').forEach(m => m.classList.add('hidden')); }
+        window.addEventListener('click', closeAllMenus);
 
-        // --- HELPERS ---
-        function closeAllMenus() { 
-            document.querySelectorAll('.combo-list, .combo-list-lider, .select-menu, .combo-list-def, .circuito-menu, #list-saliente, #list-entrante').forEach(m => m.classList.add('hidden')); 
-        }
-        window.addEventListener('click', () => closeAllMenus());
-
-        function setupSimpleDropdown(container) {
-            const input = container.querySelector('.input-select');
-            const menu = container.querySelector('.select-menu');
-            const options = menu.querySelectorAll('.select-option');
-            input.addEventListener('click', (e) => { e.stopPropagation(); closeAllMenus(); menu.classList.remove('hidden'); });
-            options.forEach(opt => { opt.addEventListener('click', (e) => { e.stopPropagation(); input.value = opt.dataset.value; if(input.value) input.classList.remove('border-red-500'); menu.classList.add('hidden'); }); });
-        }
-
-        function setupCircuitoMultiselect(row) {
-            const input = row.querySelector('.input-circ');
-            const menu = row.querySelector('.circuito-menu');
-            const chkTodas = menu.querySelector('.chk-todas');
-            const chkNums = menu.querySelectorAll('.chk-num');
-            input.addEventListener('click', (e) => { e.stopPropagation(); closeAllMenus(); menu.classList.remove('hidden'); });
-            menu.addEventListener('click', (e) => e.stopPropagation());
-            const update = () => { if (chkTodas.checked) { input.value = "Todas"; chkNums.forEach(c => c.checked = false); } else { const v = Array.from(chkNums).filter(c => c.checked).map(c => c.value); input.value = v.join(', '); } if(input.value) input.classList.remove('border-red-500'); };
-            chkTodas.addEventListener('change', () => { if(chkTodas.checked) chkNums.forEach(c => c.checked = false); update(); }); chkNums.forEach(c => { c.addEventListener('change', () => { if(c.checked) chkTodas.checked = false; update(); }); });
-        }
-
-        function setupCombobox(input, list, data, onSelectCallback = null) {
+        function setupCombobox(inp, lst, data, callback=null) {
+            if(!inp) return;
             const render = (q='') => {
-                list.innerHTML = ''; const f = data.filter(i => i.nombre && i.nombre.toLowerCase().includes(q.toLowerCase()));
-                if(f.length === 0) { list.classList.add('hidden'); return; }
-                list.classList.remove('hidden');
-                f.forEach(item => {
-                    const div = document.createElement('div'); div.className = 'p-2 hover:bg-blue-600 cursor-pointer text-xs text-white border-b border-gray-500 bg-gray-700'; div.textContent = item.nombre;
-                    div.onmousedown = (e) => { e.preventDefault(); input.value = item.nombre; input.dispatchEvent(new Event('input')); if(input.value) input.classList.remove('border-red-500'); list.classList.add('hidden'); if (onSelectCallback) onSelectCallback(item.nombre); };
-                    list.appendChild(div);
+                lst.innerHTML = ''; const f = data.filter(x => x.nombre.toLowerCase().includes(q.toLowerCase()));
+                if(f.length === 0) { lst.classList.add('hidden'); return; }
+                lst.classList.remove('hidden');
+                f.forEach(x => {
+                    const d = document.createElement('div'); d.className = 'p-2 hover:bg-gray-600 cursor-pointer text-white text-xs border-b border-gray-600'; d.innerText = x.nombre;
+                    d.onmousedown = (e) => { e.preventDefault(); inp.value = x.nombre; lst.classList.add('hidden'); if(callback) callback(x.nombre); };
+                    lst.appendChild(d);
                 });
             };
-            input.addEventListener('input', (e) => { render(e.target.value); if(input.value) input.classList.remove('border-red-500'); });
-            input.addEventListener('focus', () => render(input.value));
-            input.addEventListener('click', (e) => { e.stopPropagation(); closeAllMenus(); render(input.value); });
+            inp.oninput = (e) => render(e.target.value); inp.onfocus = () => render(inp.value); inp.onclick = (e) => { e.stopPropagation(); closeAllMenus(); render(inp.value); };
         }
+        window.setupCombobox = setupCombobox;
+        window.closeAllMenus = closeAllMenus;
+    });
 
-        // --- LOGICA TÉCNICOS Y DEFECTOS ---
-        function createNewTechCard() {
-            emptyState.style.display = 'none'; techCounter++; const currentTechId = 'tech-' + techCounter;
-            const tabBtn = document.createElement('div'); tabBtn.id = 'btn-' + currentTechId; tabBtn.className = "tech-tab-btn flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-t-lg border-t-2 border-transparent cursor-pointer bg-gray-800 text-gray-400 transition-all shrink-0 select-none"; tabBtn.onclick = () => activateTechTab(currentTechId); tabBtn.innerHTML = `<span id="label-${currentTechId}">Nuevo Técnico</span> <button onclick="removeTech('${currentTechId}', event)" class="ml-2 text-gray-500 hover:text-red-400 hover:bg-gray-900 rounded-full p-0.5">&times;</button>`; tabsBar.appendChild(tabBtn);
-            const template = document.getElementById('tech-card-template'); const clone = template.content.cloneNode(true); const cardContainer = document.createElement('div'); cardContainer.id = 'card-' + currentTechId; cardContainer.className = "tech-card-wrapper w-full hidden animate-fade-in"; cardContainer.appendChild(clone);
-            cardContainer.querySelector('.sync-name').addEventListener('input', (e) => { document.getElementById('label-' + currentTechId).innerText = e.target.value.substring(0, 15) || 'Nuevo Técnico'; });
-            initCardLogic(cardContainer, currentTechId); contentArea.appendChild(cardContainer); return cardContainer;
-        }
+    // --- SUBMIT ---
+    const form = document.getElementById('form-registro');
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        let isValid = true; 
 
-        function initCardLogic(card, techId) {
-            const mesaContainer = card.querySelector('.custom-select-container'); if(mesaContainer) setupSimpleDropdown(mesaContainer);
-            setupCombobox(card.querySelector('.input-nombre'), card.querySelector('.combo-list'), tecnicosData);
-            setupCombobox(card.querySelector('.input-lider'), card.querySelector('.combo-list-lider'), lideresData);
+        // 1. Recolectar MAIN
+        const mainCards = document.querySelectorAll('#tech-cards-content-main .tech-card-wrapper');
+        if(mainCards.length === 0) { alert("Falta técnico en Orden Principal"); return; }
+        if(!document.getElementById('input-saliente-main').value.trim()) { alert("Falta NP Saliente Principal"); isValid=false; }
+        if(!document.getElementById('input-entrante-main').value.trim()) { alert("Falta NP Entrante Principal"); isValid=false; }
+        if(!isValid) return;
 
-            const defectTabsContainer = card.querySelector('.defect-tabs-container');
-            const defectContentArea = card.querySelector('.defect-cards-content');
-            const emptyDefects = card.querySelector('.empty-defects-state');
-            const btnAddDefect = card.querySelector('.btn-add-defect-tab');
-            defectCounters[techId] = 0;
+        const asignacionesMain = extractData(mainCards);
+        if(!asignacionesMain) return;
 
-            if (btnAddDefect) {
-                btnAddDefect.onclick = () => {
-                    defectCounters[techId]++; const count = defectCounters[techId]; const defectId = `${techId}-def-${count}`; if(emptyDefects) emptyDefects.classList.add('hidden');
-                    const tabButton = document.createElement('button'); tabButton.type = 'button'; tabButton.id = `tab-btn-${defectId}`; tabButton.className = "defect-tab-btn flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded bg-gray-800 text-gray-400 border border-gray-600 hover:bg-gray-700 transition select-none shrink-0"; tabButton.innerHTML = `<span class="tab-lbl">Nuevo Defecto </span> <span class="ml-1 text-red-400 hover:text-white cursor-pointer" onclick="removeDefectTab('${defectId}', '${techId}', event)">&times;</span>`;
-                    tabButton.addEventListener('click', (e) => { if(e.target.tagName === 'SPAN' && e.target.innerText === '×') return; switchDefectTab(card, defectId); }); defectTabsContainer.appendChild(tabButton);
-                    
-                    const defTemplate = document.getElementById('defect-card-template'); const defClone = defTemplate.content.cloneNode(true); const defCard = defClone.querySelector('.defect-card'); defCard.id = `content-${defectId}`; defCard.classList.add('hidden');
-                    const inputDefecto = defCard.querySelector('.input-defecto'); const listDefecto = defCard.querySelector('.combo-list-def');
-                    inputDefecto.addEventListener('input', (e) => { const val = e.target.value; const lbl = tabButton.querySelector('.tab-lbl'); if(lbl) lbl.innerText = val ? val.substring(0, 10) + '...' : `Defecto `; updateLabels(defCard, val); });
-                    setupCombobox(inputDefecto, listDefecto, defectosData, (val) => { updateLabels(defCard, val); const lbl = tabButton.querySelector('.tab-lbl'); if(lbl) lbl.innerText = val.substring(0, 10) + '...'; });
-                    defCard.querySelector('.btn-remove-defect-card').onclick = (e) => removeDefectTab(defectId, techId, e);
-                    const locContainer = defCard.querySelector('.location-rows-container'); defCard.querySelector('.btn-add-location-row').onclick = () => createNewLocationRow(locContainer); createNewLocationRow(locContainer);
-                    defectContentArea.appendChild(defCard); switchDefectTab(card, defectId);
-                };
-                // CARGA AUTOMÁTICA DE 1 DEFECTO
-                btnAddDefect.click(); 
+        // 2. Recolectar VINC
+        const tipo = document.querySelector('input[name="tipo_tarjeta"]:checked').value;
+        let asignacionesVinc = [];
+        if(tipo === 'roja') {
+            const vincId = document.getElementById('orden-vinculada-id').value;
+            if(!vincId) { alert("Selecciona orden vinculada"); switchTab('vinculada'); return; }
+            
+            const vincCards = document.querySelectorAll('#tech-cards-content-vinc .tech-card-wrapper');
+            // Validar si copió técnicos o agregó manuales
+            const copiarTecnicos = document.getElementById('check-copiar-tecnicos').checked;
+            
+            if(!copiarTecnicos) {
+                if(vincCards.length === 0) { alert("Falta técnico en Orden Vinculada (o marca 'Asignar mismos técnicos')"); switchTab('vinculada'); return; }
+                asignacionesVinc = extractData(vincCards);
+                if(!asignacionesVinc) { switchTab('vinculada'); return; }
             }
         }
 
-        window.switchDefectTab = function(techCard, defectId) {
-            const allTabs = techCard.querySelectorAll('.defect-tab-btn'); const allContents = techCard.querySelectorAll('.defect-card');
-            allTabs.forEach(btn => { btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-500'); btn.classList.add('bg-gray-800', 'text-gray-400', 'border-gray-600'); }); allContents.forEach(content => content.classList.add('hidden'));
-            const activeTab = techCard.querySelector(`#tab-btn-${defectId}`); const activeContent = techCard.querySelector(`#content-${defectId}`);
-            if(activeTab && activeContent) { activeTab.classList.remove('bg-gray-800', 'text-gray-400', 'border-gray-600'); activeTab.classList.add('bg-blue-600', 'text-white', 'border-blue-500'); activeContent.classList.remove('hidden'); }
-        };
-
-        window.removeDefectTab = function(defectId, techId, e) {
-            if(e) e.stopPropagation(); if(!confirm("¿Eliminar este defecto?")) return;
-            const techCard = document.getElementById(`card-${techId}`); document.getElementById(`tab-btn-${defectId}`)?.remove(); document.getElementById(`content-${defectId}`)?.remove();
-            const remainingTabs = techCard.querySelectorAll('.defect-tab-btn'); if(remainingTabs.length === 0) { techCard.querySelector('.empty-defects-state').classList.remove('hidden'); } else { switchDefectTab(techCard, remainingTabs[0].id.replace('tab-btn-', '')); }
-        };
-
-        function createNewLocationRow(container) {
-            const locTempl = document.getElementById('location-row-template'); const locClone = locTempl.content.cloneNode(true); const locRow = locClone.querySelector('.location-row');
-            locRow.querySelector('.btn-remove-loc').onclick = () => locRow.remove();
-            const cavContainer = locRow.querySelector('.custom-select-container'); if(cavContainer) setupSimpleDropdown(cavContainer); setupCircuitoMultiselect(locRow);
-            container.appendChild(locRow);
-        }
-
-        function updateLabels(defCard, defectName) {
-            const lblCav = defCard.querySelector('.label-cav'); const lblCirc = defCard.querySelector('.label-circ'); const term = defectName ? defectName.toLowerCase() : "";
-            if (term.includes('hot runner') || term.includes('colada caliente')) { lblCav.textContent = 'Drop'; lblCirc.textContent = 'Zona'; } else if (term.includes('falla de sensores') || term.includes('sensor')) { lblCav.textContent = 'PG'; lblCirc.textContent = 'EO'; } else { lblCav.textContent = 'Cavidad'; lblCirc.textContent = 'Circuito'; }
-        }
-
-        window.activateTechTab = function(techId) {
-            document.querySelectorAll('.tech-card-wrapper').forEach(el => el.classList.add('hidden')); document.querySelectorAll('.tech-tab-btn').forEach(btn => { btn.classList.remove('bg-gray-700', 'text-white', 'border-blue-500'); btn.classList.add('bg-gray-800', 'text-gray-400', 'border-transparent', 'hover:bg-gray-700'); });
-            document.getElementById('card-' + techId)?.classList.remove('hidden'); const btn = document.getElementById('btn-' + techId);
-            if(btn) { btn.classList.replace('bg-gray-800', 'bg-gray-700'); btn.classList.replace('text-gray-400', 'text-white'); btn.classList.replace('border-transparent', 'border-blue-500'); }
-        };
-
-        window.removeTech = function(techId, e) {
-            e.stopPropagation(); if(!confirm("¿Eliminar técnico?")) return;
-            document.getElementById('btn-' + techId)?.remove(); document.getElementById('card-' + techId)?.remove();
-            if(tabsBar.children.length === 0) emptyState.style.display = 'flex'; else activateTechTab(tabsBar.querySelector('.tech-tab-btn').id.replace('btn-', ''));
-        };
-
-        document.getElementById('btn-add-tech').addEventListener('click', () => { const card = createNewTechCard(); activateTechTab(card.id.replace('card-','')); });
-
-        // --- SUBMIT ---
-        const form = document.getElementById('form-registro');
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const cards = contentArea.querySelectorAll('.tech-card-wrapper');
-            if(cards.length === 0) { alert("Agrega un técnico."); return; }
-
-            let isValid = true; let firstErrorTab = null; const asignaciones = [];
-            cards.forEach((wrapper) => {
-                const card = wrapper.querySelector('.tech-card');
-                let cardError = false;
-                card.querySelectorAll('.validate-required').forEach(inp => { if(!inp.value.trim()) { inp.classList.add('border-red-500'); isValid = false; cardError = true; } else inp.classList.remove('border-red-500'); });
-                const nombre = card.querySelector('.input-nombre').value.trim(); const lider = card.querySelector('.input-lider').value.trim(); const mesa = card.querySelector('.input-mesa').value.trim();
-                const detalles = []; 
-                const defCards = card.querySelectorAll('.defect-card');
-                if(defCards.length > 0) {
-                    defCards.forEach(dc => {
-                        const nomDef = dc.querySelector('.input-defecto').value.trim(); if(!nomDef) { dc.querySelector('.input-defecto').classList.add('border-red-500'); isValid = false; cardError = true; } else { dc.querySelector('.input-defecto').classList.remove('border-red-500'); }
-                        const rows = dc.querySelectorAll('.location-row'); if(rows.length === 0) { alert("Falta ubicación para: " + nomDef); isValid = false; cardError = true; }
-                        rows.forEach(r => { const cav = r.querySelector('.input-cav').value.trim(); const circ = r.querySelector('.input-circ').value.trim(); const esFijo = r.querySelector('.input-fijo').checked; const esMovil = r.querySelector('.input-movil').checked; if(!cav || !circ) { if(!cav) r.querySelector('.input-cav').classList.add('border-red-500'); if(!circ) r.querySelector('.input-circ').classList.add('border-red-500'); isValid = false; cardError = true; } else { r.querySelector('.input-cav').classList.remove('border-red-500'); r.querySelector('.input-circ').classList.remove('border-red-500'); if(nomDef) { detalles.push({ defecto: nomDef, cav: cav, circ: circ, fijo: esFijo, movil: esMovil }); } } });
-                    });
-                } else { alert("Falta registrar defecto para " + nombre); isValid = false; cardError = true; }
-
-                const tabBtn = document.getElementById('btn-' + wrapper.id.replace('card-','')); if(cardError) { tabBtn.classList.add('text-red-400'); if(!firstErrorTab) firstErrorTab = wrapper.id.replace('card-',''); } else { tabBtn.classList.remove('text-red-400'); }
-                if(!cardError && nombre && mesa && lider) { asignaciones.push({ nombre, lider, mesa, detalles }); }
-            });
-
-            if(!isValid) { alert("Faltan campos obligatorios."); if(firstErrorTab) activateTechTab(firstErrorTab); return; }
-            document.getElementById('asignaciones-json').value = JSON.stringify(asignaciones);
-            form.submit();
-        });
+        document.getElementById('asignaciones-json').value = JSON.stringify(asignacionesMain);
+        if(asignacionesVinc.length > 0) document.getElementById('asignaciones-vinc-json').value = JSON.stringify(asignacionesVinc);
+        form.submit();
     });
+
+    function extractData(cardsNodeList) {
+        const arr = []; let error = false;
+        cardsNodeList.forEach(card => {
+            const n = card.querySelector('.input-nombre').value.trim();
+            const l = card.querySelector('.input-lider').value.trim();
+            const m = card.querySelector('.input-mesa').value.trim();
+            if(!n || !l || !m) { card.querySelector('.input-nombre').classList.add('border-red-500'); error = true; }
+            
+            const defectos = [];
+            card.querySelectorAll('.defect-card').forEach(dc => {
+                const dn = dc.querySelector('.input-defecto').value.trim();
+                if(dn) {
+                    dc.querySelectorAll('.location-row').forEach(row => {
+                       const cav = row.querySelector('.input-cav').value;
+                       const circ = row.querySelector('.input-circ').value;
+                       const fijo = row.querySelector('.input-fijo').checked;
+                       const movil = row.querySelector('.input-movil').checked;
+                       if(!cav || !circ || (!fijo && !movil)) { error = true; row.classList.add('border', 'border-red-500'); }
+                       else { row.classList.remove('border', 'border-red-500'); defectos.push({ defecto: dn, cav, circ, fijo, movil }); }
+                    });
+                } else { error = true; dc.querySelector('.input-defecto').classList.add('border-red-500'); }
+            });
+            if(defectos.length === 0) error = true;
+            arr.push({ nombre: n, lider: l, mesa: m, detalles: defectos });
+        });
+        if(error) { alert("Datos incompletos en técnicos/defectos"); return null; }
+        return arr;
+    }
 </script>
 {% endblock %}

@@ -128,7 +128,7 @@ def mcm_view(request):
         defecto_sap = request.POST.get('defecto_sap')
         molde_id = request.POST.get('molde')
         asignaciones_json = request.POST.get('asignaciones_json', '[]')
-        
+        texto_auto = request.POST.get('comentarios_generados', '')
         # Recuperar máquina (del input o del objeto molde)
         maquina_final = request.POST.get('maquina')
         if not maquina_final and molde_obj:
@@ -138,7 +138,10 @@ def mcm_view(request):
         motivo_ret = request.POST.get('motivo_retorno', '')
         obs_ret = request.POST.get('observaciones_retorno', '')
         orden_ref = request.POST.get('orden_retorno_ref', '')
-
+        obs_manual = request.POST.get('observaciones_retorno', '') 
+        comentarios_finales = texto_auto
+        if obs_manual:
+            comentarios_finales += f"\n\n[Notas Adicionales]:\n{obs_manual}"
         # Validaciones
         if not numero_orden:
             messages.error(request, 'Error: Falta el Número de Orden.')
@@ -158,6 +161,7 @@ def mcm_view(request):
                         estado='Activa',
                         ultima_actualizacion=timezone.now(),
                         motivo_retorno=motivo_ret,
+                        comentarios=comentarios_finales,
                         orden_retorno_ref=orden_ref,
                         observaciones_retorno=obs_ret
                     )
@@ -206,6 +210,7 @@ def mcm_view(request):
     }
     return render(request, 'Moldeo/prueba.html', context)
 @require_http_methods(["GET", "POST"])
+@transaction.atomic
 def registro_cho_view(request):
     # 1. Configuración Inicial y Recuperación de Datos
     status_actual = '110' # Valor por defecto para CHO
@@ -243,77 +248,134 @@ def registro_cho_view(request):
 
     # 2. PROCESAMIENTO POST
     if request.method == 'POST':
+        # --- DATOS GENERALES ---
         numero_orden = request.POST.get('numero_orden')
         defecto_sap = request.POST.get('defecto_sap')
-        # Datos específicos de CHO
-        parte_saliente = request.POST.get('parte_saliente', '')
-        parte_entrante = request.POST.get('parte_entrante', '')
         
         # Recuperar máquina (del input o del objeto)
         maquina_input = request.POST.get('maquina', '')
         if not maquina_input and molde_obj and molde_obj.maquina:
             maquina_input = molde_obj.maquina.nombre
 
-        # Recuperar Asignaciones (JSON stringify desde el front o arrays antiguos)
-        # Asumiremos que actualizas el HTML para usar el mismo JSON que MCM, 
-        # pero mantenemos compatibilidad básica si usas arrays simples.
+        # Datos específicos de CHO (Orden Principal)
+        parte_saliente = request.POST.get('parte_saliente', '')
+        parte_entrante = request.POST.get('parte_entrante', '')
+
+        # Datos específicos de Tarjeta Roja (Orden Vinculada)
+        tipo_tarjeta = request.POST.get('tipo_tarjeta', 'verde')
+        orden_vinculada_id = request.POST.get('orden_vinculada_id', '')
+        parte_saliente_vinc = request.POST.get('parte_saliente_vinc', '')
+        parte_entrante_vinc = request.POST.get('parte_entrante_vinc', '')
+        copiar_tecnicos = request.POST.get('copiar_tecnicos') == 'true'
+
         asignaciones_json = request.POST.get('asignaciones_json', '')
+        comentarios_generados = request.POST.get('comentarios_generados', '')
         
         if not (numero_orden and molde_obj):
             messages.error(request, 'Error: Faltan campos obligatorios (Orden o Molde).')
         else:
             try:
-                with transaction.atomic():
-                    # Crear Orden CHO
-                    nueva_orden = OrdenCHO.objects.create(
-                        numero_orden=numero_orden,
-                        defecto_sap=defecto_sap,
-                        molde=molde_obj,
-                        tipo_mntn=tipo_mntn,
-                        status=status_actual,
-                        estado='Activa',
-                        maquina=maquina_input,
-                        parte_saliente=parte_saliente, # <--- Nuevo
-                        parte_entrante=parte_entrante, # <--- Nuevo
-                        ultima_actualizacion=timezone.now()
-                    )
+                # =================================================
+                # A. GUARDAR ORDEN PRINCIPAL
+                # =================================================
+                nueva_orden = OrdenCHO.objects.create(
+                    numero_orden=numero_orden,
+                    defecto_sap=defecto_sap,
+                    molde=molde_obj,
+                    tipo_mntn=tipo_mntn,
+                    status=status_actual,
+                    estado='Activa',
+                    maquina=maquina_input,
+                    parte_saliente=parte_saliente, 
+                    parte_entrante=parte_entrante, 
+                    # tipo_tarjeta=tipo_tarjeta, # Descomentar si agregaste el campo al modelo
+                    comentarios=comentarios_generados,
+                    ultima_actualizacion=timezone.now()
+                )
 
-                    # Guardar Técnicos
-                    if asignaciones_json:
-                        # Si viene el JSON complejo (con mesa, lider, etc.)
-                        data = json.loads(asignaciones_json)
-                        for item in data:
-                            nombre = item.get('nombre')
-                            lider_tec = item.get('lider', '')
-                            mesa = item.get('mesa', '-')
+                # Guardar Técnicos Principal
+                if asignaciones_json:
+                    data = json.loads(asignaciones_json)
+                    for item in data:
+                        nombre = item.get('nombre')
+                        lider_tec = item.get('lider', '')
+                        mesa = item.get('mesa', '-')
+                        
+                        if nombre:
+                            nombre_final = f"{nombre} (L: {lider_tec})" if lider_tec else nombre
+                            detalles_str = json.dumps(item.get('detalles', []))
                             
-                            if nombre:
-                                nombre_final = f"{nombre} (L: {lider_tec})" if lider_tec else nombre
-                                # En CHO a veces no hay "detalles" de defectos, guardamos vacío o lo que venga
-                                detalles_str = json.dumps(item.get('detalles', []))
-                                
-                                AsignacionUniversal.objects.create(
-                                    content_object=nueva_orden,
-                                    nombre_tecnico=nombre_final,
-                                    mesa=mesa,
-                                    detalles_json=detalles_str,
-                                    activo=True
-                                )
-                    else:
-                        # Fallback: Arrays simples (si tu HTML es antiguo)
-                        l_tecnicos = request.POST.getlist('tecnico_nombre[]')
-                        l_mesas = request.POST.getlist('mesa[]')
-                        from itertools import zip_longest
-                        for tec, mes in zip_longest(l_tecnicos, l_mesas, fillvalue=''):
-                            if tec and tec.strip():
-                                AsignacionUniversal.objects.create(
-                                    content_object=nueva_orden,
-                                    nombre_tecnico=tec.strip(),
-                                    mesa=mes.strip(),
-                                    activo=True
-                                )
+                            AsignacionUniversal.objects.create(
+                                content_object=nueva_orden,
+                                nombre_tecnico=nombre_final,
+                                mesa=mesa,
+                                detalles_json=detalles_str,
+                                activo=True
+                            )
+                else:
+                    # Fallback para arrays simples (si aplica)
+                    l_tecnicos = request.POST.getlist('tecnico_nombre[]')
+                    l_mesas = request.POST.getlist('mesa[]')
+                    from itertools import zip_longest
+                    for tec, mes in zip_longest(l_tecnicos, l_mesas, fillvalue=''):
+                        if tec and tec.strip():
+                            AsignacionUniversal.objects.create(
+                                content_object=nueva_orden,
+                                nombre_tecnico=tec.strip(),
+                                mesa=mes.strip(),
+                                activo=True
+                            )
 
-                messages.success(request, f'Orden CHO {numero_orden} registrada.')
+                # =================================================
+                # B. PROCESAR ORDEN VINCULADA (SOLO SI ES ROJA)
+                # =================================================
+                if tipo_tarjeta == 'roja' and orden_vinculada_id:
+                    # Buscar la orden existente que estaba pendiente
+                    orden_vinc = OrdenCHO.objects.filter(numero_orden=orden_vinculada_id).first()
+                    
+                    if orden_vinc:
+                        # Actualizar datos para iniciarla
+                        orden_vinc.estado = 'Activa'
+                        orden_vinc.status = status_actual
+                        orden_vinc.maquina = maquina_input
+                        orden_vinc.molde = molde_obj 
+                        
+                        # Usar sus propios datos de NP (Independientes)
+                        orden_vinc.parte_saliente = parte_saliente_vinc
+                        orden_vinc.parte_entrante = parte_entrante_vinc
+                        
+                        # Comentario de enlace
+                        comentario_extra = f"\n[Iniciada vía Tarjeta Roja vinculada a {numero_orden}]"
+                        if orden_vinc.comentarios:
+                            orden_vinc.comentarios += comentario_extra
+                        else:
+                            orden_vinc.comentarios = comentario_extra
+                            
+                        orden_vinc.ultima_actualizacion = timezone.now()
+                        orden_vinc.save()
+
+                        # Copiar técnicos si se solicitó
+                        if copiar_tecnicos and asignaciones_json:
+                            for item in data:
+                                nombre = item.get('nombre')
+                                lider_tec = item.get('lider', '')
+                                mesa = item.get('mesa', '-')
+                                if nombre:
+                                    nombre_final = f"{nombre} (L: {lider_tec})" if lider_tec else nombre
+                                    AsignacionUniversal.objects.create(
+                                        content_object=orden_vinc,
+                                        nombre_tecnico=nombre_final,
+                                        mesa=mesa,
+                                        detalles_json="[]",
+                                        activo=True
+                                    )
+                        
+                        messages.success(request, f'¡Éxito! Orden principal {numero_orden} y vinculada {orden_vinculada_id} iniciadas.')
+                    else:
+                        messages.warning(request, f'Orden principal guardada, pero no se encontró la orden vinculada {orden_vinculada_id}.')
+                else:
+                    messages.success(request, f'Orden CHO {numero_orden} registrada.')
+
                 return redirect('Moldeo:ordenes_en_curso')
 
             except Exception as e:
@@ -329,12 +391,11 @@ def registro_cho_view(request):
         'pre_molde_pk': pre_molde_pk,
         'pre_defecto': pre_defecto,
         'pre_maquina': molde_obj.maquina.nombre if molde_obj and molde_obj.maquina else '',
-        'moldmakers': Moldmakers.objects.all().order_by('nombre'),
+        'moldmakers': Moldmakers.objects.filter(activo=True).order_by('nombre'),
         'lideres_all': Lideres.objects.filter(activo=True).order_by('nombre'),
-        'partes_json': partes_json # Enviamos el JSON para los combos
+        'partes_json': partes_json 
     }
     return render(request, 'Moldeo/registro_cho.html', context)
-
 @require_http_methods(["GET", "POST"])
 def registro_tpm_view(request):
     tipo_mntn = 'TPM'
@@ -1228,3 +1289,144 @@ def api_filtrar_ordenes_mcm(request):
         })
         
     return JsonResponse(data, safe=False)
+def historial_molde_api(request):
+    molde_nombre = request.GET.get('molde')
+    if not molde_nombre:
+        return JsonResponse({'success': False, 'message': 'Falta nombre de molde'})
+
+    try:
+        # Buscar el objeto molde
+        molde_obj = Moldes.objects.filter(nombre=molde_nombre).first() # Ajusta 'numero_molde' o 'nombre' según tu modelo
+        if not molde_obj:
+             # Intento buscar por nombre exacto si usas otro campo
+             molde_obj = Moldes.objects.filter(nombre=molde_nombre).first()
+
+        if not molde_obj:
+             return JsonResponse({'success': True, 'historial': []}) # No existe molde, retorna vacío
+
+        # Buscar en las 3 tablas (MCM, CHO, TPM)
+        # Filtramos por molde y estado finalizado
+        mcm = OrdenMCM.objects.filter(molde=molde_obj, estado='Finalizada').order_by('-fecha_cierre')[:3]
+        cho = OrdenCHO.objects.filter(molde=molde_obj, estado='Finalizada').order_by('-fecha_cierre')[:3]
+        tpm = OrdenTPM.objects.filter(molde=molde_obj, estado='Finalizada').order_by('-fecha_cierre')[:3]
+
+        # Unir y ordenar
+        todos = sorted(
+            list(chain(mcm, cho, tpm)),
+            key=lambda x: x.fecha_cierre if x.fecha_cierre else x.fecha_creacion,
+            reverse=True
+        )[:3] # Tomamos solo las 3 más recientes de todas
+
+        data = []
+        for o in todos:
+            # Obtener defecto según el tipo de modelo
+            defecto_txt = getattr(o, 'defecto_sap', '') or getattr(o, 'comentarios', '')
+            
+            data.append({
+                'orden': o.numero_orden,
+                'tipo': o.tipo_mntn, # Asegúrate que tu modelo tenga este campo o hardcodealo
+                'fecha': o.fecha_cierre.strftime('%d/%m/%Y') if o.fecha_cierre else '---',
+                'defecto': defecto_txt[:30] + '...' if len(defecto_txt) > 30 else defecto_txt,
+                'lider': o.lider.username if o.lider else '---'
+            })
+
+        return JsonResponse({'success': True, 'historial': data})
+
+    except Exception as e:
+        print(f"Error API Historial: {e}")
+        return JsonResponse({'success': False, 'message': str(e)})
+    
+def detalle_orden_historial_api(request):
+    orden_id = request.GET.get('orden')
+    tipo = request.GET.get('tipo') # MCM, CHO, TPM
+
+    if not orden_id or not tipo:
+        return JsonResponse({'success': False, 'message': 'Faltan parámetros.'})
+
+    try:
+        orden = None
+        # Buscar en el modelo correcto
+        if tipo == 'MCM':
+            orden = OrdenMCM.objects.filter(numero_orden=orden_id).first()
+        elif tipo == 'CHO':
+            orden = OrdenCHO.objects.filter(numero_orden=orden_id).first()
+        elif tipo == 'TPM':
+            orden = OrdenTPM.objects.filter(numero_orden=orden_id).first()
+        
+        if not orden:
+            return JsonResponse({'success': False, 'message': 'Orden no encontrada.'})
+
+        # Buscar técnicos asignados (Relación Genérica)
+        tecnicos_qs = AsignacionUniversal.objects.filter(
+            object_id=orden.pk, 
+            content_type__model=f'orden{tipo.lower()}' # ej: ordenmcm
+        )
+        
+        tecnicos_list = []
+        for t in tecnicos_qs:
+            tecnicos_list.append({
+                'nombre': t.nombre_tecnico,
+                'mesa': t.mesa
+            })
+
+        data = {
+            'success': True,
+            'orden': orden.numero_orden,
+            'fecha': orden.fecha_cierre.strftime('%d/%m/%Y %H:%M') if orden.fecha_cierre else '---',
+            'tipo': orden.tipo_mntn,
+            'lider': orden.lider.username if orden.lider else 'N/A',
+            'comentarios': orden.comentarios,
+            'tecnicos': tecnicos_list
+        }
+        return JsonResponse(data)
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+def api_ordenes_pendientes(request):
+    molde_id = request.GET.get('molde_id')
+    print(f"--- DEBUG API --- Buscando órdenes para Molde ID: {molde_id}")
+
+    if not molde_id:
+        return JsonResponse({'ordenes': []})
+
+    try:
+        # 1. Recopilar IDs de órdenes que YA existen (Convertidos a String para comparar seguro)
+        # Usamos 'values_list' con 'flat=True' para obtener listas simples ['1001', '1002']
+        ids_cho = set(str(x) for x in OrdenCHO.objects.values_list('numero_orden', flat=True))
+        ids_tpm = set(str(x) for x in OrdenTPM.objects.values_list('numero_orden', flat=True))
+        ids_mcm = set(str(x) for x in OrdenMCM.objects.values_list('numero_orden', flat=True))
+        
+        # Unimos todos los sets en uno solo para búsqueda rápida
+        ids_ocupados = ids_cho.union(ids_tpm).union(ids_mcm)
+        print(f"--- DEBUG API --- Total órdenes ya ocupadas en el sistema: {len(ids_ocupados)}")
+
+        # 2. Buscar en OrdenSAP
+        # IMPORTANTE: Aquí asumo que OrdenSAP tiene una relación ForeignKey llamada 'molde'.
+        # Si OrdenSAP se relaciona por texto (work_center), avísame para cambiar esta línea.
+        #qs_sap = OrdenSAP.objects.filter(molde_id=molde_id)
+        try:
+            molde_obj = Moldes.objects.get(pk=molde_id)
+            # Asumiendo que el nombre del molde es igual al work_center en SAP
+            qs_sap = OrdenSAP.objects.filter(work_center=molde_obj.nombre) 
+        except Moldes.DoesNotExist:
+            qs_sap = []
+        print(f"--- DEBUG API --- Órdenes SAP encontradas para este molde (Total bruto): {qs_sap.count()}")
+
+        data = []
+        for orden in qs_sap:
+            # Convertimos el número de orden SAP a string
+            num_sap = str(orden.order) 
+            
+            # Verificamos si NO está en la lista de ocupados
+            if num_sap not in ids_ocupados:
+                data.append({
+                    'numero': orden.order,       
+                    'descripcion': orden.description or 'Sin descripción'
+                })
+        
+        print(f"--- DEBUG API --- Órdenes disponibles retornadas al frontend: {len(data)}")
+        return JsonResponse({'ordenes': data})
+
+    except Exception as e:
+        print(f"--- DEBUG API ERROR --- Ocurrió un error: {str(e)}")
+        return JsonResponse({'ordenes': []})

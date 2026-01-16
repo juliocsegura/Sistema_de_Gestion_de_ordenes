@@ -5,73 +5,34 @@
 {% block content %}
 <div class="sticky top-0 z-40 bg-gray-900 border-b border-gray-700 shadow-xl px-4 py-4 mb-6">
     <div class="container mx-auto max-w-7xl flex flex-col lg:flex-row justify-between items-center gap-4">
-        
         <div class="flex items-center gap-4 w-full lg:w-auto">
             <a href="javascript:history.back()" class="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             </a>
             <h2 class="text-xl md:text-2xl font-semibold text-gray-100 whitespace-nowrap">Base de Datos SAP</h2>
         </div>
-
         <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto items-center">
             <div class="relative w-full sm:w-96">
                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </span>
-                <input type="text" id="filtro-texto" placeholder="Buscar orden, molde, defecto..." 
-                       class="w-full bg-gray-800 text-white border border-gray-600 rounded-lg pl-9 pr-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none placeholder-gray-500 text-sm shadow-sm transition-all focus:border-blue-500">
+                <input type="text" id="filtro-texto" placeholder="Buscar orden, molde, defecto..." class="w-full bg-gray-800 text-white border border-gray-600 rounded-lg pl-9 pr-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none placeholder-gray-500 text-sm shadow-sm transition-all focus:border-blue-500">
             </div>
-
-            <button id="btn-limpiar" class="hidden bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-2 rounded-lg text-sm transition flex items-center gap-2 border border-gray-600">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                Limpiar
-            </button>
-
             <a href="{% url 'Moldeo:carga_masiva' %}" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg transition whitespace-nowrap flex items-center gap-2 transform hover:scale-105">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                Subir Excel
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> Subir Excel
             </a>
         </div>
     </div>
 </div>
 
 <div class="container mx-auto max-w-7xl px-4 pb-12">
-    
     <div class="overflow-hidden bg-gray-800 rounded-lg shadow-2xl border border-gray-700">
         <table class="w-full min-w-full" id="tabla-sap">
             <thead class="bg-gray-900 border-b border-gray-700">
                 <tr>
                     <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Orden (SAP)</th>
-                    
-                    <th class="p-2 text-left text-xs font-bold text-gray-400 uppercase tracking-wider w-56 relative group">
-                        <div class="flex items-center justify-between cursor-pointer p-1 rounded hover:bg-gray-800 transition" onclick="toggleDateMenu()">
-                            <div class="flex items-center gap-2">
-                                <span>Fecha Inicio</span>
-                                <span id="icono-sort" class="text-gray-500 hover:text-white transition" onclick="event.stopPropagation(); toggleSort()">⇅</span>
-                            </div>
-                            <svg class="w-3 h-3 text-gray-500 group-hover:text-blue-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-                        </div>
-
-                        <div id="menu-fecha" class="hidden absolute top-full left-0 mt-1 w-64 bg-gray-800 border border-gray-600 rounded-lg shadow-2xl z-50 p-3 animate-fade-in">
-                            <div class="text-xs text-gray-400 mb-2 font-bold uppercase">Filtrar por rango:</div>
-                            <div class="flex flex-col gap-2">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs text-gray-500 w-8">De:</span>
-                                    <input type="date" id="fecha-inicio" class="bg-gray-900 text-xs text-white border border-gray-600 rounded px-2 py-1 w-full focus:border-blue-500 outline-none">
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs text-gray-500 w-8">A:</span>
-                                    <input type="date" id="fecha-fin" class="bg-gray-900 text-xs text-white border border-gray-600 rounded px-2 py-1 w-full focus:border-blue-500 outline-none">
-                                </div>
-                            </div>
-                            <div class="mt-3 flex justify-end">
-                                <button onclick="toggleDateMenu()" class="text-xs text-blue-400 hover:text-white font-bold">Cerrar</button>
-                            </div>
-                        </div>
-                    </th>
-
+                    <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Fecha Inicio</th>
                     <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Hora</th>
-
                     <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Descripción / Defecto</th>
                     <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Equipo</th>
                     <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Molde (WC)</th>
@@ -88,72 +49,41 @@
                         centro: '{{ orden.work_center|default:'-' }}',
                         maquina: '{{ orden.maquina_relacionada|default:'' }}'
                     })">
-                    <td class="p-4 whitespace-nowrap font-bold text-blue-400 group-hover:text-blue-300">
-                        {{ orden.order }}
-                    </td>
-                    <td class="px-4 py-3 text-left text-gray-300 font-mono col-fecha" 
-                        data-fecha="{{ orden.fecha_inicio|date:'Y-m-d' }}">
-                       {{ orden.fecha_inicio|date:"d/m/Y"|default:"-" }} 
-                    </td>
-                    
-                    <td class="p-4 text-gray-400 font-mono whitespace-nowrap">
-                        {{ orden.hora_inicio|time:"H:i"|default:"-" }}
-                    </td>
-
-                    <td class="p-4 text-gray-300">
-                        {{ orden.description }}
-                    </td>
-                    <td class="p-4 whitespace-nowrap font-mono text-yellow-600 group-hover:text-yellow-500">
-                        {{ orden.equipment|default:"-" }}
-                    </td>
-                    
+                    <td class="p-4 whitespace-nowrap font-bold text-blue-400 group-hover:text-blue-300">{{ orden.order }}</td>
+                    <td class="px-4 py-3 text-left text-gray-300 font-mono col-fecha" data-fecha="{{ orden.fecha_inicio|date:'Y-m-d' }}">{{ orden.fecha_inicio|date:"d/m/Y"|default:"-" }}</td>
+                    <td class="p-4 text-gray-400 font-mono whitespace-nowrap">{{ orden.hora_inicio|time:"H:i"|default:"-" }}</td>
+                    <td class="p-4 text-gray-300">{{ orden.description }}</td>
+                    <td class="p-4 whitespace-nowrap font-mono text-yellow-600 group-hover:text-yellow-500">{{ orden.equipment|default:"-" }}</td>
                     <td class="p-4 whitespace-nowrap text-gray-300">
                         <div class="flex flex-col">
                             <span class="font-bold text-white text-base">{{ orden.work_center }}</span>
-                            
-                            {% if orden.maquina_relacionada %}
-                                <span class="mt-1 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-green-900/50 text-green-400 border border-green-700 w-fit">
-                                    MAQ: {{ orden.maquina_relacionada }}
-                                </span>
-                            {% else %}
-                                <span class="mt-1 text-xs text-gray-600 italic">Sin Asignar</span>
-                            {% endif %}
+                            {% if orden.maquina_relacionada %}<span class="mt-1 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-green-900/50 text-green-400 border border-green-700 w-fit">MAQ: {{ orden.maquina_relacionada }}</span>
+                            {% else %}<span class="mt-1 text-xs text-gray-600 italic">Sin Asignar</span>{% endif %}
                         </div>
                     </td>
                 </tr>
                 {% empty %}
-                <tr>
-                    <td colspan="6" class="p-12 text-center text-gray-500 text-lg flex flex-col items-center justify-center">
-                        <svg class="w-12 h-12 mb-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        No se encontraron órdenes cargadas.
-                    </td>
-                </tr>
+                <tr><td colspan="6" class="p-12 text-center text-gray-500 text-lg">No se encontraron órdenes cargadas.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
     
-    <div id="no-results" class="hidden mt-8 text-center text-gray-500 text-lg">
-        No se encontraron coincidencias.
-    </div>
-    
-    <div class="mt-4 text-right text-gray-500 text-xs">
-        Registros cargados: <span id="contador-registros" class="font-bold text-white">{{ ordenes|length }}</span>
-    </div>
+    <div id="no-results" class="hidden mt-8 text-center text-gray-500 text-lg">No se encontraron coincidencias.</div>
+    <div class="mt-4 text-right text-gray-500 text-xs">Registros cargados: <span id="contador-registros" class="font-bold text-white">{{ ordenes|length }}</span></div>
 
-    <div id="modal-detalle" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 hidden backdrop-blur-sm transition-opacity duration-300">
-        <div class="bg-gray-800 text-white rounded-xl shadow-2xl w-full max-w-2xl border border-gray-700 transform transition-all scale-100">
+    <div id="modal-detalle" class="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-80 hidden backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-gray-800 text-white rounded-xl shadow-2xl w-full max-w-3xl border border-gray-700 transform transition-all scale-100 flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center p-6 border-b border-gray-700">
                 <h3 class="text-2xl font-bold text-white">Detalle de Orden <span id="md-orden" class="text-blue-400"></span></h3>
                 <button onclick="closeModal()" class="text-gray-400 hover:text-white text-3xl">&times;</button>
             </div>
-            <div class="p-6 space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="p-6 overflow-y-auto custom-scrollbar">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div class="bg-gray-700/50 p-4 rounded-lg">
                         <p class="text-xs text-gray-400 uppercase tracking-wider font-bold">Defecto</p>
                         <p id="md-defecto" class="text-lg text-gray-100 mt-1"></p>
                     </div>
-
                     <div class="bg-gray-700/50 p-4 rounded-lg flex justify-between items-center border border-gray-600">
                         <div>
                             <p class="text-xs text-gray-400 uppercase tracking-wider font-bold">Molde</p>
@@ -164,150 +94,119 @@
                             <p id="md-maquina" class="text-2xl font-bold text-green-300 mt-1">--</p>
                         </div>
                     </div>
-
                     <div class="bg-gray-700/50 p-4 rounded-lg md:col-span-2 border border-yellow-600/30">
                         <p class="text-xs text-yellow-500 uppercase tracking-wider font-bold">Numero De SAP</p>
                         <p id="md-n_sap" class="text-2xl font-mono text-yellow-400 mt-1 font-bold"></p>
                     </div>
                 </div>
+
+                <div class="border-t border-gray-700 pt-4">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <h4 class="text-sm font-bold text-purple-200 uppercase">Últimos 3 mantenimientos (Finalizados)</h4>
+                    </div>
+                    <div id="historial-loading" class="hidden flex justify-center py-4">
+                        <svg class="animate-spin h-6 w-6 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    </div>
+                    <div id="historial-container" class="space-y-2"></div>
+                </div>
             </div>
-            <div class="p-6 border-t border-gray-700 flex justify-end gap-3">
+            <div class="p-6 border-t border-gray-700 flex justify-end gap-3 mt-auto">
                 <button onclick="closeModal()" class="px-5 py-3 rounded-lg text-gray-300 hover:bg-gray-700 font-semibold transition">Cancelar</button>
-                <button id="btn-iniciar-orden" class="px-8 py-3 rounded-lg bg-green-600 hover:bg-green-500 text-white font-bold text-lg shadow-lg transition transform hover:-translate-y-0.5">
-                    Iniciar Orden
-                </button>
+                <button id="btn-iniciar-orden" class="px-8 py-3 rounded-lg bg-green-600 hover:bg-green-500 text-white font-bold text-lg shadow-lg transition transform hover:-translate-y-0.5">Iniciar Orden</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-historial-detalle" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 hidden backdrop-blur-md transition-opacity duration-300">
+        <div class="bg-gray-900 text-white rounded-xl shadow-2xl w-full max-w-2xl border border-gray-600 transform transition-all scale-100 flex flex-col max-h-[85vh]">
+            <div class="flex justify-between items-center p-4 border-b border-gray-700 bg-gray-800 rounded-t-xl">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <span class="bg-purple-600 text-xs px-2 py-1 rounded">HISTORIAL</span>
+                    Orden <span id="h-orden" class="text-blue-400"></span>
+                </h3>
+                <button onclick="closeHistorialModal()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar space-y-4">
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div><p class="text-gray-500 text-xs uppercase">Fecha Cierre</p><p id="h-fecha" class="text-white font-mono"></p></div>
+                    <div><p class="text-gray-500 text-xs uppercase">Tipo</p><p id="h-tipo" class="text-white font-bold"></p></div>
+                    <div><p class="text-gray-500 text-xs uppercase">Líder</p><p id="h-lider" class="text-yellow-500"></p></div>
+                    <div><p class="text-gray-500 text-xs uppercase">Estatus</p><span class="bg-green-900 text-green-300 px-2 py-0.5 rounded text-xs">Finalizada</span></div>
+                </div>
+                <div class="bg-gray-800 p-3 rounded border border-gray-700">
+                    <p class="text-gray-500 text-xs uppercase mb-1">Comentarios / Bitácora</p>
+                    <p id="h-comentarios" class="text-gray-300 text-sm whitespace-pre-wrap font-mono"></p>
+                </div>
+                <div>
+                    <p class="text-gray-500 text-xs uppercase mb-2">Técnicos Asignados</p>
+                    <div id="h-tecnicos-list" class="space-y-2"></div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-gray-700 bg-gray-800 rounded-b-xl flex justify-end">
+                <button onclick="closeHistorialModal()" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm font-bold">Cerrar</button>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    /* Estilo oscuro para inputs de fecha */
-    ::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; opacity: 0.6; }
-    ::-webkit-calendar-picker-indicator:hover { opacity: 1; }
-    
-    /* Animación suave para el menú */
-    @keyframes fadeInMenu { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-    .animate-fade-in { animation: fadeInMenu 0.15s ease-out; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 </style>
 
 <script>
-    // --- VARIABLES Y ELEMENTOS ---
+    // --- VARIABLES ---
     const inputTexto = document.getElementById('filtro-texto');
-    const fechaInicio = document.getElementById('fecha-inicio');
-    const fechaFin = document.getElementById('fecha-fin');
     const tbody = document.getElementById('cuerpo-tabla');
-    const noResults = document.getElementById('no-results');
-    const btnLimpiar = document.getElementById('btn-limpiar');
-    const contador = document.getElementById('contador-registros');
-    const iconoSort = document.getElementById('icono-sort');
-    const menuFecha = document.getElementById('menu-fecha');
-
-    // --- TOGGLE MENU FECHA ---
-    window.toggleDateMenu = function() {
-        menuFecha.classList.toggle('hidden');
-    }
-
-    // Cerrar menú al hacer click fuera
-    window.addEventListener('click', (e) => {
-        if (!e.target.closest('th') && !menuFecha.classList.contains('hidden')) {
-            menuFecha.classList.add('hidden');
-        }
-    });
-
-    // --- FILTRADO ---
-    function aplicarFiltros() {
-        const texto = inputTexto.value.toLowerCase();
-        const fInicio = fechaInicio.value; 
-        const fFin = fechaFin.value;
-
-        const filas = Array.from(document.querySelectorAll('.fila-sap'));
-        let visibles = 0;
-
-        filas.forEach(fila => {
-            const contenido = fila.getAttribute('data-search').toLowerCase();
-            const fechaFila = fila.querySelector('.col-fecha').getAttribute('data-fecha'); 
-
-            // 1. Texto
-            const matchTexto = contenido.includes(texto);
-
-            // 2. Fecha
-            let matchFecha = true;
-            if (fInicio && fechaFila < fInicio) matchFecha = false;
-            if (fFin && fechaFila > fFin) matchFecha = false;
-
-            if (matchTexto && matchFecha) {
-                fila.style.display = '';
-                visibles++;
-            } else {
-                fila.style.display = 'none';
-            }
-        });
-
-        noResults.classList.toggle('hidden', visibles > 0);
-        contador.innerText = visibles;
-        btnLimpiar.classList.toggle('hidden', (!texto && !fInicio && !fFin));
-    }
-
-    inputTexto.addEventListener('input', aplicarFiltros);
-    fechaInicio.addEventListener('change', aplicarFiltros);
-    fechaFin.addEventListener('change', aplicarFiltros);
-
-    btnLimpiar.addEventListener('click', () => {
-        inputTexto.value = '';
-        fechaInicio.value = '';
-        fechaFin.value = '';
-        aplicarFiltros();
-    });
-
-    // --- ORDENAMIENTO ---
-    let sortAsc = false; 
-    window.toggleSort = function() {
-        sortAsc = !sortAsc;
-        iconoSort.innerText = sortAsc ? '▲' : '▼'; 
-        
-        const filas = Array.from(document.querySelectorAll('.fila-sap'));
-        
-        filas.sort((a, b) => {
-            const dateA = a.querySelector('.col-fecha').getAttribute('data-fecha') || '';
-            const dateB = b.querySelector('.col-fecha').getAttribute('data-fecha') || '';
-            if (!dateA) return 1; if (!dateB) return -1;
-            return sortAsc ? dateA.localeCompare(dateB) : dateB.localeCompare(dateA);
-        });
-
-        filas.forEach(fila => tbody.appendChild(fila));
-    }
-
-    // --- MODAL ---
     const modalDetalle = document.getElementById('modal-detalle');
+    const modalHistorial = document.getElementById('modal-historial-detalle');
     const btnIniciar = document.getElementById('btn-iniciar-orden');
+    
+    // Referencias Modal Principal
     const txtOrden = document.getElementById('md-orden');
     const txtDesc = document.getElementById('md-defecto');
     const txtCentro = document.getElementById('md-molde');
     const txtEquipo = document.getElementById('md-n_sap');
-    
-    // NUEVO: Referencia al texto de máquina en el modal
     const txtMaquina = document.getElementById('md-maquina');
+    const histContainer = document.getElementById('historial-container');
+    const histLoading = document.getElementById('historial-loading');
 
+    // Referencias Modal Historial
+    const hOrden = document.getElementById('h-orden');
+    const hFecha = document.getElementById('h-fecha');
+    const hTipo = document.getElementById('h-tipo');
+    const hLider = document.getElementById('h-lider');
+    const hComentarios = document.getElementById('h-comentarios');
+    const hTecnicosList = document.getElementById('h-tecnicos-list');
+
+    // --- FILTRADO BÁSICO ---
+    inputTexto.addEventListener('input', () => {
+        const texto = inputTexto.value.toLowerCase();
+        document.querySelectorAll('.fila-sap').forEach(fila => {
+            const contenido = fila.getAttribute('data-search').toLowerCase();
+            fila.style.display = contenido.includes(texto) ? '' : 'none';
+        });
+    });
+
+    // --- MODAL PRINCIPAL ---
     window.openModal = function(data) {
-        // Llenar datos básicos
         txtOrden.textContent = data.orden;
         txtDesc.textContent = data.desc;
         txtCentro.textContent = data.centro;
         txtEquipo.textContent = data.equipo;
+        if (txtMaquina) txtMaquina.textContent = data.maquina || "Sin Asignar";
 
-        // NUEVO: Llenar la máquina en el modal
-        if (txtMaquina) {
-            txtMaquina.textContent = data.maquina || "Sin Asignar";
-        }
+        cargarHistorial(data.centro);
 
-        // Lógica del botón Iniciar
         btnIniciar.onclick = function() {
             const params = new URLSearchParams({
                 orden_sap: data.orden,
                 defecto: data.desc,
                 molde: data.centro,
-                maquina: data.maquina // <--- IMPORTANTE: Enviamos la máquina a la siguiente página
+                maquina: data.maquina 
             }).toString();
             window.location.href = `/moldeo/registro/?${params}`; 
         };
@@ -315,6 +214,98 @@
     }
 
     window.closeModal = function() { modalDetalle.classList.add('hidden'); }
-    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+    // --- API HISTORIAL (LISTA) ---
+    async function cargarHistorial(moldeNombre) {
+        histContainer.innerHTML = '';
+        histLoading.classList.remove('hidden');
+        try {
+            const response = await fetch(`/moldeo/api/historial-molde/?molde=${encodeURIComponent(moldeNombre)}`);
+            const result = await response.json();
+            histLoading.classList.add('hidden');
+
+            if (result.success && result.historial.length > 0) {
+                let html = '';
+                result.historial.forEach(h => {
+                    // Agregamos onclick para ver detalle
+                    html += `
+                        <div onclick="verDetalleHistorial('${h.orden}', '${h.tipo}')" class="flex justify-between items-center bg-gray-700/30 hover:bg-gray-600 p-2 rounded border border-gray-600 text-xs cursor-pointer transition">
+                            <div>
+                                <span class="block font-bold text-blue-300 hover:underline">Orden ${h.orden} (${h.tipo})</span>
+                                <span class="text-gray-400 truncate w-48 block">${h.defecto || 'Sin defecto'}</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="block text-gray-300 font-mono">${h.fecha}</span>
+                                <span class="text-xs text-yellow-600">${h.lider || 'Sin Líder'}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                histContainer.innerHTML = html;
+            } else {
+                histContainer.innerHTML = '<div class="text-gray-500 text-xs italic text-center py-2">No hay historial reciente.</div>';
+            }
+        } catch (error) {
+            histLoading.classList.add('hidden');
+            histContainer.innerHTML = '<div class="text-red-400 text-xs text-center">Error al cargar.</div>';
+        }
+    }
+
+    // --- API DETALLE HISTORIAL (MODAL 2) ---
+    window.verDetalleHistorial = async function(ordenId, tipo) {
+        // Mostrar modal cargando...
+        modalHistorial.classList.remove('hidden');
+        hComentarios.innerText = "Cargando...";
+        hTecnicosList.innerHTML = "";
+        
+        try {
+            // Necesitas crear esta URL en urls.py y la vista correspondiente
+            const response = await fetch(`/moldeo/api/detalle-orden-historial/?orden=${ordenId}&tipo=${tipo}`);
+            const data = await response.json();
+
+            if(data.success) {
+                hOrden.textContent = data.orden;
+                hFecha.textContent = data.fecha;
+                hTipo.textContent = data.tipo;
+                hLider.textContent = data.lider;
+                hComentarios.textContent = data.comentarios || "Sin comentarios registrados.";
+
+                // Renderizar Técnicos
+                let htmlTecnicos = "";
+                if(data.tecnicos && data.tecnicos.length > 0) {
+                    data.tecnicos.forEach(tec => {
+                        htmlTecnicos += `
+                            <div class="bg-gray-800 p-2 rounded border border-gray-700 flex justify-between items-center">
+                                <span class="text-white font-bold text-xs">${tec.nombre}</span>
+                                <span class="text-gray-400 text-[10px]">Mesa ${tec.mesa}</span>
+                            </div>
+                        `;
+                    });
+                } else {
+                    htmlTecnicos = '<p class="text-gray-500 text-xs italic">No hay técnicos asignados.</p>';
+                }
+                hTecnicosList.innerHTML = htmlTecnicos;
+            } else {
+                alert("Error: " + data.message);
+                closeHistorialModal();
+            }
+        } catch(e) {
+            console.error(e);
+            alert("Error al cargar detalles.");
+            closeHistorialModal();
+        }
+    }
+
+    window.closeHistorialModal = function() {
+        modalHistorial.classList.add('hidden');
+    }
+    
+    // Cerrar con Escape
+    window.addEventListener('keydown', (e) => { 
+        if (e.key === 'Escape') {
+            if(!modalHistorial.classList.contains('hidden')) closeHistorialModal();
+            else if(!modalDetalle.classList.contains('hidden')) closeModal();
+        } 
+    });
 </script>
 {% endblock %}
