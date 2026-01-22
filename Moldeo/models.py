@@ -16,18 +16,15 @@ class Lideres(models.Model):
         verbose_name = "Líder"
         verbose_name_plural = "Líderes"
 
-class Moldmakers(models.Model): # Técnicos
+class Moldmakers(models.Model):
     nombre = models.CharField(max_length=150)
+    # --- NUEVOS CAMPOS PARA KIOSCO ---
+    num_empleado = models.CharField(max_length=50, null=True, blank=True) # Columna '#' o 'ID ACCOUNT'
+    password = models.CharField(max_length=100, null=True, blank=True)   # Columna 'PASSWORD'
     activo = models.BooleanField(default=True)
-    num_empleado = models.CharField(max_length=50, null=True, blank=True)
 
     def __str__(self):
         return self.nombre
-
-    class Meta:
-        verbose_name = "Técnico (Moldmaker)"
-        verbose_name_plural = "Técnicos (Moldmakers)"
-
 # --- 1. CATÁLOGO DE MÁQUINAS ---
 class Maquinas(models.Model):
     nombre = models.CharField(max_length=50, unique=True)
@@ -266,11 +263,17 @@ class OrdenSAP(models.Model):
     description = models.TextField(blank=True, null=True)    
     work_center = models.CharField(max_length=50, blank=True, null=True) 
     equipment = models.CharField(max_length=50, blank=True, null=True)  
+    system_status = models.CharField(max_length=100, blank=True, null=True) 
     fecha_inicio = models.DateField(null=True, blank=True)
     hora_inicio = models.TimeField(null=True, blank=True)
 
     def __str__(self):
         return self.order  
+    @property
+    def estatus_descripcion(self):
+        # Busca en la tabla EstatusOrden la descripción que coincida con el system_status
+        estatus_obj = EstatusOrden.objects.filter(status=self.system_status).first()
+        return estatus_obj.descripcion if estatus_obj else self.system_status or "Desconocido"
 #class ItemDefecto(models.Model):
     # Relación Genérica (Para vincularlo a OrdenMCM o cualquier otra orden futura)
 #    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
@@ -283,3 +286,35 @@ class OrdenSAP(models.Model):
 
  #   def __str__(self):
  #       return self.nombre
+class EstatusOrden(models.Model):
+    status = models.CharField(max_length=100) 
+    descripcion = models.CharField(max_length=100)        
+   
+
+    def __str__(self):
+        return f"{self.status} - {self.descripcion}"
+
+# --- MODELOS TPM (Asegúrate que estén así) ---
+class ActividadTPM(models.Model):
+    nombre = models.CharField(max_length=200, unique=True)
+    activo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.nombre
+
+class ZonaTPM(models.Model):
+    nombre = models.CharField(max_length=100, unique=True) # Ej: MODULOS, CANDADOS
+    activo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.nombre
+
+class SubZonaTPM(models.Model):
+    zona = models.ForeignKey(ZonaTPM, related_name='subzonas', on_delete=models.CASCADE)
+    nombre = models.CharField(max_length=100) # Ej: General, Uno solo
+    # Este campo se activará si el Excel dice "Requiere..."
+    requiere_detalles = models.BooleanField(default=False) 
+    activo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.zona.nombre} - {self.nombre}"

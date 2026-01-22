@@ -34,6 +34,9 @@ urlpatterns = [
     path('api/detalle-orden-historial/', views.detalle_orden_historial_api, name='api_detalle_orden_historial'),
     path('api/ordenes-pendientes/', views.api_ordenes_pendientes, name='api_ordenes_pendientes'),
     path('panel-lider/', views.panel_lider_view, name='panel_lider'),
-
+    path('api/panel-lider-data/', views.api_panel_lider_data, name='api_panel_lider_data'),
+    path('kiosco/', views.panel_kiosco_view, name='panel_kiosco'),
+    path('api/kiosco/login/', views.api_kiosco_login, name='api_kiosco_login'),
+    path('api/kiosco/sumarse/', views.api_kiosco_sumarse, name='api_kiosco_sumarse'),
 
 ]

@@ -5,19 +5,43 @@
 {% block content %}
 <div class="container mx-auto max-w-full px-4 py-6 h-screen flex flex-col">
     
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <div>
             <h1 class="text-3xl font-bold text-white tracking-tight">Panel de Control <span class="text-yellow-500">Líder</span></h1>
             <p class="text-sm text-gray-400">Gestión de asignaciones y monitoreo en tiempo real</p>
         </div>
-        <div class="flex gap-4">
-            <div class="bg-gray-800 p-3 rounded-lg border border-gray-700 flex items-center gap-3">
-                <div class="p-2 bg-blue-900/50 rounded text-blue-400 font-bold text-xl">{{ metrics.pendientes }}</div>
-                <div class="text-xs text-gray-300 uppercase font-bold">Órdenes<br>Pendientes</div>
+        
+        <div class="flex gap-3 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+            <div class="bg-gray-800 p-3 rounded-lg border border-gray-600 flex items-center gap-3 min-w-[140px] shadow-lg shadow-emerald-900/20">
+                <div class="p-3 bg-emerald-900/50 rounded text-emerald-400 font-bold text-2xl">{{ metrics.en_curso }}</div>
+                <div class="flex flex-col">
+                    <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Piso</span>
+                    <span class="text-xs text-white font-bold">En Curso</span>
+                </div>
             </div>
-            <div class="bg-gray-800 p-3 rounded-lg border border-gray-700 flex items-center gap-3">
-                <div class="p-2 bg-emerald-900/50 rounded text-emerald-400 font-bold text-xl">{{ metrics.activas }}</div>
-                <div class="text-xs text-gray-300 uppercase font-bold">Órdenes<br>En Curso</div>
+
+            <div class="bg-gray-800 p-3 rounded-lg border border-blue-600/50 flex items-center gap-3 min-w-[140px] shadow-lg shadow-blue-900/20">
+                <div class="p-3 bg-blue-900/50 rounded text-blue-400 font-bold text-2xl">{{ metrics.abiertas }}</div>
+                <div class="flex flex-col">
+                    <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Backlog</span>
+                    <span class="text-xs text-white font-bold">Por Asignar</span>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 p-3 rounded-lg border border-orange-600/50 flex items-center gap-3 min-w-[140px] shadow-lg shadow-orange-900/20">
+                <div class="p-3 bg-orange-900/50 rounded text-orange-400 font-bold text-2xl">{{ metrics.problemas }}</div>
+                <div class="flex flex-col">
+                    <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Atención</span>
+                    <span class="text-xs text-white font-bold">Mal Cerradas</span>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 p-3 rounded-lg border border-gray-700 flex items-center gap-3 min-w-[120px] opacity-70 hover:opacity-100 transition">
+                <div class="p-3 bg-gray-700/50 rounded text-gray-400 font-bold text-xl">{{ metrics.cerradas }}</div>
+                <div class="flex flex-col">
+                    <span class="text-[10px] text-gray-500 uppercase font-bold">Histórico</span>
+                    <span class="text-xs text-gray-300">Cerradas</span>
+                </div>
             </div>
         </div>
     </div>
@@ -30,30 +54,11 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                     Pendientes (SAP)
                 </h3>
-                <input type="text" id="search-sap" placeholder="Filtrar..." class="bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:ring-blue-500 outline-none">
+                <input type="text" id="search-sap" placeholder="Filtrar orden..." class="bg-gray-900 border border-gray-600 rounded px-3 py-1 text-xs text-white focus:ring-blue-500 outline-none w-40 transition-all focus:w-56">
             </div>
             
-            <div class="overflow-y-auto custom-scrollbar p-2 space-y-2 flex-1">
-                {% for orden in pendientes %}
-                <div class="sap-card bg-gray-800 hover:bg-gray-750 border border-gray-600 hover:border-blue-500 rounded-lg p-3 transition group relative">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <span class="text-xs font-bold text-gray-500">SAP:</span>
-                            <span class="text-lg font-bold text-white block">{{ orden.order }}</span>
-                            <span class="text-xs text-blue-300 font-mono">{{ orden.work_center|default:"Sin Molde" }}</span>
-                        </div>
-                        <button onclick="abrirModalAsignar('{{ orden.order }}', '{{ orden.description|escapejs }}', '{{ orden.work_center|default:''}}')" 
-                                class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-1.5 px-4 rounded shadow transition transform group-hover:scale-105">
-                            ASIGNAR →
-                        </button>
-                    </div>
-                    <div class="mt-2 text-xs text-gray-400 border-t border-gray-700 pt-1 truncate">
-                        {{ orden.description|default:"Mantenimiento General" }}
-                    </div>
-                </div>
-                {% empty %}
-                <div class="text-center text-gray-500 py-10 italic">No hay órdenes pendientes en SAP.</div>
-                {% endfor %}
+            <div id="lista-pendientes-container" class="overflow-y-auto custom-scrollbar p-2 space-y-2 flex-1">
+                {% include 'Moldeo/partials/lista_pendientes.html' %}
             </div>
         </div>
 
@@ -63,69 +68,34 @@
                     <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     Piso en Vivo
                 </h3>
+                <span class="text-[10px] text-gray-500 italic flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-ping"></span> Actualizando
+                </span>
             </div>
 
-            <div class="overflow-y-auto custom-scrollbar p-2 space-y-2 flex-1">
-                {% for orden in activas %}
-                <div class="flex items-center justify-between bg-gray-800 border-l-4 {% if orden.estado == 'Pausada' %}border-yellow-500{% else %}border-emerald-500{% endif %} rounded p-3 shadow">
-                    
-                    <div class="w-1/3">
-                        <div class="text-xs text-gray-500 font-bold uppercase">{{ orden.tipo_mntn }}</div>
-                        <div class="text-lg font-bold text-white">{{ orden.numero_orden }}</div>
-                        <div class="text-xs text-gray-400 truncate">{{ orden.molde }}</div>
-                    </div>
-
-                    <div class="w-1/3 text-center border-l border-gray-700 pl-2">
-                        <span class="text-[10px] text-gray-500 uppercase block mb-1">Asignado a</span>
-                        <div class="text-sm font-bold text-blue-300">
-                            {% with primer_tec=orden.asignaciones.first %}
-                                {% if primer_tec %}
-                                    {{ primer_tec.nombre_tecnico|truncatechars:15 }}
-                                    {% if orden.asignaciones.count > 1 %} <span class="text-xs text-gray-500">(+{{ orden.asignaciones.count|add:"-1" }})</span>{% endif %}
-                                {% else %}
-                                    Sin Asignar
-                                {% endif %}
-                            {% endwith %}
-                        </div>
-                    </div>
-
-                    <div class="w-1/3 text-right">
-                        {% if orden.estado == 'Pausada' %}
-                            <span class="px-2 py-0.5 bg-yellow-900 text-yellow-200 text-xs rounded font-bold">PAUSADA</span>
-                        {% else %}
-                            <span class="px-2 py-0.5 bg-emerald-900 text-emerald-200 text-xs rounded font-bold animate-pulse">EN CURSO</span>
-                        {% endif %}
-                        
-                        <div class="mt-1 font-mono text-xl text-white live-timer" 
-                             data-acumulado="{{ orden.duracion_segundos }}" 
-                             data-inicio="{{ orden.ultima_actualizacion|date:'c' }}">
-                             00:00
-                        </div>
-                    </div>
-                </div>
-                {% empty %}
-                <div class="text-center text-gray-500 py-10 italic">No hay órdenes activas en piso.</div>
-                {% endfor %}
+            <div id="lista-activas-container" class="overflow-y-auto custom-scrollbar p-2 space-y-2 flex-1">
+                {% include 'Moldeo/partials/lista_activas.html' %}
             </div>
         </div>
     </div>
 </div>
 
-<div id="modal-asignar" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 hidden backdrop-blur-sm">
+<div id="modal-asignar" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 hidden backdrop-blur-sm transition-opacity duration-300">
     <div class="bg-gray-800 rounded-lg border-2 border-blue-500 w-full max-w-md p-6 shadow-2xl transform scale-100 transition-all">
         <h3 class="text-xl font-bold text-white mb-1">Asignar Orden</h3>
         <p class="text-sm text-blue-400 mb-6 font-mono" id="modal-orden-ref">Ref: --</p>
 
-        <form id="form-asignar" method="GET" action="{% url 'Moldeo:registrar_cho' %}"> <div class="mb-4">
+        <form id="form-asignar" method="GET" action="{% url 'Moldeo:registrar_cho' %}">
+            <div class="mb-4">
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Tipo de Mantenimiento</label>
                 <div class="grid grid-cols-2 gap-3">
                     <label class="cursor-pointer">
                         <input type="radio" name="type_redirect" value="cho" class="peer sr-only" checked onchange="cambiarAction('cho')">
-                        <div class="text-center py-2 bg-gray-700 peer-checked:bg-blue-600 peer-checked:text-white text-gray-400 rounded text-sm font-bold border border-gray-600 peer-checked:border-blue-400 transition">CHO</div>
+                        <div class="text-center py-2 bg-gray-700 peer-checked:bg-blue-600 peer-checked:text-white text-gray-400 rounded text-sm font-bold border border-gray-600 peer-checked:border-blue-400 transition hover:bg-gray-600">CHO</div>
                     </label>
                     <label class="cursor-pointer">
                         <input type="radio" name="type_redirect" value="mcm" class="peer sr-only" onchange="cambiarAction('mcm')">
-                        <div class="text-center py-2 bg-gray-700 peer-checked:bg-red-600 peer-checked:text-white text-gray-400 rounded text-sm font-bold border border-gray-600 peer-checked:border-red-400 transition">MCM (Mayor)</div>
+                        <div class="text-center py-2 bg-gray-700 peer-checked:bg-red-600 peer-checked:text-white text-gray-400 rounded text-sm font-bold border border-gray-600 peer-checked:border-red-400 transition hover:bg-gray-600">MCM (Mayor)</div>
                     </label>
                 </div>
             </div>
@@ -142,9 +112,11 @@
 
             <input type="hidden" name="numero_orden" id="hidden-orden">
             <input type="hidden" name="defecto_sap" id="hidden-defecto">
-            <input type="hidden" name="molde_nombre" id="hidden-molde"> <div class="flex justify-end gap-3">
-                <button type="button" onclick="document.getElementById('modal-asignar').classList.add('hidden')" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded text-sm">Cancelar</button>
-                <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded text-sm shadow-lg flex items-center gap-2">
+            <input type="hidden" name="molde_nombre" id="hidden-molde">
+
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="document.getElementById('modal-asignar').classList.add('hidden')" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded text-sm font-bold">Cancelar</button>
+                <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded text-sm shadow-lg flex items-center gap-2 transform active:scale-95 transition">
                     <span>Iniciar Registro</span>
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </button>
@@ -157,8 +129,9 @@
 
 {% block scripts %}
 <script>
-    // 1. FILTRO DE BÚSQUEDA
-    document.getElementById('search-sap').addEventListener('input', function(e) {
+    // 1. FILTRO DE BÚSQUEDA LOCAL
+    const searchInput = document.getElementById('search-sap');
+    searchInput.addEventListener('input', function(e) {
         const term = e.target.value.toLowerCase();
         document.querySelectorAll('.sap-card').forEach(card => {
             const text = card.innerText.toLowerCase();
@@ -166,15 +139,12 @@
         });
     });
 
-    // 2. LÓGICA DEL MODAL
+    // 2. MODAL LOGIC
     function abrirModalAsignar(orden, defecto, molde) {
         document.getElementById('modal-orden-ref').innerText = `SAP: ${orden} | ${molde}`;
-        
-        // Llenar inputs ocultos para enviarlos por GET al formulario de registro
         document.getElementById('hidden-orden').value = orden;
         document.getElementById('hidden-defecto').value = defecto;
-        document.getElementById('hidden-molde').value = molde; // Enviamos el molde para que se busque solo
-        
+        document.getElementById('hidden-molde').value = molde;
         document.getElementById('modal-asignar').classList.remove('hidden');
     }
 
@@ -183,16 +153,22 @@
         if(tipo === 'cho') {
             form.action = "{% url 'Moldeo:registrar_cho' %}";
         } else if (tipo === 'mcm') {
-            
             form.action = "{% url 'Moldeo:registrar_mcm' %}"; 
-            alert("Módulo MCM debe estar configurado");
         }
     }
 
-    // 3. TIMERS (Reloj en vivo)
-    function updateTimers() {
+    // 3. TIMERS LOCALES (Animación cada segundo)
+    function runTimers() {
         const now = new Date();
         document.querySelectorAll('.live-timer').forEach(el => {
+            // Verificamos si la tarjeta indica que está pausada (badge amarillo)
+            const parentCard = el.closest('.border-l-4');
+            if (parentCard && parentCard.classList.contains('border-yellow-500')) {
+                // Si es pausada, no calculamos tiempo vs ahora, solo mostramos lo que trae el servidor
+                // (Opcionalmente podríamos detener la actualización visual)
+                return; 
+            }
+
             const startStr = el.dataset.inicio;
             let totalSecs = parseInt(el.dataset.acumulado) || 0;
             
@@ -203,14 +179,37 @@
                 }
             }
             
-            // Formato HH:MM:SS
             const h = Math.floor(totalSecs / 3600).toString().padStart(2, '0');
             const m = Math.floor((totalSecs % 3600) / 60).toString().padStart(2, '0');
             const s = (totalSecs % 60).toString().padStart(2, '0');
             el.innerText = `${h}:${m}:${s}`;
         });
     }
-    setInterval(updateTimers, 1000);
-    updateTimers();
+    setInterval(runTimers, 1000);
+
+    // 4. POLLING AL SERVIDOR (Refrescar datos cada 5s)
+    async function refreshPanelData() {
+        try {
+            const response = await fetch("{% url 'Moldeo:api_panel_lider_data' %}");
+            if (!response.ok) return; // Fail silencioso
+            const data = await response.json();
+
+            // Reemplazar el HTML de las listas
+            document.getElementById('lista-pendientes-container').innerHTML = data.html_pendientes;
+            document.getElementById('lista-activas-container').innerHTML = data.html_activas;
+            
+            // Re-aplicar filtro de búsqueda si había texto escrito
+            const currentSearch = searchInput.value;
+            if(currentSearch) {
+                searchInput.dispatchEvent(new Event('input'));
+            }
+
+        } catch (error) {
+            console.error('Error fetching updates:', error);
+        }
+    }
+    // Iniciar polling
+    setInterval(refreshPanelData, 5000);
+
 </script>
 {% endblock %}

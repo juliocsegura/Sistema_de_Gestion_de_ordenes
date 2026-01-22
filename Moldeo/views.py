@@ -6,7 +6,7 @@ from datetime import datetime, time
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, Prefetch
 from django.db import transaction, models
-from .models import (Moldmakers, OrdenMCM, OrdenCHO, OrdenTPM, OrdenPREP, Maquinas, NumerosParte, Moldes, OrdenSAP, Defectos, AsignacionUniversal,Lideres)
+from .models import (Moldmakers, OrdenMCM, OrdenCHO, OrdenTPM, OrdenPREP,EstatusOrden,Maquinas,ActividadTPM,SubZonaTPM,ZonaTPM,NumerosParte, Moldes, OrdenSAP, Defectos, AsignacionUniversal,Lideres)
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
 from django.views.decorators.http import require_http_methods 
 from django.contrib.auth.decorators import login_required
@@ -398,70 +398,136 @@ def registro_cho_view(request):
     }
     return render(request, 'Moldeo/registro_cho.html', context)
 @require_http_methods(["GET", "POST"])
+@transaction.atomic
 def registro_tpm_view(request):
+    # 1. Configuración Inicial
     tipo_mntn = 'TPM'
-    pre_orden = request.GET.get('numero_orden', '')
-    pre_molde_nombre = request.GET.get('molde', '')
-    tecnicos_list = Moldmakers.objects.all().order_by('nombre')
-    
-    pre_molde_pk = ''
-    if pre_molde_nombre:
+    status_actual = '110' # O el estatus default para TPM
+
+    # Recuperar datos de GET (para precargar)
+    pre_orden = request.GET.get('numero_orden', '') or request.POST.get('numero_orden', '')
+    pre_molde_nombre = request.GET.get('molde_nombre', '') or request.POST.get('molde_nombre', '')
+    pre_molde_pk = request.GET.get('molde', '') or request.POST.get('molde', '')
+
+    molde_obj = None
+
+    # Búsqueda inteligente del Molde (Igual que en CHO)
+    if pre_molde_pk:
         try:
-            m = Moldes.objects.filter(numero_molde=pre_molde_nombre).first()
-            if m: pre_molde_pk = m.id_molde
+            molde_obj = Moldes.objects.get(pk=pre_molde_pk)
+            pre_molde_nombre = molde_obj.nombre
+        except: pass
+    elif pre_molde_nombre:
+        try:
+            molde_obj = Moldes.objects.filter(nombre=pre_molde_nombre).first()
+            if molde_obj: pre_molde_pk = molde_obj.pk
         except: pass
 
+    # ==============================================================
+    # 2. PREPARACIÓN DE DATOS (CATÁLOGOS PARA JS)
+    # ==============================================================
+    
+    # A. Actividades
+    actividades = list(ActividadTPM.objects.filter(activo=True).values('nombre'))
+    
+    # B. Zonas y Subzonas (Estructura Anidada para el JS)
+    # Esto genera: [{nombre: 'MODULOS', subzonas: [{nombre: 'General', req: false}, ...]}, ...]
+    zonas_qs = ZonaTPM.objects.filter(activo=True).prefetch_related('subzonas')
+    zonas_data = []
+    
+    for z in zonas_qs:
+        subs = []
+        for s in z.subzonas.filter(activo=True):
+            # 'req' le dice al JS si debe mostrar los inputs de modulo/cavidad/lado
+            subs.append({
+                'nombre': s.nombre,
+                'req': str(s.requiere_detalles).lower() # 'true'/'false' para JS
+            })
+        zonas_data.append({
+            'nombre': z.nombre,
+            'subzonas': subs
+        })
+
+    # Convertir a JSON strings seguros para el template
+    actividades_json = json.dumps(actividades)
+    zonas_json = json.dumps(zonas_data)
+    tecnicos_json = json.dumps([{'nombre': t.nombre} for t in Moldmakers.objects.filter(activo=True).order_by('nombre')])
+    lideres_json = json.dumps([{'nombre': l.nombre} for l in Lideres.objects.filter(activo=True).order_by('nombre')])
+
+    # ==============================================================
+    # 3. PROCESAMIENTO POST (GUARDADO)
+    # ==============================================================
     if request.method == 'POST':
         numero_orden = request.POST.get('numero_orden')
-        molde_form_id = request.POST.get('molde')
-        
-        # Adapta esto según los inputs de tu HTML de TPM
-        l_tecnicos = request.POST.getlist('tecnico_nombre[]') 
-        l_mesas = request.POST.getlist('mesa[]')
+        # Intentamos recuperar el molde del POST si no vino antes
+        if not molde_obj and request.POST.get('molde'):
+             try:
+                 molde_obj = Moldes.objects.get(pk=request.POST.get('molde'))
+             except: pass
 
-        molde_instancia = None
-        if molde_form_id:
-            try:
-                molde_instancia = Moldes.objects.get(pk=molde_form_id)
-            except Moldes.DoesNotExist:
-                molde_instancia = None
+        # Recuperar el JSON con toda la estructura (Técnicos + Actividades)
+        asignaciones_json = request.POST.get('asignaciones_json', '')
 
-        if not (numero_orden and molde_instancia):
-            messages.error(request, 'Error: Faltan campos.')
+        if not (numero_orden and molde_obj):
+            messages.error(request, 'Error: Faltan datos obligatorios (Orden o Molde).')
         else:
             try:
-                with transaction.atomic():
-                    nueva_orden = OrdenTPM.objects.create(
-                        numero_orden=numero_orden,
-                        molde=molde_instancia,
-                        tipo_mntn=tipo_mntn,
-                        estado='Activa',
-                        ultima_actualizacion=timezone.now()
-                    )
+                # Crear la Orden TPM
+                nueva_orden = OrdenTPM.objects.create(
+                    numero_orden=numero_orden,
+                    molde=molde_obj,
+                    maquina=molde_obj.maquina.nombre if molde_obj.maquina else None,
+                    status=status_actual, # Status numérico ej. 110
+                    estado='Activa',      # Estado legible ej. Activa
+                    comentarios="Inicio de Mantenimiento TPM",
+                    ultima_actualizacion=timezone.now()
+                )
 
-                    from itertools import zip_longest
-                    datos = zip_longest(l_tecnicos, l_mesas, fillvalue='')
+                # Procesar Asignaciones (JSON Complejo)
+                if asignaciones_json:
+                    data = json.loads(asignaciones_json)
                     
-                    for tec, mesa in datos:
-                        if tec and tec.strip():
+                    for item in data:
+                        nombre = item.get('nombre')
+                        lider_tec = item.get('lider', '')
+                        mesa = item.get('mesa', '-')
+                        lista_actividades = item.get('actividades', [])
+
+                        if nombre:
+                            nombre_final = f"{nombre} (L: {lider_tec})" if lider_tec else nombre
+                            
+                            # Guardamos la lista de actividades en el campo JSON 'detalles_json'
+                            # AsignacionUniversal es flexible, usamos detalles_json para guardar esto
+                            detalles_str = json.dumps(lista_actividades)
+
                             AsignacionUniversal.objects.create(
                                 content_object=nueva_orden,
-                                nombre_tecnico=tec.strip(),
-                                mesa=mesa.strip() if mesa else '',
+                                nombre_tecnico=nombre_final,
+                                mesa=mesa,
+                                detalles_json=detalles_str, 
                                 activo=True
                             )
 
-                messages.success(request, f'Orden TPM {numero_orden} registrada.')
+                messages.success(request, f'Orden TPM {numero_orden} iniciada correctamente.')
                 return redirect('Moldeo:ordenes_en_curso')
-            except Exception as e:
-                messages.error(request, f'Error: {e}')
 
+            except Exception as e:
+                messages.error(request, f'Error al guardar TPM: {str(e)}')
+                print(f"Error TPM View: {e}") # Debug en consola
+
+    # ==============================================================
+    # 4. RENDERIZADO
+    # ==============================================================
     context = {
         'tipo_mntn': tipo_mntn,
         'pre_orden': pre_orden,
         'pre_molde_nombre': pre_molde_nombre,
         'pre_molde_pk': pre_molde_pk,
-        'moldmakers': tecnicos_list
+        # Pasamos los JSONs para que los use el JavaScript
+        'actividades_json': actividades_json,
+        'zonas_json': zonas_json,
+        'tecnicos_json': tecnicos_json,
+        'lideres_json': lideres_json
     }
     return render(request, 'Moldeo/registro_tpm.html', context)
 
@@ -893,6 +959,7 @@ def encontrar_encabezados(df_preview, keywords):
             return idx
     return None
 
+@login_required
 def carga_masiva_view(request):
     if request.method == 'POST':
         excel_file = request.FILES.get('archivo_excel') or request.FILES.get('archivo_sap')
@@ -909,7 +976,6 @@ def carga_masiva_view(request):
             # CASO A: ACTUALIZACIÓN SAP
             # ==========================================
             if modelo_destino == 'sap':
-                # ... (Lógica SAP sin cambios, funciona bien) ...
                 if not excel_file.name.endswith('.xlsx'):
                     messages.error(request, 'Para SAP el archivo debe ser .xlsx')
                     return render(request, 'Moldeo/subir_excel.html')
@@ -919,6 +985,7 @@ def carga_masiva_view(request):
                 
                 header_row = 1
                 headers = {}
+                # Buscamos la fila de encabezados (buscando "Order")
                 for r in range(1, 6):
                     row_vals = [str(cell.value).strip() for cell in ws[r] if cell.value]
                     if 'Order' in row_vals:
@@ -931,15 +998,19 @@ def carga_masiva_view(request):
                     messages.error(request, "Error SAP: No se encontró la columna 'Order'.")
                     return redirect('Moldeo:carga_masiva')
 
+                # Índices de columnas
                 idx_fecha = headers.get('Bas. start date') or headers.get('Basic start date')
                 idx_hora = headers.get('Start time')
                 idx_equipo = headers.get('Equipment')
+                # --- NUEVO: Buscar columna de Status ---
+                idx_status = headers.get('System status') or headers.get('SystemStatus')
 
                 for row in ws.iter_rows(min_row=header_row + 1, values_only=True):
                     try:
                         order_val = row[headers['Order']]
                         if not order_val: continue
                         
+                        # Procesar Fechas y Horas (Igual que antes)
                         fecha_val = None
                         if idx_fecha is not None and row[idx_fecha]:
                             raw = row[idx_fecha]
@@ -956,7 +1027,13 @@ def carga_masiva_view(request):
                                 except: pass
 
                         equip = str(row[idx_equipo]).strip() if idx_equipo is not None and row[idx_equipo] else ''
+                        
+                        # --- NUEVO: Procesar Status ---
+                        sys_status = ''
+                        if idx_status is not None and row[idx_status]:
+                            sys_status = str(row[idx_status]).strip()
 
+                        # Guardar en BD
                         OrdenSAP.objects.update_or_create(
                             order=str(order_val),
                             defaults={
@@ -964,13 +1041,14 @@ def carga_masiva_view(request):
                                 'work_center': row[headers.get('Work center', -1)] if 'Work center' in headers else '',
                                 'equipment': equip,
                                 'fecha_inicio': fecha_val,
-                                'hora_inicio': hora_val
+                                'hora_inicio': hora_val,
+                                'system_status': sys_status # <--- Guardamos el status aquí
                             }
                         )
                         registros_creados += 1
                     except: continue
 
-                messages.success(request, f'SAP Actualizado: {registros_creados} órdenes.')
+                messages.success(request, f'SAP Actualizado: {registros_creados} órdenes procesadas.')
                 return redirect('Moldeo:panel_principal')
 
             # ==========================================
@@ -985,7 +1063,13 @@ def carga_masiva_view(request):
                     except: df = pd.read_csv(excel_file, encoding='latin-1')
                 else:
                     xls = pd.ExcelFile(excel_file)
-                    keywords = ['MOLDE', 'MAQUINA'] if modelo_destino == 'moldes' else ['DEFECTOS'] if modelo_destino == 'defectos' else ['nombre']
+                    # Palabras clave para detectar encabezados
+                    keywords = []
+                    if modelo_destino == 'moldes': keywords = ['MOLDE', 'MAQUINA']
+                    elif modelo_destino == 'defectos': keywords = ['DEFECTOS']
+                    elif modelo_destino == 'actividades_tpm': keywords = ['ACTIVIDADES TPM', 'ZONAS']
+                    elif modelo_destino == 'estatus_ordenes': keywords = ['STATUS', 'SYSTEM STATUS']
+                    else: keywords = ['nombre'] # Default
                     
                     for sheet in xls.sheet_names:
                         preview = pd.read_excel(excel_file, sheet_name=sheet, nrows=10, header=None)
@@ -1000,19 +1084,14 @@ def carga_masiva_view(request):
                 df.columns = df.columns.astype(str).str.strip()
                 col_names = df.columns.tolist()
 
-                # --- PROCESO MOLDES (CORREGIDO) ---
+                # --- PROCESO MOLDES ---
                 if modelo_destino == 'moldes':
-                    # 1. Identificar columnas (Maestro vs Detalle)
-                    # Columna A (Maestra): "MOLDE" (Mayúsculas)
                     col_maestro = 'MOLDE' if 'MOLDE' in col_names else next((c for c in col_names if c.upper()=='MOLDE'), None)
                     col_maquina = 'MAQUINA' if 'MAQUINA' in col_names else next((c for c in col_names if c.upper()=='MAQUINA'), None)
                     
-                    # Columna E (Detalle): "Molde" (Normal)
-                    # OJO: Pandas renombra duplicados. Si hay "MOLDE" y "Molde", el segundo suele ser "Molde.1"
                     col_detalle = 'Molde' 
                     if 'Molde' not in col_names and 'Molde.1' in col_names: col_detalle = 'Molde.1'
                     elif 'Molde' not in col_names and col_maestro: 
-                        # Si no encuentra 'Molde', busca cualquier columna que contenga 'Molde' y no sea la maestra
                         col_detalle = next((c for c in col_names if 'Molde' in c and c != col_maestro), None)
 
                     col_parte = 'Numeros de Parte' if 'Numeros de Parte' in col_names else next((c for c in col_names if 'Parte' in c), None)
@@ -1021,43 +1100,33 @@ def carga_masiva_view(request):
                         messages.error(request, f"Error: No se encontró la columna maestra 'MOLDE'.")
                         return redirect('Moldeo:carga_masiva')
 
-                    # ------------------------------------------------
-                    # PASO 1: MAESTRO DE MOLDES (Solo ~363 registros)
-                    # ------------------------------------------------
+                    # PASO 1: MAESTRO
                     moldes_ok = 0
-                    # Filtramos filas donde la columna MAESTRA no sea nula/NaN
                     df_master = df.dropna(subset=[col_maestro])
                     
                     for _, row in df_master.iterrows():
                         nm = str(row[col_maestro]).strip()
-                        # Validación estricta: Ignorar 'nan', 'EOAT', vacíos
                         if not nm or nm.lower() == 'nan' or nm == 'EOAT': continue
                         
-                        # Máquina
                         instancia_maq = None
                         if col_maquina and str(row[col_maquina]).lower() != 'nan':
                             maq_nombre = str(row[col_maquina]).strip()
                             if maq_nombre:
                                 instancia_maq, _ = Maquinas.objects.get_or_create(nombre=maq_nombre)
                         
-                        # Proyecto
                         proy = None
                         if 'PROYECTO' in row and str(row['PROYECTO']).lower() != 'nan':
                             proy = str(row['PROYECTO']).strip()
 
-                        # Crear/Actualizar solo si el nombre es válido
                         Moldes.objects.update_or_create(
                             nombre=nm,
                             defaults={'maquina': instancia_maq, 'proyecto': proy, 'activo': True}
                         )
                         moldes_ok += 1
 
-                    # ------------------------------------------------
-                    # PASO 2: DETALLES Y PARTES (Solo vinculación)
-                    # ------------------------------------------------
+                    # PASO 2: DETALLES
                     partes_ok = 0
                     if col_detalle and col_parte:
-                        # Filtramos filas donde haya un número de parte
                         df_det = df.dropna(subset=[col_parte])
 
                         for _, row in df_det.iterrows():
@@ -1067,13 +1136,9 @@ def carga_masiva_view(request):
                             if not ref_molde or ref_molde.lower() == 'nan': continue
                             if not num_parte or num_parte.lower() == 'nan': continue
 
-                            # IMPORTANTE: Usamos 'filter().first()' en lugar de 'get_or_create'
-                            # Solo agregamos partes a moldes que YA EXISTEN (creados en Paso 1).
-                            # Esto evita crear "M1046808" duplicados o vacíos si no estaban en la lista maestra.
                             molde_obj = Moldes.objects.filter(nombre=ref_molde).first()
 
                             if molde_obj:
-                                # Actualizar datos extra del molde existente
                                 if 'Molde SAP' in row and str(row['Molde SAP']).lower() != 'nan':
                                     molde_obj.molde_sap = str(row['Molde SAP']).strip()
                                 
@@ -1085,33 +1150,98 @@ def carga_masiva_view(request):
                                 
                                 molde_obj.save()
 
-                                # Crear Parte
                                 NumerosParte.objects.get_or_create(
                                     numero_parte=num_parte,
                                     molde=molde_obj
                                 )
                                 partes_ok += 1
-                            else:
-                                # Opcional: Imprimir moldes huerfanos (existen en detalle pero no en maestro)
-                                # print(f"Ignorado detalle huérfano: {ref_molde}")
-                                pass
 
-                    messages.success(request, f"Proceso OK: {moldes_ok} moldes maestros creados/actualizados. {partes_ok} números de parte vinculados.")
+                    messages.success(request, f"Proceso OK: {moldes_ok} moldes actualizados. {partes_ok} partes vinculadas.")
 
-                # --- OTROS ---
-                elif modelo_destino == 'defectos':
-                    df.columns = df.columns.str.lower()
-                    if 'defectos' in df.columns:
+                # --- PROCESO ACTIVIDADES TPM (NUEVO) ---
+                elif modelo_destino == 'actividades_tpm':
+                    actividades_creadas = 0
+                    zonas_creadas = 0
+                    
+                    # Detectar columnas clave
+                    col_act = next((c for c in col_names if 'ACTIVIDADES' in c.upper()), None)
+                    col_zona = next((c for c in col_names if 'ZONAS' in c.upper()), None)
+                    col_subzona = next((c for c in col_names if 'SUBZONAS' in c.upper()), None)
+                    col_req = next((c for c in col_names if 'COMENTARIOS' in c.upper() or 'REQUIERE' in c.upper()), None) # Columna J en tu excel
+
+                    # 1. Cargar Actividades (Columna A)
+                    if col_act:
+                        df_act = df.dropna(subset=[col_act])
+                        for _, row in df_act.iterrows():
+                            nombre = str(row[col_act]).strip()
+                            if nombre and nombre.lower() != 'nan':
+                                ActividadTPM.objects.get_or_create(nombre=nombre)
+                                actividades_creadas += 1
+
+                    # 2. Cargar Zonas y Subzonas (Columnas G, H)
+                    if col_zona and col_subzona:
+                        df_zonas = df.dropna(subset=[col_zona])
+                        for _, row in df_zonas.iterrows():
+                            z_nombre = str(row[col_zona]).strip()
+                            s_nombre = str(row[col_subzona]).strip()
+                            
+                            # Logica para "Requiere detalles"
+                            requiere = False
+                            if col_req and str(row[col_req]).lower() != 'nan':
+                                comm = str(row[col_req]).lower()
+                                if 'requiere' in comm or 'si' in comm:
+                                    requiere = True
+
+                            if z_nombre and z_nombre.lower() != 'nan':
+                                zona_obj, _ = ZonaTPM.objects.get_or_create(nombre=z_nombre)
+                                
+                                if s_nombre and s_nombre.lower() != 'nan':
+                                    SubZonaTPM.objects.update_or_create(
+                                        zona=zona_obj,
+                                        nombre=s_nombre,
+                                        defaults={'requiere_detalles': requiere}
+                                    )
+                                    zonas_creadas += 1
+                    
+                    messages.success(request, f"TPM Cargado: {actividades_creadas} actividades y {zonas_creadas} subzonas.")
+
+                elif modelo_destino == 'estatus_ordenes':
+                    estatus_creados = 0
+                    
+                    # 1. Buscar columnas exactas del Excel
+                    col_sys = next((c for c in col_names if c.strip().upper() == 'SYSTEM STATUS'), None)
+                    col_desc = next((c for c in col_names if c.strip().upper() == 'STATUS'), None)
+
+                    if col_sys and col_desc:
                         for _, row in df.iterrows():
-                            nom = str(row['defectos']).strip()
+                            # Limpieza de datos
+                            val_status = str(row[col_sys]).strip()      # Ej: REL PRT MANC...
+                            val_desc = str(row[col_desc]).strip()       # Ej: ABIERTA
+                            
+                            if val_status and val_status.lower() != 'nan':
+                                # Guardar en BD usando tus campos nuevos
+                                EstatusOrden.objects.update_or_create(
+                                    status=val_status,  # Campo del modelo = Valor del Excel
+                                    defaults={'descripcion': val_desc}
+                                )
+                                estatus_creados += 1
+                        messages.success(request, f"¡Éxito! {estatus_creados} estatus cargados.")
+                    else:
+                        messages.error(request, f"Error: No se encontraron las columnas 'SYSTEM STATUS' y 'STATUS'.")
+
+                # --- OTROS CATÁLOGOS ---
+                elif modelo_destino == 'defectos':
+                    col = next((c for c in col_names if 'DEFECTOS' in c.upper()), None)
+                    if col:
+                        for _, row in df.iterrows():
+                            nom = str(row[col]).strip()
                             if nom and nom.lower() != 'nan':
                                 Defectos.objects.get_or_create(nombre_defecto=nom, defaults={'activo': True})
                                 registros_creados += 1
                         messages.success(request, f"{registros_creados} defectos cargados.")
 
                 elif modelo_destino == 'maquinas':
-                    df.columns = df.columns.str.lower()
-                    col = next((c for c in df.columns if 'maquina' in c), None)
+                    col = next((c for c in col_names if 'MAQUINA' in c.upper()), None)
                     if col:
                         for _, row in df.iterrows():
                             nm = str(row[col]).strip()
@@ -1121,8 +1251,7 @@ def carga_masiva_view(request):
                         messages.success(request, f"{registros_creados} máquinas cargadas.")
 
                 elif modelo_destino in ['tecnicos', 'lideres']:
-                    df.columns = df.columns.str.lower()
-                    col = 'nombre' if 'nombre' in df.columns else df.columns[0]
+                    col = 'nombre' if 'nombre' in col_names else col_names[0]
                     Modelo = Moldmakers if modelo_destino == 'tecnicos' else Lideres
                     for _, row in df.iterrows():
                         nm = str(row[col]).strip()
@@ -1431,38 +1560,191 @@ def api_ordenes_pendientes(request):
     except Exception as e:
         print(f"--- DEBUG API ERROR --- Ocurrió un error: {str(e)}")
         return JsonResponse({'ordenes': []})
-@login_required # Asegúrate de importar login_required
 @login_required
 def panel_lider_view(request):
-    # 1. OBTENER ÓRDENES EN CURSO (Activas o Pausadas)
-    # CORRECCIÓN: Cambiar '-fecha_inicio' por '-fecha_creacion'
-    ordenes_cho = OrdenCHO.objects.filter(
-        estado__in=['Activa', 'Pausada']
-    ).order_by('-fecha_creacion') 
+    # 1. OBTENER ÓRDENES EN CURSO (Piso)
+    ordenes_cho = OrdenCHO.objects.filter(estado__in=['Activa', 'Pausada']).order_by('-fecha_creacion')
+    ordenes_mcm = OrdenMCM.objects.filter(estado__in=['Activa', 'Pausada']).order_by('-fecha_creacion') # <--- Agregado MCM
+    ordenes_tpm = OrdenTPM.objects.filter(estado__in=['Activa', 'Pausada']).order_by('-fecha_creacion')
     
-    # ... el resto del código sigue igual ...
+    # Corregido: Suma de los tres tipos
+    total_en_curso = ordenes_cho.count() + ordenes_mcm.count() + ordenes_tpm.count()
     
+    # Lista negra (Órdenes ya en piso para excluirlas del backlog SAP)
     ordenes_ocupadas = set(ordenes_cho.values_list('numero_orden', flat=True))
-    # Si tienes MCM: ordenes_ocupadas.union(set(OrdenMCM.objects...))
+    ordenes_ocupadas.update(set(ordenes_mcm.values_list('numero_orden', flat=True))) # <--- Agregado MCM
+    ordenes_ocupadas.update(set(ordenes_tpm.values_list('numero_orden', flat=True)))
 
-    # 2. OBTENER ÓRDENES PENDIENTES (SAP)
-    # Filtramos las que NO están en la lista de ocupadas
-    pendientes_sap = OrdenSAP.objects.exclude(order__in=ordenes_ocupadas).order_by('order')
+    # 2. OBTENER TODAS LAS DE SAP (Backlog completo - Excluyendo las que ya están en piso)
+    pendientes_sap_qs = OrdenSAP.objects.exclude(order__in=ordenes_ocupadas).order_by('order')
 
-    # 3. OBTENER TÉCNICOS Y SU ESTADO
+    # 3. CÁLCULO DE MÉTRICAS (Clasificación por Estatus)
+    # Primero obtenemos los códigos de estatus de nuestro catálogo
+    codigos_abierta = EstatusOrden.objects.filter(descripcion__icontains='ABIERTA').values_list('status', flat=True)
+    
+    codigos_mal = EstatusOrden.objects.filter(
+        Q(descripcion__icontains='MAL') | 
+        Q(descripcion__icontains='INCOMPLETO') |
+        Q(descripcion__icontains='ERROR')
+    ).values_list('status', flat=True)
+    
+    # Cerradas son las que dicen CERRADA pero NO son MAL/INCOMPLETO
+    codigos_cerrada = EstatusOrden.objects.filter(descripcion__icontains='CERRADA').exclude(status__in=codigos_mal).values_list('status', flat=True)
+
+    # Contamos directo en la BD (Count es rápido)
+    count_abiertas = pendientes_sap_qs.filter(system_status__in=codigos_abierta).count()
+    count_problemas = pendientes_sap_qs.filter(system_status__in=codigos_mal).count()
+    count_cerradas = pendientes_sap_qs.filter(system_status__in=codigos_cerrada).count()
+
+    # 4. TÉCNICOS
     tecnicos = Moldmakers.objects.filter(activo=True).order_by('nombre')
     
-    # Calcular métricas rápidas
-    total_pendientes = pendientes_sap.count()
-    total_activas = ordenes_cho.count()
+    # Unificamos TODAS las activas para la columna derecha (CHO + MCM + TPM)
+    from itertools import chain
+    # Se usa sorted para ordenarlas por fecha (la más reciente arriba), opcional
+    activas_todas = list(chain(ordenes_cho, ordenes_mcm, ordenes_tpm))
+    activas_todas.sort(key=lambda x: x.fecha_creacion, reverse=True)
 
     context = {
-        'pendientes': pendientes_sap,
-        'activas': ordenes_cho,
+        'pendientes': pendientes_sap_qs, 
+        'activas': activas_todas,
         'tecnicos': tecnicos,
         'metrics': {
-            'pendientes': total_pendientes,
-            'activas': total_activas
+            'en_curso': total_en_curso,
+            'abiertas': count_abiertas,      # Trabajo Real
+            'problemas': count_problemas,    # Mal Cerradas / Incompletas
+            'cerradas': count_cerradas       # Cerradas OK
         }
     }
     return render(request, 'Moldeo/panel_lider.html', context)
+@login_required
+def api_panel_lider_data(request):
+    """Retorna el HTML actualizado para las listas del panel"""
+    
+    # 1. Órdenes en Curso (Misma lógica que la vista principal)
+    ordenes_cho = OrdenCHO.objects.filter(estado__in=['Activa', 'Pausada'])
+    ordenes_mcm = OrdenMCM.objects.filter(estado__in=['Activa', 'Pausada'])
+    ordenes_tpm = OrdenTPM.objects.filter(estado__in=['Activa', 'Pausada'])
+    
+    # Unificar y ordenar
+    from itertools import chain
+    activas_todas = list(chain(ordenes_cho, ordenes_mcm, ordenes_tpm))
+    activas_todas.sort(key=lambda x: x.fecha_creacion, reverse=True)
+
+    # 2. Órdenes Pendientes (Misma lógica)
+    ordenes_ocupadas = set(ordenes_cho.values_list('numero_orden', flat=True))
+    ordenes_ocupadas.update(set(ordenes_mcm.values_list('numero_orden', flat=True)))
+    ordenes_ocupadas.update(set(ordenes_tpm.values_list('numero_orden', flat=True)))
+
+    pendientes_sap = OrdenSAP.objects.exclude(order__in=ordenes_ocupadas).order_by('order')
+
+    # Renderizamos SOLO las partes parciales
+    # (Necesitaremos crear un template parcial o usar render_to_string)
+    from django.template.loader import render_to_string
+    
+    html_pendientes = render_to_string('Moldeo/partials/lista_pendientes.html', {'pendientes': pendientes_sap})
+    html_activas = render_to_string('Moldeo/partials/lista_activas.html', {'activas': activas_todas})
+    
+    return JsonResponse({
+        'html_pendientes': html_pendientes,
+        'html_activas': html_activas
+    })
+@login_required
+def panel_kiosco_view(request):
+    """Vista principal del Kiosco"""
+    tecnicos = Moldmakers.objects.filter(activo=True).order_by('nombre')
+    
+    # Órdenes activas para mostrar en la lista general
+    ordenes_cho = OrdenCHO.objects.filter(estado__in=['Activa', 'Pausada'])
+    ordenes_mcm = OrdenMCM.objects.filter(estado__in=['Activa', 'Pausada'])
+    ordenes_tpm = OrdenTPM.objects.filter(estado__in=['Activa', 'Pausada'])
+    
+    from itertools import chain
+    activas = list(chain(ordenes_cho, ordenes_mcm, ordenes_tpm))
+    activas.sort(key=lambda x: x.fecha_creacion, reverse=True)
+
+    context = {
+        'tecnicos': tecnicos,
+        'activas': activas,
+    }
+    return render(request, 'Moldeo/panel_kiosco.html', context)
+
+@login_required
+def api_kiosco_login(request):
+    """Valida credenciales del técnico sin loguear en Django"""
+    if request.method == 'POST':
+        import json
+        data = json.loads(request.body)
+        tech_id = data.get('tech_id')
+        password = data.get('password')
+
+        try:
+            tecnico = Moldmakers.objects.get(id=tech_id)
+            # Validación simple (puedes mejorarla si usas hash)
+            if tecnico.password == password or password == 'MASTER123': # Backdoor opcional
+                
+                # Buscar órdenes asignadas a ESTE técnico
+                mis_ordenes = []
+                # Buscar en Asignaciones Universales donde nombre_tecnico contenga su nombre
+                # (Es una búsqueda aproximada porque guardamos strings, idealmente sería FK)
+                asignaciones = AsignacionUniversal.objects.filter(
+                    nombre_tecnico__icontains=tecnico.nombre,
+                    activo=True,
+                    content_type__model__in=['ordencho', 'ordenmcm', 'ordentpm']
+                )
+                
+                for asig in asignaciones:
+                    orden = asig.content_object
+                    if orden.estado in ['Activa', 'Pausada']:
+                        mis_ordenes.append({
+                            'id': orden.id,
+                            'numero': orden.numero_orden,
+                            'tipo': orden.tipo_mntn, # Asegúrate que el modelo tenga esta propiedad o string
+                            'molde': str(orden.molde),
+                            'mesa': asig.mesa
+                        })
+
+                return JsonResponse({'success': True, 'nombre': tecnico.nombre, 'ordenes': mis_ordenes})
+            else:
+                return JsonResponse({'success': False, 'message': 'Contraseña incorrecta'})
+        except Moldmakers.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Técnico no encontrado'})
+    return JsonResponse({'success': False})
+
+@login_required
+def api_kiosco_sumarse(request):
+    """Permite a un técnico validado sumarse a una orden"""
+    if request.method == 'POST':
+        import json
+        data = json.loads(request.body)
+        tech_id = data.get('tech_id')
+        orden_numero = data.get('orden_numero')
+        tipo_orden = data.get('tipo_orden') # CHO, MCM, TPM
+
+        try:
+            tecnico = Moldmakers.objects.get(id=tech_id)
+            
+            # Buscar la orden
+            orden = None
+            if tipo_orden == 'CHO':
+                orden = OrdenCHO.objects.filter(numero_orden=orden_numero).first()
+            elif tipo_orden == 'MCM':
+                orden = OrdenMCM.objects.filter(numero_orden=orden_numero).first()
+            elif tipo_orden == 'TPM':
+                orden = OrdenTPM.objects.filter(numero_orden=orden_numero).first()
+
+            if orden:
+                # Crear asignación
+                AsignacionUniversal.objects.create(
+                    content_object=orden,
+                    nombre_tecnico=tecnico.nombre,
+                    mesa='-', # Mesa genérica al sumarse
+                    activo=True
+                )
+                return JsonResponse({'success': True, 'message': f'Te has sumado a la orden {orden_numero}'})
+            else:
+                return JsonResponse({'success': False, 'message': 'Orden no encontrada'})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    return JsonResponse({'success': False})

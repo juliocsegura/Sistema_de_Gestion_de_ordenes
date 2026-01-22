@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
 from .models import (
     Lideres, Moldmakers, Maquinas, Moldes, NumerosParte, Defectos,
-    OrdenMCM, OrdenCHO, OrdenTPM, OrdenPREP, OrdenSAP, AsignacionUniversal
+    OrdenMCM, OrdenCHO, OrdenTPM, OrdenPREP, OrdenSAP, AsignacionUniversal,SubZonaTPM,ActividadTPM,ZonaTPM,EstatusOrden
 )
 
 # --- INLINE PARA ASIGNACIONES (TECNICOS) ---
@@ -23,7 +23,7 @@ class LideresAdmin(admin.ModelAdmin):
 
 @admin.register(Moldmakers)
 class MoldmakersAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'activo', 'num_empleado')
+    list_display = ('nombre', 'activo', 'num_empleado','password')
     search_fields = ('nombre', 'num_empleado')
     list_filter = ('activo',)
 
@@ -81,8 +81,8 @@ class OrdenPREPAdmin(OrdenBaseAdmin):
 # --- ORDEN SAP ---
 @admin.register(OrdenSAP)
 class OrdenSAPAdmin(admin.ModelAdmin):
-    list_display = ('order', 'description', 'work_center', 'equipment', 'fecha_inicio')
-    search_fields = ('order', 'description', 'work_center')
+    list_display = ('order', 'work_center', 'system_status', 'fecha_inicio') # Agregado system_status
+    search_fields = ('order', 'work_center', 'system_status')
     list_filter = ('fecha_inicio', 'work_center')
 
 # --- ASIGNACIÓN UNIVERSAL (Vista general) ---
@@ -91,3 +91,42 @@ class AsignacionUniversalAdmin(admin.ModelAdmin):
     list_display = ('nombre_tecnico', 'content_object', 'activo', 'fecha_inicio')
     list_filter = ('activo', 'fecha_inicio', 'content_type')
     search_fields = ('nombre_tecnico', 'mesa', 'defecto')
+@admin.register(EstatusOrden)
+class EstatusOrdenAdmin(admin.ModelAdmin):
+    list_display = ('status', 'descripcion')
+    search_fields = ('status', 'descripcion')
+    ordering = ('status',)
+
+# --- TPM: ACTIVIDADES ---
+@admin.register(ActividadTPM)
+class ActividadTPMAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'activo')
+    search_fields = ('nombre',)
+    list_filter = ('activo',)
+    ordering = ('nombre',)
+
+# --- TPM: ZONAS ---
+class SubZonaInline(admin.TabularInline):
+    """Permite agregar SubZonas directamente dentro de la pantalla de Zona"""
+    model = SubZonaTPM
+    extra = 1
+
+@admin.register(ZonaTPM)
+class ZonaTPMAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'activo', 'total_subzonas')
+    search_fields = ('nombre',)
+    list_filter = ('activo',)
+    inlines = [SubZonaInline] # Muestra las subzonas aquí
+
+    def total_subzonas(self, obj):
+        return obj.subzonas.count()
+    total_subzonas.short_description = 'Subzonas'
+
+# --- TPM: SUBZONAS (Por si quieres verlas todas juntas) ---
+@admin.register(SubZonaTPM)
+class SubZonaTPMAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'zona', 'requiere_detalles', 'activo')
+    search_fields = ('nombre', 'zona__nombre')
+    list_filter = ('zona', 'requiere_detalles', 'activo')
+    list_editable = ('requiere_detalles', 'activo') # Para editar rápido desde la lista
+    ordering = ('zona', 'nombre')

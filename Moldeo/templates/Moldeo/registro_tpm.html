@@ -1,6 +1,6 @@
 {% extends 'Moldeo/base.html' %}
 
-{% block title %}Registrar Orden - MCM{% endblock %}
+{% block title %}Registrar Orden - TPM{% endblock %}
 
 {% block content %}
 <div class="container mx-auto max-w-7xl px-4 py-12">
@@ -11,23 +11,23 @@
         </a>
     </div>
     
-    <h1 class="text-4xl font-bold text-center text-gray-100 mb-8">Registrar Orden (TPM)</h1>
+    <h1 class="text-4xl font-bold text-center text-yellow-500 mb-8">Registrar Orden (TPM)</h1>
 
     <form id="form-registro" action="" method="POST" class="w-full max-w-7xl mx-auto bg-gray-800 rounded-lg shadow-xl border border-gray-700 overflow-visible" novalidate>
         {% csrf_token %}
         <input type="hidden" name="asignaciones_json" id="asignaciones-json">
-        <input type="hidden" name="orden_retorno_ref" id="input-orden-ref-final">
+        <input type="hidden" name="asignaciones_vinc_json" id="asignaciones-vinc-json">
         
         <div class="bg-gray-900/50 border-b border-gray-700 px-8 pt-4">
             <nav class="-mb-px flex space-x-8" aria-label="Tabs">
                 <button type="button" id="tab-btn-general" onclick="switchTab('general')"
-                    class="group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-all border-emerald-500 text-emerald-500">
-                    Datos de la Orden
+                    class="group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-all border-yellow-500 text-yellow-500">
+                    Datos de la Orden TPM
                 </button>
-                <button type="button" id="tab-btn-retorno" onclick="switchTab('retorno')"
-                    class="hidden group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-all border-transparent text-gray-400 hover:text-gray-300">
-                    Información de Retorno
-                    <span class="ml-2 bg-yellow-900 text-yellow-200 py-0.5 px-2 rounded-full text-xs hidden" id="badge-retorno">!</span>
+                <button type="button" id="tab-btn-vinculada" onclick="switchTab('vinculada')"
+                    class="hidden group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-all border-transparent text-gray-400 hover:text-red-400">
+                    <span class="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded mr-2 font-bold">ROJA</span>
+                    Orden Vinculada
                 </button>
             </nav>
         </div>
@@ -44,44 +44,54 @@
             <div id="view-general" class="animate-fade-in">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 border-b border-gray-700 pb-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-400 mb-1">Orden</label>
-                        <input type="text" name="numero_orden" value="{{ pre_orden }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold">
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Orden Principal</label>
+                        <input type="text" name="numero_orden" value="{{ pre_orden }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold px-3 py-2">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-400 mb-1">Molde</label>
-                        <input type="text" value="{{ pre_molde_nombre }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold">
-                        <input type="hidden" name="molde" value="{{ pre_molde_pk|default:'' }}">
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-400 font-bold mb-2">Máquina</label>
-                        <input type="text" 
-                            name="maquina" 
-                            value="{{ pre_maquina }}" 
-                            class="w-full bg-gray-700 text-green-400 font-bold border border-gray-600 rounded px-3 py-2"
-                            readonly>
+                        <input type="text" value="{{ pre_molde_nombre }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold px-3 py-2">
+                        <input type="hidden" name="molde" id="input-molde-id" value="{{ pre_molde_pk|default:'' }}">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-400 mb-1">Defecto SAP</label>
-                        <input type="text" name="defecto_sap" value="{{ pre_defecto }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold">
+                        <label class="block text-gray-400 font-bold mb-1">Máquina</label>
+                        <input type="text" name="maquina" value="{{ pre_maquina }}" class="w-full bg-gray-700 text-green-400 font-bold border border-gray-600 rounded px-3 py-2" readonly>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-400 mb-1">Status</label>
-                        <input type="text" id="input-status" name="statusmcm" value="{{ status_actual|default:'100' }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold">
+                        <input type="text" id="input-status" name="statusmcm" value="110" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold px-3 py-2">
+                    </div>
+
+                    <div class="col-span-1 sm:col-span-2 mt-6 border-t border-gray-700 pt-6">
+                        <label class="block text-sm font-bold text-gray-300 mb-3 text-center uppercase tracking-wider">Selección de Tarjeta</label>
+                        <div class="flex justify-center gap-6 mb-4">
+                            <label class="cursor-pointer relative group">
+                                <input type="radio" name="tipo_tarjeta" value="verde" class="peer sr-only" onchange="toggleCardType('verde')" checked>
+                                <div class="w-32 h-16 bg-gray-800 border-2 border-gray-600 rounded-lg flex items-center justify-center peer-checked:bg-green-900/40 peer-checked:border-green-500 peer-checked:shadow-[0_0_15px_rgba(34,197,94,0.3)] transition-all">
+                                    <span class="text-gray-400 font-bold peer-checked:text-green-400">VERDE</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer relative group">
+                                <input type="radio" name="tipo_tarjeta" value="roja" class="peer sr-only" onchange="toggleCardType('roja')">
+                                <div class="w-32 h-16 bg-gray-800 border-2 border-gray-600 rounded-lg flex items-center justify-center peer-checked:bg-red-900/40 peer-checked:border-red-500 peer-checked:shadow-[0_0_15px_rgba(239,68,68,0.3)] transition-all">
+                                    <span class="text-gray-400 font-bold peer-checked:text-red-400">ROJA</span>
+                                </div>
+                            </label>
+                        </div>
+                        <p class="text-center text-xs text-gray-500 italic" id="txt-help-tarjeta">Tarjeta Verde: Mantenimiento TPM estándar.</p>
                     </div>
                 </div>
 
                 <div class="space-y-4">
                     <div class="flex justify-between items-center bg-gray-700/30 p-2 rounded-t-lg border-b border-gray-600">
-                        <h3 class="text-lg font-bold text-white pl-2">Asignaciones</h3>
-                        <button type="button" id="btn-add-tech" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-4 rounded shadow transition transform hover:scale-105 flex items-center gap-1">
+                        <h3 class="text-lg font-bold text-yellow-400 pl-2">Técnicos (Orden Principal)</h3>
+                        <button type="button" onclick="createNewTechCard('main')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-4 rounded shadow flex items-center gap-1">
                             <span class="text-lg leading-none">+</span> Nuevo Técnico
                         </button>
                     </div>
-
-                    <div class="bg-gray-900/30 rounded-b-lg border border-gray-600 min-h-[350px] flex flex-col overflow-visible">
-                        <div class="flex overflow-x-auto bg-gray-800 border-b border-gray-600 p-1 space-x-1 custom-scrollbar" id="tech-tabs-bar"></div>
-                        <div id="tech-cards-content" class="p-4 flex-1 relative overflow-visible">
-                            <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-gray-500 italic pointer-events-none">
+                    <div class="bg-gray-900/30 rounded-b-lg border border-gray-600 min-h-[300px] flex flex-col overflow-visible">
+                        <div class="flex overflow-x-auto bg-gray-800 border-b border-gray-600 p-1 space-x-1 custom-scrollbar" id="tech-tabs-bar-main"></div>
+                        <div id="tech-cards-content-main" class="p-4 flex-1 relative overflow-visible">
+                            <div class="empty-state absolute inset-0 flex flex-col items-center justify-center text-gray-500 italic pointer-events-none">
                                 <span>No hay técnicos asignados. Agrega uno arriba.</span>
                             </div>
                         </div>
@@ -89,197 +99,151 @@
                 </div>
             </div>
 
-            <template id="tech-card-template">
-                <div class="tech-card animate-fade-in relative">
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 pr-2">
-                        
-                        <div class="md:col-span-5 relative group-combo">
-                            <label class="block text-[10px] text-gray-400 uppercase font-bold mb-1 tracking-wider">Nombre Técnico</label>
-                            <input type="text" class="input-nombre sync-name w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500 placeholder-gray-500 validate-required" placeholder="Buscar..." autocomplete="off">
-                            <div class="combo-list hidden absolute top-full left-0 w-full bg-gray-600 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg"></div>
-                        </div>
-
-                        <div class="md:col-span-4 relative group-combo-lider">
-                            <label class="block text-[10px] text-yellow-500 uppercase font-bold mb-1 tracking-wider">Líder Responsable</label>
-                            <input type="text" class="input-lider w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white focus:ring-2 focus:ring-yellow-500 placeholder-gray-500 validate-required" placeholder="Seleccionar..." autocomplete="off">
-                            <div class="combo-list-lider hidden absolute top-full left-0 w-full bg-gray-600 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg"></div>
-                        </div>
-
-                        <div class="md:col-span-3 relative custom-select-container">
-                            <label class="block text-[10px] text-gray-400 uppercase font-bold mb-1 tracking-wider">Mesa</label>
-                            <input type="text" class="input-mesa input-select w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white text-center focus:ring-2 focus:ring-blue-500 cursor-pointer outline-none validate-required" value="" placeholder="-" readonly>
-                            <div class="select-menu hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 shadow-2xl rounded max-h-48 overflow-y-auto z-50">
-                                {% for i in "x"|rjust:"20" %}<div class="select-option p-2 hover:bg-blue-600 text-white text-center text-sm cursor-pointer border-b border-gray-600 last:border-0" data-value="{{ forloop.counter }}">{{ forloop.counter }}</div>{% endfor %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-gray-900/40 border border-gray-600 rounded-lg p-3">
-                        <div class="flex items-center gap-2 border-b border-gray-600 pb-2 mb-3 overflow-x-auto custom-scrollbar">
-                            <div class="defect-tabs-container flex gap-1"></div>
-                            
-                            <button type="button" class="btn-add-defect-tab shrink-0 bg-blue-600 hover:bg-blue-500 text-white w-8 h-8 rounded flex items-center justify-center font-bold shadow transition" title="Agregar otro defecto">
-                                +
-                            </button>
-                        </div>
-
-                        <div class="defect-cards-content relative min-h-[180px]">
-                            <div class="empty-defects-state absolute inset-0 flex items-center justify-center text-gray-500 text-xs italic">
-                                Sin defectos registrados. Pulsa "+" para agregar.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </template>
-
-            <div id="view-retorno" class="hidden animate-fade-in">
-                <div class="bg-yellow-900/10 border border-yellow-700/50 rounded-lg p-6">
-                    <h3 class="text-xl font-bold text-yellow-500 mb-6 flex items-center gap-2 border-b border-yellow-800 pb-2">
-                        Detalles del Retorno 
+            <div id="view-vinculada" class="hidden animate-fade-in">
+                <div class="bg-red-900/10 border border-red-700/50 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-red-500 mb-6 flex items-center gap-2 border-b border-red-800 pb-2">
+                        Configuración de Tarjeta Roja
                     </h3>
+                    
+                    <div class="mb-8">
+                        <label class="block text-sm font-bold text-red-400 uppercase mb-2">Seleccionar Orden Pendiente</label>
+                        <div class="relative">
+                            <input type="text" id="input-orden-vinculada" 
+                                class="w-full bg-gray-900 border border-red-500 text-white rounded-md font-bold px-4 py-3 focus:ring-2 focus:ring-red-500 outline-none placeholder-red-300/30" 
+                                placeholder="Buscar orden pendiente..." autocomplete="off">
+                            <input type="hidden" name="orden_vinculada_id" id="orden-vinculada-id">
+                            <div id="list-ordenes-pendientes" class="hidden absolute top-full left-0 w-full bg-gray-800 border border-red-500 z-50 max-h-48 overflow-y-auto shadow-xl rounded-b-lg"></div>
+                        </div>
+                    </div>
 
-                    <div class="mb-6 bg-gray-800/50 p-4 rounded-lg border border-gray-600 relative">
-                        <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Buscar Orden Anterior</label>
-                        
-                        <div class="relative group-combo-orden">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                            </div>
-                            <input type="text" id="input-buscar-orden" 
-                                   class="w-full bg-gray-900 border border-gray-500 rounded-lg pl-10 pr-10 py-2 text-white focus:ring-2 focus:ring-yellow-500 outline-none placeholder-gray-600" 
-                                   placeholder="Escribe el número (ej: 527...)" autocomplete="off">
-                            
-                            <div id="spinner-busqueda" class="absolute inset-y-0 right-0 pr-3 flex items-center hidden">
-                                <svg class="animate-spin h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            </div>
-                            <div id="lista-resultados-orden" class="hidden absolute top-full left-0 w-full bg-gray-800 border border-gray-600 max-h-60 overflow-y-auto z-50 rounded-b-lg shadow-2xl mt-1"></div>
+                    <div id="wrapper-inputs-vinculada" class="opacity-50 pointer-events-none transition-opacity">
+                        <div class="bg-gray-800 p-4 rounded border border-gray-600 flex items-center mb-6">
+                            <input type="checkbox" name="copiar_tecnicos" id="check-copiar-tecnicos" value="true" checked 
+                                   class="w-5 h-5 text-red-600 bg-gray-700 border-gray-500 rounded focus:ring-red-500 cursor-pointer">
+                            <label for="check-copiar-tecnicos" class="ml-3 text-sm text-gray-300 cursor-pointer select-none">
+                                Asignar mismos técnicos de la orden principal.
+                            </label>
                         </div>
 
-                        <div id="resultado-busqueda" class="hidden mt-3 p-3 bg-gray-700/50 rounded border border-gray-600 text-sm animate-fade-in">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <p class="text-gray-300"><span class="text-yellow-400 font-bold">Molde:</span> <span id="res-molde"></span></p>
-                                    <p class="text-gray-300"><span class="text-yellow-400 font-bold">Actividad:</span> <span id="res-defecto"></span></p>
-                                </div>
-                                <button type="button" id="btn-ver-detalles" class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded border border-blue-500 font-bold shadow hover:shadow-lg transition animate-pulse">
-                                    Cargar Tarjetas de Técnicos
+                        <div class="space-y-4 border-t border-red-800/50 pt-4">
+                            <div class="flex justify-between items-center bg-red-900/30 p-2 rounded-t-lg border-b border-red-800">
+                                <h3 class="text-lg font-bold text-red-300 pl-2">Técnicos (Orden Vinculada)</h3>
+                                <button type="button" onclick="createNewTechCard('vinc')" class="bg-red-700 hover:bg-red-600 text-white text-xs font-bold py-2 px-4 rounded shadow flex items-center gap-1">
+                                    <span class="text-lg leading-none">+</span> Nuevo Técnico
                                 </button>
                             </div>
-                        </div>
-                    </div>
-
-                    <div id="contenedor-resumen-visual" class="hidden mb-6">
-                        <div class="flex justify-between items-center mb-2">
-                            <h4 class="text-sm font-bold text-gray-300 uppercase">
-                                Selecciona lo que falló (Máx 2 Técnicos): <span id="contador-seleccion" class="text-yellow-400 text-lg">0</span>/2
-                            </h4>
-                            <button type="button" onclick="cerrarResumen()" class="text-xs text-red-400 hover:text-red-300 underline">Limpiar</button>
-                        </div>
-                        <div id="grid-tarjetas-retorno" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto custom-scrollbar p-1"></div>
-                    </div>
-                    
-                    <div class="space-y-6">
-                        <div class="relative">
-                            <label class="block text-sm font-bold text-gray-300 mb-2">Defectos de retorno </label>
-                            <div class="relative" id="container-motivo-multiselect">
-                                <input type="text" id="input-motivo-display" 
-                                       class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-yellow-500 cursor-pointer caret-transparent" 
-                                       placeholder="-- Seleccionar Defectos --" readonly>
-                                <input type="hidden" name="motivo_retorno" id="input-motivo-val">
-                                
-                                <div id="dropdown-motivo-list" class="hidden absolute top-full left-0 w-full bg-gray-800 border border-gray-600 max-h-60 overflow-y-auto z-50 rounded-b-lg shadow-2xl mt-1 p-1">
+                            <div class="bg-gray-900/30 rounded-b-lg border border-red-800 min-h-[200px] flex flex-col overflow-visible">
+                                <div class="flex overflow-x-auto bg-gray-800 border-b border-red-800 p-1 space-x-1 custom-scrollbar" id="tech-tabs-bar-vinc"></div>
+                                <div id="tech-cards-content-vinc" class="p-4 flex-1 relative overflow-visible">
+                                    <div class="empty-state absolute inset-0 flex flex-col items-center justify-center text-gray-500 italic pointer-events-none">
+                                        <span>Sin técnicos en orden vinculada.</span>
                                     </div>
+                                </div>
                             </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">
-                                    Generado Automáticamente (Solo Lectura)
-                                </label>
-                                <textarea id="txt-observaciones-auto" rows="4" 
-                                          class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-400 text-xs font-mono focus:outline-none" 
-                                          readonly placeholder="Selecciona tarjetas arriba para generar este texto..."></textarea>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-bold text-gray-300 mb-2">
-                                    Información Adicional
-                                </label>
-                                <textarea id="txt-observaciones-manual" rows="3" 
-                                          class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-yellow-500" 
-                                          placeholder="Escribe aquí cualquier comentario extra..."></textarea>
-                            </div>
-                            
-                            <input type="hidden" name="observaciones_retorno" id="final-observaciones">
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <div class="pt-6 border-t border-gray-700 mt-8 mb-8">
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xl font-bold py-4 px-6 rounded-lg shadow-lg transform transition hover:scale-[1.01] flex items-center justify-center gap-3">
+                <button type="submit" class="w-full bg-yellow-600 hover:bg-yellow-500 text-white text-xl font-bold py-4 px-6 rounded-lg shadow-lg flex items-center justify-center gap-3">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-                    Guardar Orden
+                    Guardar TPM
                 </button>
             </div>
         </div>
     </form>
 </div>
 
-<template id="defect-card-template">
-    <div class="defect-card bg-gray-800/80 border border-gray-600 rounded p-3 relative animate-fade-in mb-3">
-        <button type="button" class="btn-remove-defect-card absolute top-2 right-2 text-gray-600 hover:text-red-400 p-1 text-xl font-bold">&times;</button>
-        
-        <div class="mb-3 relative group-combo-def pr-6">
-            <label class="block text-[9px] text-blue-400 uppercase font-bold mb-1">Actividad</label>
-            <input type="text" class="input-defecto w-full bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white font-bold validate-required" placeholder="Seleccionar..." autocomplete="off">
-            <div class="combo-list-def hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 z-50 max-h-40 overflow-y-auto shadow-xl rounded-b"></div>
+<template id="tech-card-template">
+    <div class="tech-card animate-fade-in relative">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 pr-2">
+            <div class="md:col-span-5 relative group-combo">
+                <label class="block text-[10px] text-gray-400 uppercase font-bold mb-1 tracking-wider">Nombre Técnico</label>
+                <input type="text" class="input-nombre sync-name w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500 placeholder-gray-500 validate-required" placeholder="Buscar..." autocomplete="off">
+                <div class="combo-list hidden absolute top-full left-0 w-full bg-gray-600 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg"></div>
+            </div>
+            <div class="md:col-span-4 relative group-combo-lider">
+                <label class="block text-[10px] text-yellow-500 uppercase font-bold mb-1 tracking-wider">Líder Responsable</label>
+                <input type="text" class="input-lider w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white focus:ring-2 focus:ring-yellow-500 placeholder-gray-500 validate-required" placeholder="Seleccionar..." autocomplete="off">
+                <div class="combo-list-lider hidden absolute top-full left-0 w-full bg-gray-600 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg"></div>
+            </div>
+            <div class="md:col-span-3 relative custom-select-container">
+                <label class="block text-[10px] text-gray-400 uppercase font-bold mb-1 tracking-wider">Mesa</label>
+                <input type="text" class="input-mesa input-select w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white text-center focus:ring-2 focus:ring-blue-500 cursor-pointer outline-none validate-required" value="" placeholder="-" readonly>
+                <div class="select-menu hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 shadow-2xl rounded max-h-48 overflow-y-auto z-50">
+                    {% for i in "x"|rjust:"20" %}<div class="select-option p-2 hover:bg-blue-600 text-white text-center text-sm cursor-pointer border-b border-gray-600 last:border-0" data-value="{{ forloop.counter }}">{{ forloop.counter }}</div>{% endfor %}
+                </div>
+            </div>
         </div>
         
-        <div class="bg-gray-900/50 rounded border border-gray-700/50">
-            <div class="grid grid-cols-12 bg-gray-700/50 px-2 py-1 text-[9px] text-gray-400 uppercase font-bold text-center">
-                <div class="col-span-3 label-cav">Cavidad</div>
-                <div class="col-span-3 label-circ">Circuito</div>
-                <div class="col-span-4">Ubicación</div> <div class="col-span-2"></div>
+        <div class="bg-gray-800/50 rounded border border-gray-700 p-3">
+            <div class="flex items-center gap-2 border-b border-gray-600 pb-2 mb-3 overflow-x-auto custom-scrollbar">
+                <div class="activity-tabs-container flex gap-1"></div>
+                
+                <button type="button" class="btn-add-activity-tab shrink-0 bg-blue-600 hover:bg-blue-500 text-white w-8 h-8 rounded flex items-center justify-center font-bold shadow transition" title="Agregar Actividad">
+                    +
+                </button>
             </div>
-            <div class="location-rows-container"></div>
-            <button type="button" class="btn-add-location-row w-full bg-gray-700/30 hover:bg-gray-700 text-gray-400 hover:text-white text-[10px] py-1 border-t border-gray-700 transition">+ Agregar Ubicación</button>
+
+            <div class="activity-cards-content relative min-h-[150px]">
+                <div class="empty-activities-state absolute inset-0 flex items-center justify-center text-gray-500 text-xs italic">
+                    Sin actividades. Pulsa "+" para agregar.
+                </div>
+            </div>
         </div>
     </div>
 </template>
 
-<template id="location-row-template">
-    <div class="location-row grid grid-cols-12 gap-1 px-2 py-1 border-b border-gray-700/30 last:border-0 items-center animate-fade-in relative">
+<template id="activity-card-template">
+    <div class="activity-card bg-gray-900 border border-gray-700 rounded p-3 relative animate-fade-in">
+        <button type="button" class="btn-remove-activity absolute top-2 right-2 text-gray-600 hover:text-red-500 font-bold text-lg" title="Eliminar Actividad">&times;</button>
         
-        <div class="col-span-3 relative custom-select-container">
-            <input type="text" class="input-cav input-select w-full bg-transparent border-b border-gray-600 focus:border-blue-500 text-center text-xs text-white placeholder-gray-600 focus:outline-none py-1 cursor-pointer validate-required" placeholder="-" readonly>
-            <div class="select-menu hidden absolute top-full left-0 w-full bg-gray-800 border border-gray-600 shadow-2xl rounded max-h-60 overflow-y-auto z-50">
-                {% for i in "x"|rjust:"128" %}<div class="select-option p-2 hover:bg-blue-600 text-white text-center text-xs cursor-pointer border-b border-gray-700 last:border-0" data-value="{{ forloop.counter }}">{{ forloop.counter }}</div>{% endfor %}
+        <div class="mb-3 relative group-actividad pr-6">
+            <label class="block text-[9px] text-blue-400 uppercase font-bold mb-1">Actividad</label>
+            <input type="text" class="input-actividad w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-white font-bold placeholder-gray-500 focus:border-blue-500 outline-none" placeholder="Seleccionar..." autocomplete="off">
+            <div class="combo-list-actividad hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 z-50 max-h-40 overflow-y-auto shadow-xl rounded-b"></div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-2">
+            <div class="relative">
+                <label class="block text-[9px] text-emerald-400 uppercase font-bold mb-1">Zona</label>
+                <select class="select-zona w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:border-emerald-500 outline-none cursor-pointer">
+                    <option value="">-- Seleccionar --</option>
+                </select>
+            </div>
+            <div class="relative">
+                <label class="block text-[9px] text-emerald-400 uppercase font-bold mb-1">Subzona</label>
+                <select class="select-subzona w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:border-emerald-500 outline-none cursor-pointer disabled:opacity-50" disabled>
+                    <option value="">-- Primero Zona --</option>
+                </select>
             </div>
         </div>
 
-        <div class="col-span-3 relative group-circuito">
-            <input type="text" class="input-circ w-full bg-transparent border-b border-gray-600 focus:border-yellow-500 text-center text-xs text-white placeholder-gray-600 focus:outline-none py-1 cursor-pointer validate-required" placeholder="-" readonly>
-            <div class="circuito-menu hidden absolute top-full left-0 w-64 bg-gray-800 border border-gray-600 shadow-2xl rounded z-[100] p-2 max-h-60 overflow-y-auto">
-                <label class="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded cursor-pointer border-b border-gray-600 mb-2"><input type="checkbox" value="Todas" class="chk-todas form-checkbox h-4 w-4 text-yellow-600 bg-gray-900 border-gray-500 rounded"><span class="text-xs text-white font-bold">TODAS</span></label>
-                <div class="grid grid-cols-4 gap-2">{% for i in "x"|rjust:"126" %}<label class="flex items-center justify-center p-1 hover:bg-gray-700 rounded cursor-pointer"><input type="checkbox" value="{{ forloop.counter }}" class="chk-num form-checkbox h-3 w-3 text-yellow-500 bg-gray-900 border-gray-500 rounded mr-1"><span class="text-[10px] text-gray-300">{{ forloop.counter }}</span></label>{% endfor %}</div>
+        <div class="details-panel hidden mt-2 pt-2 border-t border-gray-700/50 bg-gray-800/30 p-2 rounded">
+            <div class="flex items-center gap-2 mb-2">
+                <svg class="w-3 h-3 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <label class="text-[10px] text-yellow-500 uppercase font-bold">Detalles de Ubicación</label>
             </div>
-        </div>
-
-        <div class="col-span-4 flex items-center justify-center gap-3">
-            <label class="inline-flex items-center cursor-pointer group">
-                <input type="checkbox" class="input-fijo form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded focus:ring-emerald-500">
-                <span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Fijo</span>
-            </label>
-            <label class="inline-flex items-center cursor-pointer group">
-                <input type="checkbox" class="input-movil form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded focus:ring-emerald-500">
-                <span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Móvil</span>
-            </label>
-        </div>
-
-        <div class="col-span-2 text-center">
-            <button type="button" class="btn-remove-loc text-gray-600 hover:text-red-500 font-bold px-2 text-xl">&times;</button>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div>
+                    <input type="text" class="input-modulo w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 outline-none" placeholder="Módulo (Ej: 1)">
+                </div>
+                <div>
+                    <input type="text" class="input-cavidad w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 outline-none" placeholder="Cavidad">
+                </div>
+                <div>
+                    <input type="text" class="input-circuito w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 outline-none" placeholder="Circuito">
+                </div>
+                <div>
+                    <select class="input-lado w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 outline-none cursor-pointer">
+                        <option value="">Lado...</option>
+                        <option value="Fijo">Fijo</option>
+                        <option value="Movil">Móvil</option>
+                    </select>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -288,733 +252,403 @@
 
 {% block scripts %}
 <script>
-    // --- 1. UTILIDADES VISUALES (TABS) ---
+    const contexts = {
+        main: { tabs: 'tech-tabs-bar-main', content: 'tech-cards-content-main', empty: '#tech-cards-content-main .empty-state' },
+        vinc: { tabs: 'tech-tabs-bar-vinc', content: 'tech-cards-content-vinc', empty: '#tech-cards-content-vinc .empty-state' }
+    };
+    let techGlobalCounter = 0;
+    
+    // Contadores de actividades POR tarjeta de técnico
+    // Ejemplo: { 'tech-1': 3, 'tech-2': 1 }
+    let activityCounters = {}; 
+
+    // DATOS DJANGO
+    const catalogoActividades = {{ actividades_json|default:"[]"|safe }};
+    const catalogoZonas = {{ zonas_json|default:"[]"|safe }};
+    const tecnicosData = {{ tecnicos_json|default:"[]"|safe }};
+    const lideresData = {{ lideres_json|default:"[]"|safe }};
+
+    // --- TABS UI (General / Vinculada) ---
     function switchTab(tabName) {
-        const btnGeneral = document.getElementById('tab-btn-general');
-        const btnRetorno = document.getElementById('tab-btn-retorno');
         const viewGeneral = document.getElementById('view-general');
-        const viewRetorno = document.getElementById('view-retorno');
+        const viewVinculada = document.getElementById('view-vinculada');
+        const btnGeneral = document.getElementById('tab-btn-general');
+        const btnVinculada = document.getElementById('tab-btn-vinculada');
 
         if(tabName === 'general') {
-            viewGeneral.classList.remove('hidden'); viewRetorno.classList.add('hidden');
-            btnGeneral.classList.replace('border-transparent', 'border-emerald-500'); btnGeneral.classList.replace('text-gray-400', 'text-emerald-500');
-            btnRetorno.classList.replace('border-yellow-500', 'border-transparent'); btnRetorno.classList.replace('text-yellow-500', 'text-gray-400');
+            viewGeneral.classList.remove('hidden'); viewVinculada.classList.add('hidden');
+            btnGeneral.classList.replace('border-transparent', 'border-yellow-500'); btnGeneral.classList.replace('text-gray-400', 'text-yellow-500');
+            btnVinculada.classList.replace('border-red-500', 'border-transparent'); btnVinculada.classList.replace('text-red-400', 'text-gray-400');
         } else {
-            viewGeneral.classList.add('hidden'); viewRetorno.classList.remove('hidden');
-            btnRetorno.classList.replace('border-transparent', 'border-yellow-500'); btnRetorno.classList.replace('text-gray-400', 'text-yellow-500');
-            btnGeneral.classList.replace('border-emerald-500', 'border-transparent'); btnGeneral.classList.replace('text-emerald-500', 'text-gray-400');
-            if(!window.dataOrdenEncontrada) updateReturnLeadersOptions(); 
+            viewGeneral.classList.add('hidden'); viewVinculada.classList.remove('hidden');
+            btnVinculada.classList.replace('border-transparent', 'border-red-500'); btnVinculada.classList.replace('text-gray-400', 'text-red-400');
+            btnGeneral.classList.replace('border-yellow-500', 'border-transparent'); btnGeneral.classList.replace('text-yellow-500', 'text-gray-400');
         }
     }
 
-    window.cerrarResumen = function() {
-        document.getElementById('contenedor-resumen-visual').classList.add('hidden');
-        document.getElementById('txt-observaciones-auto').value = '';
-        document.getElementById('contador-seleccion').innerText = '0';
-        
-        // Resetear multiselect de motivo
-        document.getElementById('input-motivo-val').value = '';
-        document.getElementById('input-motivo-display').value = '';
-        document.querySelectorAll('.chk-motivo').forEach(c => c.checked = false);
+    window.toggleCardType = function(type) {
+        const btnTabVinculada = document.getElementById('tab-btn-vinculada');
+        const txtHelp = document.getElementById('txt-help-tarjeta');
+        if (type === 'roja') {
+            btnTabVinculada.classList.remove('hidden');
+            txtHelp.innerText = "Tarjeta Roja: Vincular orden TPM pendiente.";
+            cargarOrdenesPendientes(); 
+        } else {
+            btnTabVinculada.classList.add('hidden');
+            txtHelp.innerText = "Tarjeta Verde: Mantenimiento TPM estándar.";
+            switchTab('general');
+            document.getElementById('input-orden-vinculada').value = '';
+            document.getElementById('orden-vinculada-id').value = '';
+            document.getElementById('wrapper-inputs-vinculada').classList.add('opacity-50', 'pointer-events-none');
+        }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        // DATOS MAESTROS
-        const tecnicosData = [{% for t in moldmakers %}{ nombre: "{{ t.nombre|escapejs }}" },{% endfor %}];
-        const lideresData = [{% for l in lideres_all %}{ nombre: "{{ l.nombre|escapejs }}" },{% endfor %}]; 
-        const defectosData = [{% if lista_defectos %}{% for d in lista_defectos %}{ nombre: "{{ d.nombre_defecto|escapejs }}" },{% endfor %}{% else %}{ nombre: "Rebaba" }{% endif %}];
-        
-        // VARIABLES GLOBALES
-        const tabsBar = document.getElementById('tech-tabs-bar');
-        const contentArea = document.getElementById('tech-cards-content');
-        const emptyState = document.getElementById('empty-state');
-        const statusInput = document.getElementById('input-status');
-        const btnRetorno = document.getElementById('tab-btn-retorno');
-        const badge = document.getElementById('badge-retorno');
-        
-        let techCounter = 0;
-        let defectCounters = {}; // Contador de defectos por técnico
-        window.dataOrdenEncontrada = null; 
+    // --- API PENDIENTES ---
+    async function cargarOrdenesPendientes() {
+        const moldeId = document.getElementById('input-molde-id').value;
+        if(!moldeId) return;
+        try {
+            const res = await fetch(`/moldeo/api/ordenes-pendientes/?molde_id=${moldeId}`);
+            const data = await res.json();
+            const listContainer = document.getElementById('list-ordenes-pendientes');
+            const inputDisplay = document.getElementById('input-orden-vinculada');
+            
+            const renderLista = (q='') => {
+                listContainer.innerHTML = '';
+                const f = data.ordenes.filter(o => o.numero.toString().toLowerCase().includes(q.toLowerCase()));
+                if(f.length === 0) listContainer.innerHTML = '<div class="p-2 text-xs text-gray-500">Sin resultados.</div>';
+                
+                f.forEach(o => {
+                    const div = document.createElement('div');
+                    div.className = "p-2 hover:bg-red-800 cursor-pointer text-sm text-white border-b border-red-700/30";
+                    div.innerHTML = `<div class="font-bold">${o.numero}</div><div class="text-[10px] text-gray-400">${o.descripcion}</div>`;
+                    div.onclick = () => {
+                        inputDisplay.value = o.numero;
+                        document.getElementById('orden-vinculada-id').value = o.numero;
+                        listContainer.classList.add('hidden');
+                        document.getElementById('wrapper-inputs-vinculada').classList.remove('opacity-50', 'pointer-events-none');
+                    };
+                    listContainer.appendChild(div);
+                });
+                listContainer.classList.remove('hidden');
+            };
+            inputDisplay.oninput = (e) => renderLista(e.target.value);
+            inputDisplay.onfocus = () => renderLista(inputDisplay.value);
+            window.addEventListener('click', (e) => { if(!inputDisplay.contains(e.target) && !listContainer.contains(e.target)) listContainer.classList.add('hidden'); });
+        } catch(e) { console.error(e); }
+    }
 
-        function checkStatus() {
-            const val = statusInput.value.trim();
-            if (val === '203' || val === '204') {
-                btnRetorno.classList.remove('hidden'); badge.classList.remove('hidden');
-            } else {
-                btnRetorno.classList.add('hidden'); badge.classList.add('hidden'); switchTab('general');
+    // --- GESTIÓN DE TÉCNICOS ---
+    function createNewTechCard(contextKey) {
+        const cfg = contexts[contextKey];
+        if(!cfg) return;
+        const containerTabs = document.getElementById(cfg.tabs);
+        const containerCards = document.getElementById(cfg.content);
+        const emptyMsg = document.querySelector(cfg.empty);
+        if(emptyMsg) emptyMsg.style.display = 'none';
+        
+        techGlobalCounter++;
+        const currentId = `card-${contextKey}-${techGlobalCounter}`; 
+        
+        const tabBtn = document.createElement('div');
+        tabBtn.className = "tech-tab-btn flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-t-lg border-t-2 border-transparent cursor-pointer bg-gray-800 text-gray-400 shrink-0 select-none";
+        tabBtn.innerHTML = `<span>Nuevo Técnico</span> <button type="button" class="ml-2 hover:text-red-400">&times;</button>`;
+        
+        tabBtn.onclick = (e) => {
+            if(e.target.tagName === 'BUTTON') { 
+                if(confirm("¿Eliminar técnico?")) {
+                    tabBtn.remove(); 
+                    document.getElementById(currentId).remove();
+                    if(containerTabs.children.length === 0 && emptyMsg) emptyMsg.style.display = 'flex';
+                    else if(containerTabs.children.length > 0) containerTabs.firstElementChild.click();
+                }
+            } else { 
+                // Reset de estilos tabs
+                Array.from(containerTabs.children).forEach(t => { 
+                    t.classList.remove('bg-gray-700','text-white','border-yellow-500','border-red-500'); 
+                    t.classList.add('bg-gray-800','text-gray-400','border-transparent'); 
+                });
+                // Ocultar contenidos
+                Array.from(containerCards.children).forEach(c => { 
+                    if(!c.classList.contains('empty-state')) c.classList.add('hidden'); 
+                });
+                
+                // Activar actual
+                const activeColor = (contextKey === 'main') ? 'border-yellow-500' : 'border-red-500';
+                tabBtn.classList.add('bg-gray-700','text-white', activeColor); 
+                tabBtn.classList.remove('bg-gray-800','text-gray-400','border-transparent');
+                document.getElementById(currentId).classList.remove('hidden');
             }
-        }
-        checkStatus();
+        };
+        containerTabs.appendChild(tabBtn);
 
-        // ==========================================
-        // 2. MOTIVO MULTI-SELECT
-        // ==========================================
-        const inputMotivoDisplay = document.getElementById('input-motivo-display');
-        const inputMotivoVal = document.getElementById('input-motivo-val');
-        const dropdownMotivoList = document.getElementById('dropdown-motivo-list');
+        const tmpl = document.getElementById('tech-card-template');
+        const clone = tmpl.content.cloneNode(true);
+        const cardDiv = clone.querySelector('.tech-card');
+        cardDiv.id = currentId;
+        cardDiv.classList.add('tech-card-wrapper', 'hidden'); 
+        cardDiv.querySelector('.input-nombre').addEventListener('input', (e) => { 
+            tabBtn.querySelector('span').innerText = e.target.value.substring(0,10) || 'Nuevo'; 
+        });
 
-        function initMotivoMultiselect() {
-            if(!dropdownMotivoList) return;
-            defectosData.forEach((def, idx) => {
-                const div = document.createElement('div');
-                div.className = "flex items-center p-2 hover:bg-gray-700 cursor-pointer border-b border-gray-700 last:border-0";
-                div.innerHTML = `
-                    <input type="checkbox" id="motivo-${idx}" value="${def.nombre}" class="chk-motivo form-checkbox h-4 w-4 text-yellow-500 bg-gray-900 border-gray-500 rounded mr-2">
-                    <label for="motivo-${idx}" class="text-sm text-gray-300 w-full cursor-pointer select-none">${def.nombre}</label>
-                `;
-                div.addEventListener('click', (e) => {
-                    if (e.target.tagName !== 'INPUT') {
-                        const chk = div.querySelector('input');
-                        chk.checked = !chk.checked;
-                        updateMotivoDisplay();
+        initCardLogic(cardDiv, currentId);
+        containerCards.appendChild(cardDiv);
+        tabBtn.click(); 
+    }
+
+    function initCardLogic(card, techId) {
+        setupCombobox(card.querySelector('.input-nombre'), card.querySelector('.combo-list'), tecnicosData);
+        setupCombobox(card.querySelector('.input-lider'), card.querySelector('.combo-list-lider'), lideresData);
+        
+        const mesaInp = card.querySelector('.input-mesa'); const mesaMenu = card.querySelector('.select-menu');
+        mesaInp.onclick = (e) => { e.stopPropagation(); closeAllMenus(); mesaMenu.classList.remove('hidden'); };
+        mesaMenu.onclick = (e) => { if(e.target.classList.contains('select-option')){ mesaInp.value = e.target.dataset.value; mesaMenu.classList.add('hidden'); } };
+
+        // === INICIALIZAR LÓGICA DE ACTIVIDADES EN TABS ===
+        const activityTabsContainer = card.querySelector('.activity-tabs-container');
+        const activityCardsContent = card.querySelector('.activity-cards-content');
+        const emptyActivitiesMsg = card.querySelector('.empty-activities-state');
+        const btnAddActivity = card.querySelector('.btn-add-activity-tab');
+        
+        activityCounters[techId] = 0; // Reset counter para este técnico
+
+        if (btnAddActivity) {
+            btnAddActivity.onclick = () => {
+                activityCounters[techId]++;
+                const actCount = activityCounters[techId];
+                const activityId = `${techId}-act-${actCount}`; // ID único: card-main-1-act-1
+                
+                if(emptyActivitiesMsg) emptyActivitiesMsg.classList.add('hidden');
+
+                // 1. Crear Pestaña (Tab)
+                const actTabBtn = document.createElement('button');
+                actTabBtn.type = 'button';
+                actTabBtn.id = `tab-btn-${activityId}`;
+                actTabBtn.className = "activity-tab-btn flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded bg-gray-800 text-gray-400 border border-gray-600 hover:bg-gray-700 transition select-none shrink-0";
+                actTabBtn.innerHTML = `<span class="tab-lbl">Actividad ${actCount}</span> <span class="ml-1 text-red-400 hover:text-white cursor-pointer" onclick="removeActivityTab('${activityId}', '${techId}', event)">&times;</span>`;
+                
+                actTabBtn.onclick = (e) => {
+                    if(e.target.tagName === 'SPAN' && e.target.innerText === '×') return; 
+                    switchActivityTab(card, activityId);
+                };
+                activityTabsContainer.appendChild(actTabBtn);
+
+                // 2. Crear Contenido (Card)
+                const tmpl = document.getElementById('activity-card-template');
+                const clone = tmpl.content.cloneNode(true);
+                const actCard = clone.querySelector('.activity-card');
+                actCard.id = `content-${activityId}`;
+                actCard.classList.add('hidden'); // Oculto por defecto
+
+                // --- LÓGICA INTERNA DE LA ACTIVIDAD ---
+                const inpAct = actCard.querySelector('.input-actividad');
+                const listAct = actCard.querySelector('.combo-list-actividad');
+                const selZona = actCard.querySelector('.select-zona');
+                const selSub = actCard.querySelector('.select-subzona');
+                const detailsPanel = actCard.querySelector('.details-panel');
+
+                // Botón eliminar dentro del card
+                actCard.querySelector('.btn-remove-activity').onclick = (e) => removeActivityTab(activityId, techId, e);
+
+                // Setup Combo Actividad
+                setupCombobox(inpAct, listAct, catalogoActividades, (val) => {
+                    // Actualizar nombre del tab al seleccionar
+                    const lbl = actTabBtn.querySelector('.tab-lbl');
+                    if(lbl) lbl.innerText = val.substring(0, 12) + '...';
+                });
+                
+                // Llenar Zonas
+                catalogoZonas.forEach(z => {
+                    const opt = document.createElement('option');
+                    opt.value = z.nombre;
+                    opt.innerText = z.nombre;
+                    selZona.appendChild(opt);
+                });
+
+                // Lógica Toggle Detalles
+                const toggleDetails = () => {
+                    const zonaTxt = selZona.value.toUpperCase();
+                    const subTxt = selSub.value;
+                    const reqDb = selSub.options[selSub.selectedIndex]?.dataset.req === 'true';
+                    // REGLAS ESPECÍFICAS
+                    const esModulos = (zonaTxt === 'MODULOS' && subTxt === 'Uno solo');
+                    const esBotado = (zonaTxt === 'SISTEMA DE BOTADO' && subTxt === 'MODULOS');
+
+                    if(reqDb || esModulos || esBotado) {
+                        detailsPanel.classList.remove('hidden');
+                    } else {
+                        detailsPanel.classList.add('hidden');
+                    }
+                };
+
+                // Cambio Zona
+                selZona.addEventListener('change', () => {
+                    selSub.innerHTML = '<option value="">-- Seleccionar --</option>';
+                    selSub.disabled = true;
+                    detailsPanel.classList.add('hidden');
+
+                    const zonaName = selZona.value;
+                    const zonaObj = catalogoZonas.find(z => z.nombre === zonaName);
+                    
+                    if(zonaObj && zonaObj.subzonas.length > 0) {
+                        selSub.disabled = false;
+                        zonaObj.subzonas.forEach(s => {
+                            const opt = document.createElement('option');
+                            opt.value = s.nombre;
+                            opt.innerText = s.nombre;
+                            opt.dataset.req = s.req; 
+                            selSub.appendChild(opt);
+                        });
                     }
                 });
-                div.querySelector('input').addEventListener('change', updateMotivoDisplay);
-                dropdownMotivoList.appendChild(div);
-            });
 
-            inputMotivoDisplay.addEventListener('click', (e) => {
-                e.stopPropagation();
-                dropdownMotivoList.classList.toggle('hidden');
-            });
+                // Cambio Subzona
+                selSub.addEventListener('change', toggleDetails);
 
-            window.addEventListener('click', (e) => {
-                if(!inputMotivoDisplay.contains(e.target) && !dropdownMotivoList.contains(e.target)) {
-                    dropdownMotivoList.classList.add('hidden');
-                }
-            });
-        }
-
-        function updateMotivoDisplay() {
-            const checked = Array.from(document.querySelectorAll('.chk-motivo:checked')).map(c => c.value);
-            inputMotivoVal.value = checked.join(', ');
-            inputMotivoDisplay.value = checked.length > 0 ? checked.join(', ') : '';
-        }
-
-        initMotivoMultiselect();
-
-        // ==========================================
-        // 3. BÚSQUEDA DINÁMICA (RETORNO)
-        // ==========================================
-        const inputBuscar = document.getElementById('input-buscar-orden');
-        const listaResultados = document.getElementById('lista-resultados-orden');
-        const spinner = document.getElementById('spinner-busqueda');
-        const resContainer = document.getElementById('resultado-busqueda');
-        const resMolde = document.getElementById('res-molde');
-        const resDefecto = document.getElementById('res-defecto');
-        const btnVerDetalles = document.getElementById('btn-ver-detalles');
-        let debounceTimer;
-
-        if (inputBuscar) {
-            inputBuscar.addEventListener('input', (e) => {
-                const term = e.target.value.trim();
-                clearTimeout(debounceTimer);
-                if (term.length < 1) { listaResultados.classList.add('hidden'); return; }
+                activityCardsContent.appendChild(actCard);
                 
-                spinner.classList.remove('hidden');
-                debounceTimer = setTimeout(async () => {
-                    try {
-                        const res = await fetch(`/moldeo/api/filtrar-ordenes/?q=${term}`);
-                        const data = await res.json();
-                        listaResultados.innerHTML = '';
-                        if (data.length > 0) {
-                            listaResultados.classList.remove('hidden');
-                            data.forEach(item => {
-                                const div = document.createElement('div');
-                                div.className = "p-3 hover:bg-yellow-700/50 cursor-pointer border-b border-gray-700 last:border-0 transition-colors";
-                                div.innerHTML = `<div class="flex justify-between items-center"><span class="font-bold text-white text-sm">${item.numero}</span><span class="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">${item.molde}</span></div><div class="text-xs text-gray-400 mt-1 truncate">${item.defecto || 'Sin defecto'}</div>`;
-                                div.onclick = () => buscarInfoOrden(item.numero);
-                                listaResultados.appendChild(div);
-                            });
-                        } else {
-                            listaResultados.innerHTML = '<div class="p-3 text-gray-500 text-sm text-center">No se encontraron órdenes finalizadas.</div>';
-                            listaResultados.classList.remove('hidden');
-                        }
-                    } catch (err) { console.error("Error búsqueda", err); } finally { spinner.classList.add('hidden'); }
-                }, 300);
-            });
-            window.addEventListener('click', (e) => { if (!inputBuscar.contains(e.target) && !listaResultados.contains(e.target)) listaResultados.classList.add('hidden'); });
+                // Activar la nueva pestaña
+                switchActivityTab(card, activityId);
+            };
+
+            // Crear una actividad inicial automáticamente
+            btnAddActivity.click();
         }
+    }
 
-        async function buscarInfoOrden(numeroOrden) {
-            inputBuscar.value = numeroOrden;
-            listaResultados.classList.add('hidden');
-            cerrarResumen(); 
-            try {
-                const response = await fetch(`/moldeo/api/buscar-orden-info/?numero=${numeroOrden}`);
-                const data = await response.json();
-                if(data.success) {
-                    resContainer.classList.remove('hidden');
-                    resMolde.textContent = data.molde;
-                    resDefecto.textContent = data.defecto || 'N/A';
-                    window.dataOrdenEncontrada = data; 
-                } else { 
-                    alert("Error al cargar orden: " + data.message); 
-                    resContainer.classList.add('hidden'); 
-                    window.dataOrdenEncontrada = null; 
-                }
-            } catch(e) { console.error(e); alert("Error de conexión."); }
+    // --- FUNCIONES GESTIÓN TABS ACTIVIDADES ---
+    window.switchActivityTab = function(techCard, activityId) {
+        const allTabs = techCard.querySelectorAll('.activity-tab-btn');
+        const allContents = techCard.querySelectorAll('.activity-card');
+
+        allTabs.forEach(btn => {
+            btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-500');
+            btn.classList.add('bg-gray-800', 'text-gray-400', 'border-gray-600');
+        });
+        allContents.forEach(c => c.classList.add('hidden'));
+
+        const activeTab = techCard.querySelector(`#tab-btn-${activityId}`);
+        const activeContent = techCard.querySelector(`#content-${activityId}`);
+
+        if(activeTab && activeContent) {
+            activeTab.classList.remove('bg-gray-800', 'text-gray-400', 'border-gray-600');
+            activeTab.classList.add('bg-blue-600', 'text-white', 'border-blue-500');
+            activeContent.classList.remove('hidden');
         }
+    };
 
-        // ==========================================
-        // 4. TARJETAS DE RETORNO (CHIPS)
-        // ==========================================
-        const contenedorVisual = document.getElementById('contenedor-resumen-visual');
-        const gridTarjetas = document.getElementById('grid-tarjetas-retorno');
-        const contadorSeleccion = document.getElementById('contador-seleccion');
-        const txtObservacionesAuto = document.getElementById('txt-observaciones-auto');
-        const txtObservacionesManual = document.getElementById('txt-observaciones-manual');
+    window.removeActivityTab = function(activityId, techId, e) {
+        if(e) e.stopPropagation();
+        if(!confirm("¿Eliminar actividad?")) return;
 
-        function crearChipsDesglose(textoRaw, tipo, parentId) {
-            if (!textoRaw) return "";
-            const str = String(textoRaw);
-            const partes = str.split(/[,/\s-]+/).map(s => s.trim()).filter(s => s !== "");
-            if (partes.length <= 1) return ""; 
+        const techCard = document.getElementById(`card-${techId}`);
+        document.getElementById(`tab-btn-${activityId}`)?.remove();
+        document.getElementById(`content-${activityId}`)?.remove();
 
-            let html = `<div class="mt-2 flex flex-wrap gap-2 ml-1 border-t border-gray-700 pt-1">`;
-            partes.forEach(parte => {
-                const cleanVal = parte.replace(/[^a-zA-Z0-9]/g, '');
-                if(!cleanVal) return;
-                const subId = `${parentId}-${tipo}-${cleanVal}`;
-                html += `
-                    <div class="relative">
-                        <input type="checkbox" id="${subId}" class="peer sr-only chk-sub-item" 
-                               data-parent-id="${parentId}" data-tipo="${tipo}" data-valor="${parte}">
-                        <label for="${subId}" class="cursor-pointer select-none rounded px-2 py-1 text-[10px] font-bold transition-all
-                            bg-gray-700 text-gray-400 border border-gray-600 
-                            peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-400 hover:bg-gray-600 opacity-50 peer-checked:opacity-100">
-                            ${parte}
-                        </label>
-                    </div>
-                `;
-            });
-            html += `</div>`;
-            return html;
+        const remainingTabs = techCard.querySelectorAll('.activity-tab-btn');
+        if(remainingTabs.length === 0) {
+            techCard.querySelector('.empty-activities-state').classList.remove('hidden');
+        } else {
+            // Activar la primera disponible
+            const firstId = remainingTabs[0].id.replace('tab-btn-', '');
+            switchActivityTab(techCard, firstId);
         }
+    };
 
-        if(btnVerDetalles) {
-            btnVerDetalles.addEventListener('click', () => {
-                if(!window.dataOrdenEncontrada) { alert("Primero busca y selecciona una orden."); return; }
-                
-                gridTarjetas.innerHTML = '';
-                txtObservacionesAuto.value = `[Ref. Orden #${inputBuscar.value}] - Esperando selección...`;
-                contadorSeleccion.innerText = '0';
-                contenedorVisual.classList.remove('hidden');
+    // --- HELPERS GENERALES ---
+    function closeAllMenus() { document.querySelectorAll('.combo-list, .combo-list-lider, .select-menu, .combo-list-actividad, [id^="list-"]').forEach(m => m.classList.add('hidden')); }
+    window.addEventListener('click', closeAllMenus);
 
-                if(window.dataOrdenEncontrada.observaciones_retorno) {
-                    txtObservacionesManual.value = `--- Notas Previas ---\n${window.dataOrdenEncontrada.observaciones_retorno}`;
-                }
-                updateReturnLeadersOptions(); 
-
-                try {
-                    const asignaciones = window.dataOrdenEncontrada.asignaciones;
-                    if(asignaciones && asignaciones.length > 0) {
-                        asignaciones.forEach((asig, index) => {
-                            const cardDiv = document.createElement('div');
-                            cardDiv.className = "bg-gray-800 border border-gray-600 rounded p-3 relative hover:border-gray-500 transition tech-card-selector";
-                            cardDiv.dataset.techId = index;
-                            cardDiv.dataset.techName = asig.nombre;
-                            cardDiv.dataset.lider = asig.lider || "N/A";
-
-                            let htmlContent = `
-                                <div class="flex justify-between items-start border-b border-gray-600 pb-2 mb-2">
-                                    <div>
-                                        <p class="font-bold text-sm text-white">${asig.nombre}</p>
-                                        <p class="text-xs text-yellow-500">Líder: ${asig.lider || 'Sin asignar'}</p>
-                                    </div>
-                                    <span class="text-xs bg-gray-700 px-2 py-1 rounded text-gray-300">Mesa ${asig.mesa}</span>
-                                </div>
-                                <div class="space-y-3">
-                            `;
-
-                            if(asig.detalles && asig.detalles.length > 0) {
-                                asig.detalles.forEach((det, dIndex) => {
-                                    const uniqueId = `chk-${index}-${dIndex}`;
-                                    const valCav = det.cav || "";
-                                    const valCirc = det.circ || "";
-                                    const chipsCav = crearChipsDesglose(valCav, 'cav', uniqueId);
-                                    const chipsCirc = crearChipsDesglose(valCirc, 'circ', uniqueId);
-                                    const tieneDesglose = (chipsCav !== "" || chipsCirc !== "");
-
-                                    htmlContent += `
-                                        <div class="bg-gray-900/50 p-2 rounded border border-gray-700/50">
-                                            <div class="flex items-start gap-2">
-                                                <input type="checkbox" id="${uniqueId}" 
-                                                    class="chk-defecto mt-1 w-4 h-4 text-yellow-600 bg-gray-800 border-gray-500 rounded focus:ring-yellow-500 focus:ring-2"
-                                                    data-tech-index="${index}" data-defecto="${det.defecto}"
-                                                    data-raw-cav="${valCav}" data-raw-circ="${valCirc}"
-                                                    data-tiene-desglose="${tieneDesglose}">
-                                                <label for="${uniqueId}" class="text-xs text-gray-300 cursor-pointer w-full select-none">
-                                                    <span class="font-bold text-blue-300 block">${det.defecto}</span>
-                                                    <div class="text-gray-400 mt-0.5 flex flex-col gap-0.5">
-                                                        <span>Cav: ${valCav}</span> <span>Circ: ${valCirc}</span>
-                                                    </div>
-                                                </label>
-                                            </div>
-                                            ${chipsCav} ${chipsCirc}
-                                        </div>
-                                    `;
-                                });
-                            } else { htmlContent += `<p class="text-xs text-gray-500 italic">Sin defectos registrados.</p>`; }
-
-                            htmlContent += `</div>`;
-                            cardDiv.innerHTML = htmlContent;
-                            gridTarjetas.appendChild(cardDiv);
-                        });
-
-                        document.querySelectorAll('.chk-defecto').forEach(chk => {
-                            chk.addEventListener('change', (e) => {
-                                const isChecked = e.target.checked;
-                                const parentId = e.target.id;
-                                const subs = document.querySelectorAll(`.chk-sub-item[data-parent-id="${parentId}"]`);
-                                subs.forEach(sub => {
-                                    sub.disabled = !isChecked; 
-                                    if(isChecked) sub.parentElement.classList.remove('opacity-50'); 
-                                    if(!isChecked) sub.checked = false;
-                                });
-                                validarLimiteTecnicos(e.target);
-                                generarTextoRetorno();
-                            });
-                        });
-
-                        document.querySelectorAll('.chk-sub-item').forEach(sub => {
-                            sub.disabled = true; 
-                            sub.addEventListener('change', generarTextoRetorno);
-                        });
-
-                    } else { gridTarjetas.innerHTML = '<p class="text-gray-400 col-span-2 text-center p-4">Sin datos técnicos.</p>'; }
-                } catch(error) { console.error(error); gridTarjetas.innerHTML = `<p class="text-red-400 text-center p-4">Error visualizando datos.</p>`; }
-                generarTextoRetorno(); 
+    function setupCombobox(inp, lst, data, callback=null) {
+        if(!inp) return;
+        const render = (q='') => {
+            lst.innerHTML = ''; const f = data.filter(x => x.nombre.toLowerCase().includes(q.toLowerCase()));
+            if(f.length === 0) { lst.classList.add('hidden'); return; }
+            lst.classList.remove('hidden');
+            f.forEach(x => {
+                const d = document.createElement('div'); d.className = 'p-2 hover:bg-gray-600 cursor-pointer text-white text-xs border-b border-gray-600'; d.innerText = x.nombre;
+                d.onmousedown = (e) => { 
+                    e.preventDefault(); 
+                    inp.value = x.nombre; 
+                    lst.classList.add('hidden'); 
+                    if(callback) callback(x.nombre);
+                };
+                lst.appendChild(d);
             });
-        }
-
-        function validarLimiteTecnicos(checkboxCambiado) {
-            const todosMarcados = document.querySelectorAll('.chk-defecto:checked');
-            const tecnicosSeleccionados = new Set();
-            todosMarcados.forEach(c => tecnicosSeleccionados.add(c.dataset.techIndex));
-
-            if (tecnicosSeleccionados.size > 2) {
-                alert("Solo puedes seleccionar defectos de máximo 2 técnicos diferentes.");
-                checkboxCambiado.checked = false; 
-                const subs = document.querySelectorAll(`.chk-sub-item[data-parent-id="${checkboxCambiado.id}"]`);
-                subs.forEach(sub => { sub.disabled = true; sub.checked = false; });
-                return;
-            }
-
-            document.querySelectorAll('.tech-card-selector').forEach(card => {
-                const idx = card.dataset.techId;
-                if (tecnicosSeleccionados.has(idx)) {
-                    card.classList.add('border-yellow-500', 'bg-gray-800'); card.classList.remove('border-gray-600');
-                } else {
-                    card.classList.remove('border-yellow-500', 'bg-gray-800'); card.classList.add('border-gray-600');
-                }
-            });
-            contadorSeleccion.innerText = tecnicosSeleccionados.size;
-        }
-
-        function generarTextoRetorno() {
-            const checksPadres = document.querySelectorAll('.chk-defecto:checked');
-            const ordenNum = inputBuscar.value;
-            const resumen = {}; 
-
-            checksPadres.forEach(chk => {
-                const idx = chk.dataset.techIndex;
-                const parentId = chk.id;
-                const card = document.querySelector(`.tech-card-selector[data-tech-id="${idx}"]`);
-                const nombre = card.dataset.techName;
-                const lider = card.dataset.lider;
-                
-                let cavTxt = chk.dataset.rawCav;
-                let circTxt = chk.dataset.rawCirc;
-
-                const subCavsAll = document.querySelectorAll(`.chk-sub-item[data-parent-id="${parentId}"][data-tipo="cav"]`);
-                if (subCavsAll.length > 0) {
-                    const marcados = Array.from(subCavsAll).filter(c => c.checked).map(c => c.dataset.valor);
-                    cavTxt = marcados.length > 0 ? marcados.join(', ') : "(Selecciona)";
-                }
-                const subCircsAll = document.querySelectorAll(`.chk-sub-item[data-parent-id="${parentId}"][data-tipo="circ"]`);
-                if (subCircsAll.length > 0) {
-                    const marcados = Array.from(subCircsAll).filter(c => c.checked).map(c => c.dataset.valor);
-                    circTxt = marcados.length > 0 ? marcados.join(', ') : "(Selecciona)";
-                }
-
-                const detalle = `${chk.dataset.defecto} (Cav: ${cavTxt}, Circ: ${circTxt})`;
-                if (!resumen[idx]) resumen[idx] = { nombre, lider, defectos: [] };
-                resumen[idx].defectos.push(detalle);
-            });
-
-            let textoFinal = `[RETORNO ORDEN #${ordenNum}]\n`;
-            if (checksPadres.length === 0) textoFinal += "Sin selección de fallas.\n";
-
-            Object.values(resumen).forEach(obj => {
-                textoFinal += `\n>> TÉCNICO: ${obj.nombre}\n   LÍDER: ${obj.lider}\n   FALLAS RECURRENTES:\n`;
-                obj.defectos.forEach(d => textoFinal += `   - ${d}\n`);
-            });
-            txtObservacionesAuto.value = textoFinal;
-        }
-
-        window.updateReturnLeadersOptions = function() {
-            const dropdown = document.getElementById('dropdown-lideres');
-            if(dropdown) dropdown.innerHTML = '<div class="p-2 text-gray-500 text-xs text-center italic">Busca una orden para ver líderes.</div>';
         };
+        inp.oninput = (e) => render(e.target.value); inp.onfocus = () => render(inp.value); inp.onclick = (e) => { e.stopPropagation(); closeAllMenus(); render(inp.value); };
+    }
 
-        // ==========================================
-        // 5. GESTIÓN DE TARJETAS Y TABS (TÉCNICO)
-        // ==========================================
+    // --- SUBMIT ---
+    const form = document.getElementById('form-registro');
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        let isValid = true; 
+
+        // 1. Recolectar MAIN
+        const mainCards = document.querySelectorAll('#tech-cards-content-main .tech-card-wrapper');
+        if(mainCards.length === 0) { alert("Falta técnico en Orden Principal"); return; }
         
-        function createNewTechCard() {
-            emptyState.style.display = 'none';
-            techCounter++;
-            const currentTechId = 'tech-' + techCounter;
+        const asignacionesMain = extractData(mainCards);
+        if(!asignacionesMain) return;
+
+        // 2. Recolectar VINC
+        const tipo = document.querySelector('input[name="tipo_tarjeta"]:checked').value;
+        let asignacionesVinc = [];
+        if(tipo === 'roja') {
+            const vincId = document.getElementById('orden-vinculada-id').value;
+            if(!vincId) { alert("Selecciona orden vinculada"); switchTab('vinculada'); return; }
             
-            const tabBtn = document.createElement('div');
-            tabBtn.id = 'btn-' + currentTechId;
-            tabBtn.className = "tech-tab-btn flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-t-lg border-t-2 border-transparent cursor-pointer bg-gray-800 text-gray-400 transition-all shrink-0 select-none";
-            tabBtn.onclick = () => activateTechTab(currentTechId);
-            tabBtn.innerHTML = `<span id="label-${currentTechId}">Nuevo Técnico</span> <button onclick="removeTech('${currentTechId}', event)" class="ml-2 text-gray-500 hover:text-red-400 hover:bg-gray-900 rounded-full p-0.5">&times;</button>`;
-            tabsBar.appendChild(tabBtn);
-
-            const template = document.getElementById('tech-card-template');
-            const clone = template.content.cloneNode(true);
-            const cardContainer = document.createElement('div');
-            cardContainer.id = 'card-' + currentTechId;
-            cardContainer.className = "tech-card-wrapper w-full hidden animate-fade-in";
-            cardContainer.appendChild(clone);
+            const vincCards = document.querySelectorAll('#tech-cards-content-vinc .tech-card-wrapper');
+            const copiarTecnicos = document.getElementById('check-copiar-tecnicos').checked;
             
-            cardContainer.querySelector('.sync-name').addEventListener('input', (e) => {
-                document.getElementById('label-' + currentTechId).innerText = e.target.value.substring(0, 15) || 'Nuevo Técnico';
-            });
-
-            initCardLogic(cardContainer, currentTechId);
-            contentArea.appendChild(cardContainer);
-            return cardContainer;
-        }
-
-        function initCardLogic(card, techId) {
-            const mesaContainer = card.querySelector('.custom-select-container');
-            if(mesaContainer) setupSimpleDropdown(mesaContainer);
-            
-            setupCombobox(card.querySelector('.input-nombre'), card.querySelector('.combo-list'), tecnicosData);
-            setupCombobox(card.querySelector('.input-lider'), card.querySelector('.combo-list-lider'), lideresData);
-
-            // TABS DE DEFECTOS
-            const defectTabsContainer = card.querySelector('.defect-tabs-container');
-            const defectContentArea = card.querySelector('.defect-cards-content');
-            const emptyDefects = card.querySelector('.empty-defects-state');
-            const btnAddDefect = card.querySelector('.btn-add-defect-tab');
-            
-            // Inicializar contador en el objeto global
-            defectCounters[techId] = 0;
-
-            btnAddDefect.onclick = () => {
-                defectCounters[techId]++;
-                const count = defectCounters[techId];
-                const defectId = `${techId}-def-${count}`;
-                if(emptyDefects) emptyDefects.classList.add('hidden');
-
-                // 1. Botón Tab
-                const tabButton = document.createElement('button');
-                tabButton.type = 'button';
-                tabButton.id = `tab-btn-${defectId}`;
-                tabButton.className = "defect-tab-btn flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded bg-gray-800 text-gray-400 border border-gray-600 hover:bg-gray-700 transition select-none shrink-0";
-                tabButton.innerHTML = `<span class="tab-lbl">Nuevo Defecto </span> <span class="ml-1 text-red-400 hover:text-white cursor-pointer" onclick="removeDefectTab('${defectId}', '${techId}', event)">&times;</span>`;
-                
-                tabButton.addEventListener('click', (e) => {
-                    if(e.target.tagName === 'SPAN' && e.target.innerText === '×') return; 
-                    switchDefectTab(card, defectId);
-                });
-                defectTabsContainer.appendChild(tabButton);
-
-                // 2. Contenido
-                const defTemplate = document.getElementById('defect-card-template');
-                const defClone = defTemplate.content.cloneNode(true);
-                const defCard = defClone.querySelector('.defect-card');
-                defCard.id = `content-${defectId}`;
-                defCard.classList.add('hidden'); 
-                
-                const inputDefecto = defCard.querySelector('.input-defecto');
-                const listDefecto = defCard.querySelector('.combo-list-def');
-                
-                inputDefecto.addEventListener('input', (e) => {
-                    const val = e.target.value;
-                    const lbl = tabButton.querySelector('.tab-lbl');
-                    if(lbl) lbl.innerText = val ? val.substring(0, 10) + '...' : `Defecto `;
-                    updateLabels(defCard, val);
-                });
-
-                setupCombobox(inputDefecto, listDefecto, defectosData, (val) => {
-                    updateLabels(defCard, val);
-                    const lbl = tabButton.querySelector('.tab-lbl');
-                    if(lbl) lbl.innerText = val.substring(0, 10) + '...';
-                });
-
-                defCard.querySelector('.btn-remove-defect-card').onclick = (e) => removeDefectTab(defectId, techId, e);
-
-                const locContainer = defCard.querySelector('.location-rows-container');
-                defCard.querySelector('.btn-add-location-row').onclick = () => createNewLocationRow(locContainer);
-                createNewLocationRow(locContainer); 
-
-                defectContentArea.appendChild(defCard);
-                switchDefectTab(card, defectId);
-            };
-
-         
-            btnAddDefect.click();
-        }
-
-        window.switchDefectTab = function(techCard, defectId) {
-            const allTabs = techCard.querySelectorAll('.defect-tab-btn');
-            const allContents = techCard.querySelectorAll('.defect-card');
-
-            allTabs.forEach(btn => {
-                btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-500');
-                btn.classList.add('bg-gray-800', 'text-gray-400', 'border-gray-600');
-            });
-            allContents.forEach(content => content.classList.add('hidden'));
-
-            const activeTab = techCard.querySelector(`#tab-btn-${defectId}`);
-            const activeContent = techCard.querySelector(`#content-${defectId}`);
-
-            if(activeTab && activeContent) {
-                activeTab.classList.remove('bg-gray-800', 'text-gray-400', 'border-gray-600');
-                activeTab.classList.add('bg-blue-600', 'text-white', 'border-blue-500');
-                activeContent.classList.remove('hidden');
+            if(!copiarTecnicos) {
+                if(vincCards.length === 0) { alert("Falta técnico en Orden Vinculada"); switchTab('vinculada'); return; }
+                asignacionesVinc = extractData(vincCards);
+                if(!asignacionesVinc) { switchTab('vinculada'); return; }
             }
-        };
-
-        window.removeDefectTab = function(defectId, techId, e) {
-            if(e) e.stopPropagation();
-            if(!confirm("¿Eliminar este defecto?")) return;
-
-            const techCard = document.getElementById(`card-${techId}`);
-            const tabBtn = document.getElementById(`tab-btn-${defectId}`);
-            const content = document.getElementById(`content-${defectId}`);
-
-            if(tabBtn) tabBtn.remove();
-            if(content) content.remove();
-
-            const remainingTabs = techCard.querySelectorAll('.defect-tab-btn');
-            if(remainingTabs.length === 0) {
-                techCard.querySelector('.empty-defects-state').classList.remove('hidden');
-            } else {
-                const firstId = remainingTabs[0].id.replace('tab-btn-', '');
-                switchDefectTab(techCard, firstId);
-            }
-        };
-
-        function createNewLocationRow(container) {
-            const locTempl = document.getElementById('location-row-template');
-            const locClone = locTempl.content.cloneNode(true);
-            const locRow = locClone.querySelector('.location-row');
-            
-            locRow.querySelector('.btn-remove-loc').onclick = () => locRow.remove();
-            
-            const cavContainer = locRow.querySelector('.custom-select-container');
-            if(cavContainer) setupSimpleDropdown(cavContainer);
-            setupCircuitoMultiselect(locRow);
-            
-            container.appendChild(locRow);
         }
 
-        function updateLabels(defCard, defectName) {
-            const lblCav = defCard.querySelector('.label-cav');
-            const lblCirc = defCard.querySelector('.label-circ');
-            const term = defectName ? defectName.toLowerCase() : "";
-            if (term.includes('hot runner') || term.includes('colada caliente')) { lblCav.textContent = 'Drop'; lblCirc.textContent = 'Zona'; } 
-            else if (term.includes('falla de sensores') || term.includes('sensor')) { lblCav.textContent = 'PG'; lblCirc.textContent = 'EO'; } 
-            else { lblCav.textContent = 'Cavidad'; lblCirc.textContent = 'Circuito'; }
-        }
-
-        window.activateTechTab = function(techId) {
-            document.querySelectorAll('.tech-card-wrapper').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tech-tab-btn').forEach(btn => {
-                btn.classList.remove('bg-gray-700', 'text-white', 'border-blue-500');
-                btn.classList.add('bg-gray-800', 'text-gray-400', 'border-transparent', 'hover:bg-gray-700');
-            });
-            document.getElementById('card-' + techId)?.classList.remove('hidden');
-            const btn = document.getElementById('btn-' + techId);
-            if(btn) {
-                btn.classList.replace('bg-gray-800', 'bg-gray-700');
-                btn.classList.replace('text-gray-400', 'text-white');
-                btn.classList.replace('border-transparent', 'border-blue-500');
-            }
-        };
-
-        window.removeTech = function(techId, e) {
-            e.stopPropagation();
-            if(!confirm("¿Eliminar técnico?")) return;
-            document.getElementById('btn-' + techId)?.remove();
-            document.getElementById('card-' + techId)?.remove();
-            if(tabsBar.children.length === 0) emptyState.style.display = 'flex';
-            else activateTechTab(tabsBar.querySelector('.tech-tab-btn').id.replace('btn-', ''));
-        };
-
-        function closeAllMenus() { document.querySelectorAll('.circuito-menu, .select-menu, .combo-list, .combo-list-def, .combo-list-lider').forEach(m => m.classList.add('hidden')); }
-        window.addEventListener('click', () => closeAllMenus());
-
-        function setupSimpleDropdown(container) {
-            const input = container.querySelector('.input-select');
-            const menu = container.querySelector('.select-menu');
-            const options = menu.querySelectorAll('.select-option');
-            input.addEventListener('click', (e) => { e.stopPropagation(); closeAllMenus(); menu.classList.remove('hidden'); });
-            options.forEach(opt => {
-                opt.addEventListener('click', (e) => {
-                    e.stopPropagation(); input.value = opt.dataset.value; 
-                    if(input.value) input.classList.remove('border-red-500'); menu.classList.add('hidden');
-                });
-            });
-        }
-
-        function setupCircuitoMultiselect(row) {
-            const input = row.querySelector('.input-circ');
-            const menu = row.querySelector('.circuito-menu');
-            const chkTodas = menu.querySelector('.chk-todas');
-            const chkNums = menu.querySelectorAll('.chk-num');
-            input.addEventListener('click', (e) => { e.stopPropagation(); closeAllMenus(); menu.classList.remove('hidden'); });
-            menu.addEventListener('click', (e) => e.stopPropagation());
-            const update = () => {
-                if (chkTodas.checked) { input.value = "Todas"; chkNums.forEach(c => c.checked = false); } 
-                else { const v = Array.from(chkNums).filter(c => c.checked).map(c => c.value); input.value = v.join(', '); }
-                if(input.value) input.classList.remove('border-red-500');
-            };
-            chkTodas.addEventListener('change', () => { if(chkTodas.checked) chkNums.forEach(c => c.checked = false); update(); });
-            chkNums.forEach(c => { c.addEventListener('change', () => { if(c.checked) chkTodas.checked = false; update(); }); });
-        }
-
-        function setupCombobox(input, list, data, onSelectCallback = null) {
-            const render = (q='') => {
-                list.innerHTML = ''; const f = data.filter(i => i.nombre.toLowerCase().includes(q.toLowerCase()));
-                if(f.length === 0) { list.classList.add('hidden'); return; }
-                list.classList.remove('hidden');
-                f.forEach(item => {
-                    const div = document.createElement('div'); div.className = 'p-2 hover:bg-blue-600 cursor-pointer text-xs text-white border-b border-gray-500 bg-gray-700'; div.textContent = item.nombre;
-                    div.onmousedown = (e) => { 
-                        e.preventDefault(); input.value = item.nombre; input.dispatchEvent(new Event('input')); 
-                        if(input.value) input.classList.remove('border-red-500'); list.classList.add('hidden'); 
-                        if (onSelectCallback) onSelectCallback(item.nombre);
-                    };
-                    list.appendChild(div);
-                });
-            };
-            input.addEventListener('input', (e) => { render(e.target.value); if(input.value) input.classList.remove('border-red-500'); });
-            input.addEventListener('focus', () => render(input.value));
-            input.addEventListener('click', (e) => { e.stopPropagation(); closeAllMenus(); render(input.value); });
-        }
-
-        const form = document.getElementById('form-registro');
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            
-            const autoObs = document.getElementById('txt-observaciones-auto').value;
-            const manualObs = document.getElementById('txt-observaciones-manual').value;
-            let combinedObs = autoObs;
-            if(manualObs.trim()) { combinedObs += "\n\n[Notas Adicionales]:\n" + manualObs; }
-            document.getElementById('final-observaciones').value = combinedObs;
-
-           
-            const ordenBuscada = document.getElementById('input-buscar-orden').value;
-            const contenedorRetorno = document.getElementById('contenedor-resumen-visual');
-            if(ordenBuscada && !contenedorRetorno.classList.contains('hidden')) {
-                 document.getElementById('input-orden-ref-final').value = ordenBuscada;
-            }
-
-          
-            const cards = contentArea.querySelectorAll('.tech-card-wrapper');
-            if(cards.length === 0) { alert("Agrega un técnico."); switchTab('general'); return; }
-
-            let isValid = true;
-            let firstErrorTab = null;
-            let totalDefectos = 0;
-            const asignaciones = [];
-
-            cards.forEach((wrapper) => {
-                const card = wrapper.querySelector('.tech-card');
-                let cardError = false;
-                
-                card.querySelectorAll('.validate-required').forEach(inp => {
-                    if(!inp.value.trim()) { inp.classList.add('border-red-500'); isValid = false; cardError = true; } 
-                    else inp.classList.remove('border-red-500');
-                });
-
-                const nombre = card.querySelector('.input-nombre').value.trim();
-                const lider = card.querySelector('.input-lider').value.trim();
-                const mesa = card.querySelector('.input-mesa').value.trim();
-                const detalles = [];
-                const defCards = card.querySelectorAll('.defect-card'); // Busca en todos los tabs (ocultos o no)
-
-                if(defCards.length === 0) { 
-                    alert("Faltan defectos para " + (nombre||"un técnico")); isValid = false; cardError = true; 
-                } else {
-                    defCards.forEach(dc => {
-                        const nomDef = dc.querySelector('.input-defecto').value.trim();
-                        if(!nomDef) { dc.querySelector('.input-defecto').classList.add('border-red-500'); isValid = false; cardError = true; }
-                        else { dc.querySelector('.input-defecto').classList.remove('border-red-500'); }
-                        
-                        const rows = dc.querySelectorAll('.location-row');
-                        if(rows.length === 0) { alert("Falta ubicación para: " + nomDef); isValid = false; cardError = true; }
-                        
-                        rows.forEach(r => {
-                            const cav = r.querySelector('.input-cav').value.trim();
-                            const circ = r.querySelector('.input-circ').value.trim();
-                            const esFijo = r.querySelector('.input-fijo').checked;
-                            const esMovil = r.querySelector('.input-movil').checked;
-
-                            if(!cav || !circ) { 
-                                if(!cav) r.querySelector('.input-cav').classList.add('border-red-500');
-                                if(!circ) r.querySelector('.input-circ').classList.add('border-red-500');
-                                isValid = false; cardError = true; 
-                            } else {
-                                r.querySelector('.input-cav').classList.remove('border-red-500');
-                                r.querySelector('.input-circ').classList.remove('border-red-500');
-                                if(nomDef) { 
-                                    // Guardamos Fijo/Móvil
-                                    detalles.push({ defecto: nomDef, cav: cav, circ: circ, fijo: esFijo, movil: esMovil }); 
-                                    totalDefectos++; 
-                                }
-                            }
-                        });
-                    });
-                }
-
-                const tabBtn = document.getElementById('btn-' + wrapper.id.replace('card-',''));
-                if(cardError) { tabBtn.classList.add('text-red-400'); if(!firstErrorTab) firstErrorTab = wrapper.id.replace('card-',''); }
-                else { tabBtn.classList.remove('text-red-400'); }
-
-                if(!cardError && nombre && mesa && lider && detalles.length > 0) {
-                    asignaciones.push({ nombre, lider, mesa, detalles });
-                }
-            });
-
-            if(!isValid) { alert("Faltan campos obligatorios."); if(firstErrorTab) activateTechTab(firstErrorTab); return; }
-            if(totalDefectos === 0) { alert("Registra defectos."); return; }
-            if(asignaciones.length === 0) { alert("Error datos."); return; }
-
-            document.getElementById('asignaciones-json').value = JSON.stringify(asignaciones);
-            form.submit();
-        });
-
-        // Evento Botón Agregar Técnico
-        document.getElementById('btn-add-tech').addEventListener('click', () => {
-            const card = createNewTechCard();
-            activateTechTab(card.id.replace('card-',''));
-        });
-
-        const modal = document.getElementById('orden-modal');
-        const btnCerrar = document.getElementById('modal-close-btn');
-
-        if (btnCerrar) {
-            btnCerrar.addEventListener('click', (e) => {
-                e.preventDefault();
-                if(modal) modal.classList.add('hidden');
-            });
-        }
-        if (modal) {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) modal.classList.add('hidden');
-            });
-        }
-
+        document.getElementById('asignaciones-json').value = JSON.stringify(asignacionesMain);
+        if(asignacionesVinc.length > 0) document.getElementById('asignaciones-vinc-json').value = JSON.stringify(asignacionesVinc);
+        form.submit();
     });
+
+    function extractData(cardsNodeList) {
+        const arr = []; let error = false;
+        cardsNodeList.forEach(card => {
+            const n = card.querySelector('.input-nombre').value.trim();
+            const l = card.querySelector('.input-lider').value.trim();
+            const m = card.querySelector('.input-mesa').value.trim();
+            if(!n || !l || !m) { card.querySelector('.input-nombre').classList.add('border-red-500'); error = true; }
+            
+            const actividades = [];
+            // Buscamos TODOS los activity-card (estén ocultos o no, ya que están en el DOM)
+            card.querySelectorAll('.activity-card').forEach(row => {
+                const act = row.querySelector('.input-actividad').value.trim();
+                const zona = row.querySelector('.select-zona').value;
+                const sub = row.querySelector('.select-subzona').value;
+                
+                if(!act || !zona || !sub) {
+                    if(!act) row.querySelector('.input-actividad').classList.add('border-red-500');
+                    error = true;
+                } else {
+                    row.querySelector('.input-actividad').classList.remove('border-red-500');
+                    // Recopilar detalles si estan visibles o tienen valor
+                    const mod = row.querySelector('.input-modulo').value;
+                    const cav = row.querySelector('.input-cavidad').value;
+                    const cir = row.querySelector('.input-circuito').value;
+                    const lad = row.querySelector('.input-lado').value;
+                    
+                    actividades.push({ actividad: act, zona: zona, subzona: sub, modulo: mod, cavidad: cav, circuito: cir, lado: lad });
+                }
+            });
+            
+            if(actividades.length === 0) error = true;
+            arr.push({ nombre: n, lider: l, mesa: m, actividades: actividades });
+        });
+        if(error) { alert("Datos incompletos en técnicos/actividades"); return null; }
+        return arr;
+    }
 </script>
 {% endblock %}

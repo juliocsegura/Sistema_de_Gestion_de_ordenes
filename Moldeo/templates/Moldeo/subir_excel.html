@@ -36,12 +36,26 @@
                 <label class="block text-xs font-bold text-blue-400 uppercase mb-2 ml-1">1. Selecciona el destino</label>
                 <select name="modelo_destino" class="w-full bg-gray-900 border border-gray-600 text-white text-sm rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none transition" required>
                     <option value="" disabled selected>-- ¿Qué vas a cargar? --</option>
-                    <option value="sap" class="bg-blue-900 text-white font-bold">⚡ Órdenes SAP (Diario)</option>
-                    <option value="moldes">📁 Moldes (Relaciona Máquina y Números de Parte)</option>
-                    <option value="defectos">⚠️ Defectos (Catálogo)</option>
-                    <option value="maquinas">🤖 Máquinas (Catálogo)</option>
-                    <option value="tecnicos">👷 Técnicos (Moldmakers)</option>
-                    <option value="lideres">👔 Líderes</option>
+                    
+                    <optgroup label="Operación Diaria">
+                        <option value="sap" class="bg-blue-900 text-white font-bold">⚡ Órdenes SAP (Diario)</option>
+                    </optgroup>
+
+                    <optgroup label="Catálogos Generales">
+                        <option value="moldes">📁 Moldes (Máquina y No. Parte)</option>
+                        <option value="defectos">⚠️ Defectos (Catálogo)</option>
+                        <option value="maquinas">🤖 Máquinas (Catálogo)</option>
+                    </optgroup>
+
+                    <optgroup label="Catálogos TPM">
+                        <option value="actividades_tpm">🛠️ Actividades TPM (Zonas y Subzonas)</option>
+                        <option value="estatus_ordenes">📊 Estatus de Órdenes</option>
+                    </optgroup>
+
+                    <optgroup label="Personal">
+                        <option value="tecnicos">👷 Técnicos (Moldmakers)</option>
+                        <option value="lideres">👔 Líderes</option>
+                    </optgroup>
                 </select>
             </div>
 
@@ -73,9 +87,11 @@
         <div class="mt-8 border-t border-gray-700 pt-4">
             <p class="text-xs text-gray-500 font-bold mb-1">Requisitos de Columnas (1ra fila):</p>
             <ul class="text-[10px] text-gray-400 space-y-1 list-disc list-inside">
-                <li><span class="text-blue-300">Moldes:</span> Molde, Maquina, Numeros de Parte, Molde SAP (Opcional)</li>
-                <li><span class="text-blue-300">Defectos:</span> Defectos, Estatus (Opcional), Actividad (Opcional)</li>
-                <li><span class="text-blue-300">Otros:</span> Nombre (o nombre de la columna principal)</li>
+                <li><span class="text-blue-300">Moldes:</span> Molde, Maquina, Numeros de Parte</li>
+                <li><span class="text-blue-300">TPM:</span> Actividades TPM, Zonas, Subzonas, Comentarios</li>
+                <li><span class="text-blue-300">Estatus:</span> Estatus (o Código), Descripcion</li>
+                <li><span class="text-blue-300">Defectos:</span> Defectos</li>
+                <li><span class="text-blue-300">Personal:</span> Nombre</li>
             </ul>
         </div>
     </div>

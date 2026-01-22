@@ -1,0 +1,182 @@
+{% extends 'Moldeo/base.html' %}
+
+{% block title %}Modo Kiosco - Taller de Moldes{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-900 text-white p-6 flex flex-col items-center">
+    
+    <div class="w-full max-w-6xl flex justify-between items-center mb-8 border-b border-gray-700 pb-4">
+        <div>
+            <h1 class="text-4xl font-bold text-yellow-500 tracking-tighter">KIOSCO TÉCNICO</h1>
+            <p class="text-gray-400 text-sm">Acceso rápido personal</p>
+        </div>
+        <div id="user-display" class="hidden flex items-center gap-4 bg-gray-800 px-4 py-2 rounded-lg border border-yellow-600 animate-fade-in">
+            <div>
+                <span class="block text-xs text-gray-400 uppercase">Hola,</span>
+                <span class="text-xl font-bold text-white" id="user-name-label">Nombre</span>
+            </div>
+            <button onclick="logoutKiosco()" class="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded text-xs font-bold uppercase tracking-wider">Salir</button>
+        </div>
+    </div>
+
+    <div id="login-screen" class="w-full max-w-md bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-700">
+        <h2 class="text-2xl font-bold text-center mb-6 text-blue-400">¿Quién eres?</h2>
+        
+        <div class="space-y-6">
+            <div>
+                <label class="block text-sm font-bold text-gray-500 mb-2">Técnico</label>
+                <select id="login-tech-select" class="w-full bg-gray-900 text-white border border-gray-600 rounded-lg px-4 py-4 text-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="">-- Selecciona tu nombre --</option>
+                    {% for t in tecnicos %}
+                    <option value="{{ t.id }}">{{ t.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-bold text-gray-500 mb-2">Contraseña / PIN</label>
+                <input type="password" id="login-password" class="w-full bg-gray-900 text-white border border-gray-600 rounded-lg px-4 py-4 text-lg tracking-widest focus:ring-2 focus:ring-blue-500 outline-none" placeholder="****">
+            </div>
+
+            <button onclick="loginKiosco()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl text-xl shadow-lg transform transition active:scale-95">
+                ENTRAR
+            </button>
+        </div>
+    </div>
+
+    <div id="work-screen" class="hidden w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden shadow-xl flex flex-col h-[600px]">
+            <div class="bg-blue-900/30 p-4 border-b border-blue-800">
+                <h3 class="text-xl font-bold text-blue-300 flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    Mis Asignaciones
+                </h3>
+            </div>
+            <div id="my-orders-list" class="p-4 space-y-3 overflow-y-auto flex-1">
+                <p class="text-gray-500 text-center py-10 italic">No tienes órdenes asignadas.</p>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden shadow-xl flex flex-col h-[600px]">
+            <div class="bg-emerald-900/30 p-4 border-b border-emerald-800">
+                <h3 class="text-xl font-bold text-emerald-300 flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    Órdenes en Curso (Sumarse)
+                </h3>
+            </div>
+            <div class="p-4 space-y-3 overflow-y-auto flex-1 custom-scrollbar">
+                {% for orden in activas %}
+                <div class="bg-gray-700 p-4 rounded-lg border border-gray-600 flex justify-between items-center group hover:border-yellow-500 transition">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-xs font-bold px-1.5 py-0.5 rounded bg-gray-800 text-gray-300">{{ orden.tipo_mntn }}</span>
+                            <span class="text-lg font-bold text-white">{{ orden.numero_orden }}</span>
+                        </div>
+                        <div class="text-sm text-blue-300">{{ orden.molde }}</div>
+                    </div>
+                    <button onclick="sumarseOrden('{{ orden.numero_orden }}', '{{ orden.tipo_mntn }}')" 
+                            class="bg-gray-600 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded shadow transition transform active:scale-95 flex items-center gap-2">
+                        <span>+ ME UNO</span>
+                    </button>
+                </div>
+                {% empty %}
+                <p class="text-gray-500 text-center py-10 italic">No hay órdenes disponibles.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% csrf_token %}
+
+<script>
+    let currentTechId = null;
+
+    async function loginKiosco() {
+        const techId = document.getElementById('login-tech-select').value;
+        const pass = document.getElementById('login-password').value;
+        
+        if(!techId || !pass) { alert("Selecciona usuario y contraseña"); return; }
+
+        try {
+            const res = await fetch("{% url 'Moldeo:api_kiosco_login' %}", {
+                method: 'POST',
+                headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value },
+                body: JSON.stringify({ tech_id: techId, password: pass })
+            });
+            const data = await res.json();
+
+            if(data.success) {
+                currentTechId = techId;
+                document.getElementById('user-name-label').innerText = data.nombre;
+                
+                // Mostrar órdenes
+                const list = document.getElementById('my-orders-list');
+                list.innerHTML = '';
+                if(data.ordenes.length > 0) {
+                    data.ordenes.forEach(o => {
+                        list.innerHTML += `
+                            <div class="bg-blue-900/20 border border-blue-700/50 p-4 rounded-lg">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <span class="text-xs font-bold text-blue-400">${o.tipo}</span>
+                                        <h4 class="text-xl font-bold text-white">${o.numero}</h4>
+                                        <p class="text-sm text-gray-300">${o.molde}</p>
+                                    </div>
+                                    <span class="bg-blue-800 text-white text-xs px-2 py-1 rounded">Mesa: ${o.mesa}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    list.innerHTML = '<p class="text-gray-500 text-center py-10 italic">No tienes asignaciones activas.</p>';
+                }
+
+                // Switch UI
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('work-screen').classList.remove('hidden');
+                document.getElementById('user-display').classList.remove('hidden');
+                document.getElementById('user-display').classList.add('flex');
+            } else {
+                alert(data.message || "Error de credenciales");
+            }
+        } catch(e) { console.error(e); alert("Error de conexión"); }
+    }
+
+    function logoutKiosco() {
+        currentTechId = null;
+        document.getElementById('login-password').value = '';
+        document.getElementById('login-tech-select').value = '';
+        
+        document.getElementById('work-screen').classList.add('hidden');
+        document.getElementById('user-display').classList.add('hidden');
+        document.getElementById('user-display').classList.remove('flex');
+        document.getElementById('login-screen').classList.remove('hidden');
+    }
+
+    async function sumarseOrden(numero, tipo) {
+        if(!confirm(`¿Quieres unirte a la orden ${numero}?`)) return;
+        
+        try {
+            const res = await fetch("{% url 'Moldeo:api_kiosco_sumarse' %}", {
+                method: 'POST',
+                headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value },
+                body: JSON.stringify({ 
+                    tech_id: currentTechId, 
+                    orden_numero: numero,
+                    tipo_orden: tipo
+                })
+            });
+            const data = await res.json();
+            if(data.success) {
+                alert("¡Te has unido correctamente!");
+                // Recargar login para refrescar "Mis Asignaciones" (truco rápido)
+                loginKiosco(); 
+            } else {
+                alert("Error: " + data.message);
+            }
+        } catch(e) { console.error(e); }
+    }
+</script>
+{% endblock %}
