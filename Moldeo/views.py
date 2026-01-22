@@ -9,6 +9,7 @@ from django.db import transaction, models
 from .models import (Moldmakers, OrdenMCM, OrdenCHO, OrdenTPM, OrdenPREP, Maquinas, NumerosParte, Moldes, OrdenSAP, Defectos, AsignacionUniversal,Lideres)
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
 from django.views.decorators.http import require_http_methods 
+from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 import json
 from itertools import chain, zip_longest
@@ -1430,3 +1431,38 @@ def api_ordenes_pendientes(request):
     except Exception as e:
         print(f"--- DEBUG API ERROR --- Ocurrió un error: {str(e)}")
         return JsonResponse({'ordenes': []})
+@login_required # Asegúrate de importar login_required
+@login_required
+def panel_lider_view(request):
+    # 1. OBTENER ÓRDENES EN CURSO (Activas o Pausadas)
+    # CORRECCIÓN: Cambiar '-fecha_inicio' por '-fecha_creacion'
+    ordenes_cho = OrdenCHO.objects.filter(
+        estado__in=['Activa', 'Pausada']
+    ).order_by('-fecha_creacion') 
+    
+    # ... el resto del código sigue igual ...
+    
+    ordenes_ocupadas = set(ordenes_cho.values_list('numero_orden', flat=True))
+    # Si tienes MCM: ordenes_ocupadas.union(set(OrdenMCM.objects...))
+
+    # 2. OBTENER ÓRDENES PENDIENTES (SAP)
+    # Filtramos las que NO están en la lista de ocupadas
+    pendientes_sap = OrdenSAP.objects.exclude(order__in=ordenes_ocupadas).order_by('order')
+
+    # 3. OBTENER TÉCNICOS Y SU ESTADO
+    tecnicos = Moldmakers.objects.filter(activo=True).order_by('nombre')
+    
+    # Calcular métricas rápidas
+    total_pendientes = pendientes_sap.count()
+    total_activas = ordenes_cho.count()
+
+    context = {
+        'pendientes': pendientes_sap,
+        'activas': ordenes_cho,
+        'tecnicos': tecnicos,
+        'metrics': {
+            'pendientes': total_pendientes,
+            'activas': total_activas
+        }
+    }
+    return render(request, 'Moldeo/panel_lider.html', context)

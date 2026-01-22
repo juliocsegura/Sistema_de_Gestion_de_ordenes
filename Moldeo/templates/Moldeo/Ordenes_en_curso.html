@@ -269,6 +269,33 @@
         </div>
     </div>
 </div>
+<div id="modal-warning-hydra" class="fixed inset-0 z-[70] flex items-center justify-center bg-black bg-opacity-90 hidden backdrop-blur-sm transition-opacity duration-300">
+    <div class="bg-gray-800 border-2 border-yellow-500 rounded-xl shadow-2xl w-full max-w-md transform scale-100 p-6 relative">
+        <div class="text-center">
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-900/50 mb-4 border border-yellow-500 animate-pulse">
+                <svg class="h-10 w-10 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            
+            <h3 class="text-2xl font-bold text-white mb-2">¡Recordatorio Importante!</h3>
+            <p class="text-gray-300 text-base mb-6">
+                Vas a cambiar el estatus de la orden.
+                <br>Por favor, asegúrate de reflejar este cambio en:
+                <br><span class="text-yellow-400 font-bold text-xl block mt-2 tracking-wider">SISTEMA HYDRA</span>
+            </p>
+
+            <div class="flex justify-center gap-4">
+                <button type="button" onclick="document.getElementById('modal-warning-hydra').classList.add('hidden')" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-semibold transition">
+                    Cancelar
+                </button>
+                <button type="button" id="btn-confirmar-hydra" class="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg font-bold shadow-lg shadow-yellow-600/30 transition transform hover:-translate-y-1">
+                    Listo, Continuar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock content %}
 
 {% block scripts %}
@@ -710,7 +737,42 @@ document.addEventListener('DOMContentLoaded', () => {
         const nuevoEstado = (ordenActual.estado === 'Pausada') ? 'Activa' : 'Pausada';
         actualizarOrden({ estado: nuevoEstado });
     };
+    let payloadPendiente = null; // Almacena la acción (Pausar/Finalizar) temporalmente
 
+    // 1. Interceptar Botón PAUSAR / REANUDAR
+    document.getElementById('modal-pausar-btn').onclick = () => {
+        const ordenActual = ordenesCache.find(o => o.id == currentOrdenId);
+        if(!ordenActual) return;
+        
+        // Calcular el nuevo estado
+        const nuevoEstado = (ordenActual.estado === 'Pausada') ? 'Activa' : 'Pausada';
+        
+        // Guardamos lo que queremos hacer
+        payloadPendiente = { estado: nuevoEstado };
+        
+        // Mostramos el Warning de Hydra
+        document.getElementById('modal-warning-hydra').classList.remove('hidden');
+    };
+
+    // 2. Interceptar Botón FINALIZAR
+    document.getElementById('modal-finalizar-btn').onclick = () => {
+        // Guardamos lo que queremos hacer
+        payloadPendiente = { estado: 'Finalizada' };
+        
+        // Mostramos el Warning de Hydra
+        document.getElementById('modal-warning-hydra').classList.remove('hidden');
+    };
+
+    // 3. Confirmar Acción (Botón "Listo, Continuar" del Modal Amarillo)
+    document.getElementById('btn-confirmar-hydra').onclick = () => {
+        if (payloadPendiente) {
+            // Ejecutar la actualización real
+            actualizarOrden(payloadPendiente);
+            payloadPendiente = null; // Limpiar
+        }
+        // Cerrar modal hydra
+        document.getElementById('modal-warning-hydra').classList.add('hidden');
+    };
     function actualizarBotonPausarVisual(orden) {
         const btn = document.getElementById('modal-pausar-btn');
         if (orden.estado === 'Pausada') {

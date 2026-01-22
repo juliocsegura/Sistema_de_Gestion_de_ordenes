@@ -33,6 +33,7 @@ urlpatterns = [
     path('api/historial-molde/', views.historial_molde_api, name='api_historial_molde'),
     path('api/detalle-orden-historial/', views.detalle_orden_historial_api, name='api_detalle_orden_historial'),
     path('api/ordenes-pendientes/', views.api_ordenes_pendientes, name='api_ordenes_pendientes'),
+    path('panel-lider/', views.panel_lider_view, name='panel_lider'),
 
 
 ]

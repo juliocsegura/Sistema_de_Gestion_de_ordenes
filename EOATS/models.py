@@ -2,8 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-import barcode
-from barcode.writer import ImageWriter
+
 from io import BytesIO
 
 # --- DEFINICIÓN DE ESTATUS ---
