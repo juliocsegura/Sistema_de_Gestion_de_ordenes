@@ -296,6 +296,7 @@
         </div>
     </div>
 </div>
+
 {% endblock content %}
 
 {% block scripts %}
@@ -653,6 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (orden.tipo === 'MCM') colorTipo = 'text-red-400';
             else if (orden.tipo === 'CHO') colorTipo = 'text-orange-400';
             else if (orden.tipo === 'TPM') colorTipo = 'text-yellow-400';
+            else if (orden.tipo === 'PREP') colorTipo = 'text-green-400';
 
             htmlContent += `
             <tr class="cursor-pointer border-b border-gray-700 transition ${bgFila}" onclick="openModalById(${orden.id})">

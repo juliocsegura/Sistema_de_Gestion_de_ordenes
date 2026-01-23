@@ -55,7 +55,7 @@ class DefectosAdmin(admin.ModelAdmin):
 # --- CONFIGURACIÓN BASE PARA ÓRDENES ---
 class OrdenBaseAdmin(admin.ModelAdmin):
     list_display = ('numero_orden', 'estado', 'fecha_creacion', 'lider', 'maquina', 'molde')
-    list_filter = ('estado', 'fecha_creacion', 'lider')
+    list_filter = ('estado', 'fecha_creacion','asignaciones', 'lider')
     search_fields = ('numero_orden', 'maquina', 'lider__username', 'molde__nombre')
     autocomplete_fields = ['lider', 'molde']
     inlines = [AsignacionInline] # Aquí insertamos la tabla de técnicos

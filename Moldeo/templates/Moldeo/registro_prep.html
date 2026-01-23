@@ -1,6 +1,6 @@
 {% extends 'Moldeo/base.html' %}
 
-{% block title %}Registrar Orden - TPM{% endblock %}
+{% block title %}Registrar Orden - PREP{% endblock %}
 
 {% block content %}
 <div class="container mx-auto max-w-7xl px-4 py-12">
@@ -11,7 +11,7 @@
         </a>
     </div>
     
-    <h1 class="text-4xl font-bold text-center text-yellow-500 mb-8">Registrar Orden (TPM)</h1>
+    <h1 class="text-4xl font-bold text-center text-green-500 mb-8">Registrar Orden (PREP)</h1>
 
     <form id="form-registro" action="" method="POST" class="w-full max-w-7xl mx-auto bg-gray-800 rounded-lg shadow-xl border border-gray-700 overflow-visible" novalidate>
         {% csrf_token %}
@@ -21,8 +21,8 @@
         <div class="bg-gray-900/50 border-b border-gray-700 px-8 pt-4">
             <nav class="-mb-px flex space-x-8" aria-label="Tabs">
                 <button type="button" id="tab-btn-general" onclick="switchTab('general')"
-                    class="group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-all border-yellow-500 text-yellow-500">
-                    Datos de la Orden TPM
+                    class="group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-all border-green-500 text-green-500">
+                    Datos de la Orden PREP
                 </button>
                 <button type="button" id="tab-btn-vinculada" onclick="switchTab('vinculada')"
                     class="hidden group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-all border-transparent text-gray-400 hover:text-red-400">
@@ -58,11 +58,11 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-400 mb-1">Status</label>
-                        <input type="text" id="input-status" name="statusmcm" value="{{ status_actual|default:'206' }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold px-3 py-2">
+                        <input type="text" id="input-status" name="statusmcm" value="{{ status_actual|default:'230' }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold px-3 py-2">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-400 mb-1">Defecto (SAP)</label>
-                        <input type="text" name="defecto_sap" value="{{ pre_defecto }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold px-3 py-2">
+                     <div>
+                         <label class="block text-sm font-medium text-gray-400 mb-1">Defecto (SAP)</label>
+                         <input type="text" name="defecto_sap" value="{{ pre_defecto }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold px-3 py-2">
                     </div>
                     <div class="col-span-1 sm:col-span-2 mt-6 border-t border-gray-700 pt-6">
                         <label class="block text-sm font-bold text-gray-300 mb-3 text-center uppercase tracking-wider">Selección de Tarjeta</label>
@@ -80,13 +80,13 @@
                                 </div>
                             </label>
                         </div>
-                        <p class="text-center text-xs text-gray-500 italic" id="txt-help-tarjeta">Tarjeta Verde: Mantenimiento TPM estándar.</p>
+                        <p class="text-center text-xs text-gray-500 italic" id="txt-help-tarjeta">Tarjeta Verde: Mantenimiento PREP estándar.</p>
                     </div>
                 </div>
 
                 <div class="space-y-4">
                     <div class="flex justify-between items-center bg-gray-700/30 p-2 rounded-t-lg border-b border-gray-600">
-                        <h3 class="text-lg font-bold text-yellow-400 pl-2">Técnicos (Orden Principal)</h3>
+                        <h3 class="text-lg font-bold text-green-400 pl-2">Técnicos (Orden Principal)</h3>
                         <button type="button" onclick="createNewTechCard('main')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-4 rounded shadow flex items-center gap-1">
                             <span class="text-lg leading-none">+</span> Nuevo Técnico
                         </button>
@@ -149,9 +149,9 @@
             </div>
 
             <div class="pt-6 border-t border-gray-700 mt-8 mb-8">
-                <button type="submit" class="w-full bg-yellow-600 hover:bg-yellow-500 text-white text-xl font-bold py-4 px-6 rounded-lg shadow-lg flex items-center justify-center gap-3">
+                <button type="submit" class="w-full bg-green-600 hover:bg-green-500 text-white text-xl font-bold py-4 px-6 rounded-lg shadow-lg flex items-center justify-center gap-3">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-                    Guardar TPM
+                    Guardar PREP
                 </button>
             </div>
         </div>
@@ -167,8 +167,8 @@
                 <div class="combo-list hidden absolute top-full left-0 w-full bg-gray-600 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg"></div>
             </div>
             <div class="md:col-span-4 relative group-combo-lider">
-                <label class="block text-[10px] text-yellow-500 uppercase font-bold mb-1 tracking-wider">Líder Responsable</label>
-                <input type="text" class="input-lider w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white focus:ring-2 focus:ring-yellow-500 placeholder-gray-500 validate-required" placeholder="Seleccionar..." autocomplete="off">
+                <label class="block text-[10px] text-green-500 uppercase font-bold mb-1 tracking-wider">Líder Responsable</label>
+                <input type="text" class="input-lider w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white focus:ring-2 focus:ring-green-500 placeholder-gray-500 validate-required" placeholder="Seleccionar..." autocomplete="off">
                 <div class="combo-list-lider hidden absolute top-full left-0 w-full bg-gray-600 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg"></div>
             </div>
             <div class="md:col-span-3 relative custom-select-container">
@@ -207,47 +207,6 @@
             <input type="text" class="input-actividad w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-white font-bold placeholder-gray-500 focus:border-blue-500 outline-none" placeholder="Seleccionar..." autocomplete="off">
             <div class="combo-list-actividad hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 z-50 max-h-40 overflow-y-auto shadow-xl rounded-b"></div>
         </div>
-
-        <div class="grid grid-cols-2 gap-3 mb-2">
-            <div class="relative">
-                <label class="block text-[9px] text-emerald-400 uppercase font-bold mb-1">Zona</label>
-                <select class="select-zona w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:border-emerald-500 outline-none cursor-pointer">
-                    <option value="">-- Seleccionar --</option>
-                </select>
-            </div>
-            <div class="relative">
-                <label class="block text-[9px] text-emerald-400 uppercase font-bold mb-1">Subzona</label>
-                <select class="select-subzona w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:border-emerald-500 outline-none cursor-pointer disabled:opacity-50" disabled>
-                    <option value="">-- Primero Zona --</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="details-panel hidden mt-2 pt-2 border-t border-gray-700/50 bg-gray-800/30 p-2 rounded">
-            <div class="flex items-center gap-2 mb-2">
-                <svg class="w-3 h-3 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <label class="text-[10px] text-yellow-500 uppercase font-bold">Detalles de Ubicación</label>
-            </div>
-            
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <div>
-                    <input type="text" class="input-modulo w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 outline-none" placeholder="Módulo (Ej: 1)">
-                </div>
-                <div>
-                    <input type="text" class="input-cavidad w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 outline-none" placeholder="Cavidad">
-                </div>
-                <div>
-                    <input type="text" class="input-circuito w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 outline-none" placeholder="Circuito">
-                </div>
-                <div>
-                    <select class="input-lado w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 outline-none cursor-pointer">
-                        <option value="">Lado...</option>
-                        <option value="Fijo">Fijo</option>
-                        <option value="Movil">Móvil</option>
-                    </select>
-                </div>
-            </div>
-        </div>
     </div>
 </template>
 
@@ -267,7 +226,6 @@
 
     // DATOS DJANGO
     const catalogoActividades = {{ actividades_json|default:"[]"|safe }};
-    const catalogoZonas = {{ zonas_json|default:"[]"|safe }};
     const tecnicosData = {{ tecnicos_json|default:"[]"|safe }};
     const lideresData = {{ lideres_json|default:"[]"|safe }};
 
@@ -280,12 +238,12 @@
 
         if(tabName === 'general') {
             viewGeneral.classList.remove('hidden'); viewVinculada.classList.add('hidden');
-            btnGeneral.classList.replace('border-transparent', 'border-yellow-500'); btnGeneral.classList.replace('text-gray-400', 'text-yellow-500');
+            btnGeneral.classList.replace('border-transparent', 'border-green-500'); btnGeneral.classList.replace('text-gray-400', 'text-green-500');
             btnVinculada.classList.replace('border-red-500', 'border-transparent'); btnVinculada.classList.replace('text-red-400', 'text-gray-400');
         } else {
             viewGeneral.classList.add('hidden'); viewVinculada.classList.remove('hidden');
             btnVinculada.classList.replace('border-transparent', 'border-red-500'); btnVinculada.classList.replace('text-gray-400', 'text-red-400');
-            btnGeneral.classList.replace('border-yellow-500', 'border-transparent'); btnGeneral.classList.replace('text-yellow-500', 'text-gray-400');
+            btnGeneral.classList.replace('border-green-500', 'border-transparent'); btnGeneral.classList.replace('text-green-500', 'text-gray-400');
         }
     }
 
@@ -294,11 +252,11 @@
         const txtHelp = document.getElementById('txt-help-tarjeta');
         if (type === 'roja') {
             btnTabVinculada.classList.remove('hidden');
-            txtHelp.innerText = "Tarjeta Roja: Vincular orden TPM pendiente.";
+            txtHelp.innerText = "Tarjeta Roja: Vincular orden PREP pendiente.";
             cargarOrdenesPendientes(); 
         } else {
             btnTabVinculada.classList.add('hidden');
-            txtHelp.innerText = "Tarjeta Verde: Mantenimiento TPM estándar.";
+            txtHelp.innerText = "Tarjeta Verde: Mantenimiento PREP estándar.";
             switchTab('general');
             document.getElementById('input-orden-vinculada').value = '';
             document.getElementById('orden-vinculada-id').value = '';
@@ -368,7 +326,7 @@
             } else { 
                 // Reset de estilos tabs
                 Array.from(containerTabs.children).forEach(t => { 
-                    t.classList.remove('bg-gray-700','text-white','border-yellow-500','border-red-500'); 
+                    t.classList.remove('bg-gray-700','text-white','border-green-500','border-red-500'); 
                     t.classList.add('bg-gray-800','text-gray-400','border-transparent'); 
                 });
                 // Ocultar contenidos
@@ -377,7 +335,7 @@
                 });
                 
                 // Activar actual
-                const activeColor = (contextKey === 'main') ? 'border-yellow-500' : 'border-red-500';
+                const activeColor = (contextKey === 'main') ? 'border-green-500' : 'border-red-500';
                 tabBtn.classList.add('bg-gray-700','text-white', activeColor); 
                 tabBtn.classList.remove('bg-gray-800','text-gray-400','border-transparent');
                 document.getElementById(currentId).classList.remove('hidden');
@@ -446,8 +404,6 @@
                 // --- LÓGICA INTERNA DE LA ACTIVIDAD ---
                 const inpAct = actCard.querySelector('.input-actividad');
                 const listAct = actCard.querySelector('.combo-list-actividad');
-                const selZona = actCard.querySelector('.select-zona');
-                const selSub = actCard.querySelector('.select-subzona');
                 const detailsPanel = actCard.querySelector('.details-panel');
 
                 // Botón eliminar dentro del card
@@ -459,57 +415,7 @@
                     const lbl = actTabBtn.querySelector('.tab-lbl');
                     if(lbl) lbl.innerText = val.substring(0, 12) + '...';
                 });
-                
-                // Llenar Zonas
-                catalogoZonas.forEach(z => {
-                    const opt = document.createElement('option');
-                    opt.value = z.nombre;
-                    opt.innerText = z.nombre;
-                    selZona.appendChild(opt);
-                });
-
-                // Lógica Toggle Detalles
-                const toggleDetails = () => {
-                    const zonaTxt = selZona.value.toUpperCase();
-                    const subTxt = selSub.value;
-                    const reqDb = selSub.options[selSub.selectedIndex]?.dataset.req === 'true';
-                    // REGLAS ESPECÍFICAS
-                    const esModulos = (zonaTxt === 'MODULOS' && subTxt === 'Uno solo');
-                   
-
-                    if(reqDb || esModulos) {
-                        detailsPanel.classList.remove('hidden');
-                    } else {
-                        detailsPanel.classList.add('hidden');
-                    }
-                };
-
-                // Cambio Zona
-                selZona.addEventListener('change', () => {
-                    selSub.innerHTML = '<option value="">-- Seleccionar --</option>';
-                    selSub.disabled = true;
-                    detailsPanel.classList.add('hidden');
-
-                    const zonaName = selZona.value;
-                    const zonaObj = catalogoZonas.find(z => z.nombre === zonaName);
-                    
-                    if(zonaObj && zonaObj.subzonas.length > 0) {
-                        selSub.disabled = false;
-                        zonaObj.subzonas.forEach(s => {
-                            const opt = document.createElement('option');
-                            opt.value = s.nombre;
-                            opt.innerText = s.nombre;
-                            opt.dataset.req = s.req; 
-                            selSub.appendChild(opt);
-                        });
-                    }
-                });
-
-                // Cambio Subzona
-                selSub.addEventListener('change', toggleDetails);
-
                 activityCardsContent.appendChild(actCard);
-                
                 // Activar la nueva pestaña
                 switchActivityTab(card, activityId);
             };
@@ -629,21 +535,16 @@
             // Buscamos TODOS los activity-card (estén ocultos o no, ya que están en el DOM)
             card.querySelectorAll('.activity-card').forEach(row => {
                 const act = row.querySelector('.input-actividad').value.trim();
-                const zona = row.querySelector('.select-zona').value;
-                const sub = row.querySelector('.select-subzona').value;
                 
-                if(!act || !zona || !sub) {
+                
+                if(!act) {
                     if(!act) row.querySelector('.input-actividad').classList.add('border-red-500');
                     error = true;
                 } else {
                     row.querySelector('.input-actividad').classList.remove('border-red-500');
-                    // Recopilar detalles si estan visibles o tienen valor
-                    const mod = row.querySelector('.input-modulo').value;
-                    const cav = row.querySelector('.input-cavidad').value;
-                    const cir = row.querySelector('.input-circuito').value;
-                    const lad = row.querySelector('.input-lado').value;
+            
                     
-                    actividades.push({ actividad: act, zona: zona, subzona: sub, modulo: mod, cavidad: cav, circuito: cir, lado: lad });
+                    actividades.push({ actividad: act });
                 }
             });
             

@@ -61,7 +61,10 @@
                         <label class="block text-sm font-medium text-gray-400 mb-1">Status</label>
                         <input type="text" id="input-status" name="statusmcm" value="{{ status_actual|default:'110' }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold px-3 py-2">
                     </div>
-
+                    <div>
+                         <label class="block text-sm font-medium text-gray-400 mb-1">Defecto (SAP)</label>
+                         <input type="text" name="defecto_sap" value="{{ pre_defecto }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold px-3 py-2">
+                    </div>
                     <div class="relative">
                         <label class="block text-sm font-medium text-blue-400 mb-1">NP Saliente (Principal)</label>
                         <input type="text" name="parte_saliente" id="input-saliente-main" class="block w-full bg-gray-800 border-gray-500 text-white rounded-md font-bold px-3 py-2 outline-none placeholder-gray-500" placeholder="Buscar NP..." autocomplete="off">
@@ -184,16 +187,20 @@
 <template id="defect-card-template">
     <div class="defect-card bg-gray-800/80 border border-gray-600 rounded p-3 relative animate-fade-in mb-3">
         <button type="button" class="btn-remove-defect-card absolute top-2 right-2 text-gray-600 hover:text-red-400 p-1 text-xl font-bold">&times;</button>
-        <div class="mb-3 relative group-combo-def pr-6">
+       <div class="mb-3 relative pr-6">
             <label class="block text-[9px] text-blue-400 uppercase font-bold mb-1">Defecto</label>
-            <input type="text" class="input-defecto w-full bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white font-bold validate-required" placeholder="Seleccionar..." autocomplete="off">
-            <div class="combo-list-def hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 z-50 max-h-40 overflow-y-auto shadow-xl rounded-b"></div>
-        </div>
+            <input type="text" 
+                   class="input-defecto w-full bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-300 font-bold cursor-not-allowed outline-none" 
+                   value="CAMBIO DE CONFIGURACION" 
+                   readonly>
+            </div>
         <div class="bg-gray-900/50 rounded border border-gray-700/50">
             <div class="grid grid-cols-12 bg-gray-700/50 px-2 py-1 text-[9px] text-gray-400 uppercase font-bold text-center">
-                <div class="col-span-3 label-cav">Cavidad</div>
-                <div class="col-span-3 label-circ">Circuito</div>
-                <div class="col-span-4">Ubicación</div> <div class="col-span-2"></div>
+                <div class="col-span-2 label-cav">Detalle Entrante</div>
+                <div class="col-span-2 label-cav">Detalle Saliente</div>
+                <div class="col-span-2 label-cav">Cavidad</div>
+                <div class="col-span-2 label-circ">Circuito</div>
+                <div class="col-span-3">Ubicación</div> <div class="col-span-2"></div>
             </div>
             <div class="location-rows-container"></div>
             <button type="button" class="btn-add-location-row w-full bg-gray-700/30 hover:bg-gray-700 text-gray-400 hover:text-white text-[10px] py-1 border-t border-gray-700 transition">+ Agregar Ubicación</button>
@@ -203,13 +210,20 @@
 
 <template id="location-row-template">
     <div class="location-row grid grid-cols-12 gap-1 px-2 py-1 border-b border-gray-700/30 last:border-0 items-center animate-fade-in relative">
-        <div class="col-span-3 relative custom-select-container">
+        <div class="col-span-2">
+            <input type="text" class="input-entrante w-full bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-center text-white focus:border-blue-500 outline-none placeholder-gray-600" placeholder="-">
+        </div>
+
+        <div class="col-span-2">
+            <input type="text" class="input-saliente w-full bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-center text-white focus:border-blue-500 outline-none placeholder-gray-600" placeholder="-">
+        </div>
+        <div class="col-span-2 relative custom-select-container">
             <input type="text" class="input-cav input-select w-full bg-transparent border-b border-gray-600 focus:border-blue-500 text-center text-xs text-white placeholder-gray-600 focus:outline-none py-1 cursor-pointer validate-required" placeholder="-" readonly>
             <div class="select-menu hidden absolute top-full left-0 w-full bg-gray-800 border border-gray-600 shadow-2xl rounded max-h-60 overflow-y-auto z-50">
                 {% for i in "x"|rjust:"128" %}<div class="select-option p-2 hover:bg-blue-600 text-white text-center text-xs cursor-pointer border-b border-gray-700 last:border-0" data-value="{{ forloop.counter }}">{{ forloop.counter }}</div>{% endfor %}
             </div>
         </div>
-        <div class="col-span-3 relative group-circuito">
+        <div class="col-span-2 relative group-circuito">
             <input type="text" class="input-circ w-full bg-transparent border-b border-gray-600 focus:border-yellow-500 text-center text-xs text-white placeholder-gray-600 focus:outline-none py-1 cursor-pointer validate-required" placeholder="-" readonly>
             <div class="circuito-menu hidden absolute top-full left-0 w-64 bg-gray-800 border border-gray-600 shadow-2xl rounded z-[100] p-2 max-h-60 overflow-y-auto">
                 <label class="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded cursor-pointer border-b border-gray-600 mb-2">
@@ -226,11 +240,11 @@
                 </div>
             </div>
         </div>
-        <div class="col-span-4 flex items-center justify-center gap-3">
+        <div class="col-span-3 flex items-center justify-center gap-2">
             <label class="inline-flex items-center cursor-pointer group"><input type="checkbox" class="input-fijo form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded"><span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Fijo</span></label>
             <label class="inline-flex items-center cursor-pointer group"><input type="checkbox" class="input-movil form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded"><span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Móvil</span></label>
         </div>
-        <div class="col-span-2 text-center">
+        <div class="col-span-1 text-center">
             <button type="button" class="btn-remove-loc text-gray-600 hover:text-red-500 font-bold px-2 text-xl">&times;</button>
         </div>
     </div>

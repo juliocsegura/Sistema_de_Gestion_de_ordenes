@@ -3,6 +3,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 from itertools import chain 
 from django.contrib.auth.models import User
+import json
 
 class Lideres(models.Model):
     nombre = models.CharField(max_length=150)
@@ -212,6 +213,19 @@ class AsignacionUniversal(models.Model):
     fecha_inicio = models.DateTimeField(auto_now_add=True)
     fecha_fin = models.DateTimeField(null=True, blank=True)
     detalles_json = models.TextField(blank=True, null=True, default='[]')
+    @property
+    def resumen_actividades(self):
+        """Devuelve un string con las actividades separadas por coma"""
+        if not self.detalles_json:
+            return ""
+        try:
+            data = json.loads(self.detalles_json)
+            # Si es lista de objetos (TPM)
+            if isinstance(data, list) and len(data) > 0 and 'actividad' in data[0]:
+                return ", ".join([d.get('actividad', '') for d in data])
+            return ""
+        except:
+            return ""
     def __str__(self):
         status = "🟢" if self.activo else "🔴"
         return f"{status} {self.nombre_tecnico} en {self.content_object}"
@@ -220,6 +234,7 @@ class AsignacionUniversal(models.Model):
         indexes = [
             models.Index(fields=["content_type", "object_id"]),
         ]
+    
 # --- 3. MODELOS GENÉRICOS RELACIONADOS ---
 #class ItemTecnico(models.Model):
 #    nombre = models.CharField(max_length=100) 
@@ -318,3 +333,9 @@ class SubZonaTPM(models.Model):
 
     def __str__(self):
         return f"{self.zona.nombre} - {self.nombre}"
+class ActividadPREP(models.Model):
+    nombre = models.CharField(max_length=200, unique=True)
+    activo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.nombre

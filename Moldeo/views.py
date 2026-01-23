@@ -6,7 +6,7 @@ from datetime import datetime, time
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, Prefetch
 from django.db import transaction, models
-from .models import (Moldmakers, OrdenMCM, OrdenCHO, OrdenTPM, OrdenPREP,EstatusOrden,Maquinas,ActividadTPM,SubZonaTPM,ZonaTPM,NumerosParte, Moldes, OrdenSAP, Defectos, AsignacionUniversal,Lideres)
+from .models import (Moldmakers, OrdenMCM, OrdenCHO, OrdenTPM, OrdenPREP,EstatusOrden,Maquinas,ActividadTPM,ActividadPREP,SubZonaTPM,ZonaTPM,NumerosParte, Moldes, OrdenSAP, Defectos, AsignacionUniversal,Lideres)
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
 from django.views.decorators.http import require_http_methods 
 from django.contrib.auth.decorators import login_required
@@ -88,6 +88,15 @@ def btn_status_ordentpm_view(request):
         'pre_maquina': request.GET.get('maquina', '')
     }
     return render(request, 'Moldeo/btn_status_tpm.html', context)
+def btn_status_ordenprep_view(request):
+    context = {
+        'pre_orden': request.GET.get('numero_orden', ''),
+        'pre_defecto': request.GET.get('defecto_sap', ''),
+        'pre_molde': request.GET.get('molde', ''),
+        
+        'pre_maquina': request.GET.get('maquina', '')
+    }
+    return render(request, 'Moldeo/btn_status_prep.html', context)
 
 @require_http_methods(["GET", "POST"])
 def mcm_view(request):
@@ -402,13 +411,15 @@ def registro_cho_view(request):
 def registro_tpm_view(request):
     # 1. Configuración Inicial
     tipo_mntn = 'TPM'
-    status_actual = '110' # O el estatus default para TPM
+    status_actual = '206' # O el estatus default para TPM
 
     # Recuperar datos de GET (para precargar)
     pre_orden = request.GET.get('numero_orden', '') or request.POST.get('numero_orden', '')
-    pre_molde_nombre = request.GET.get('molde_nombre', '') or request.POST.get('molde_nombre', '')
-    pre_molde_pk = request.GET.get('molde', '') or request.POST.get('molde', '')
-
+    pre_maquina = request.POST.get('maquina') or request.GET.get('maquina', '')
+    pre_defecto = request.POST.get('defecto_sap') or request.GET.get('defecto_sap', '')
+    # Manejo inteligente del Molde (Nombre vs ID)
+    pre_molde_nombre = request.GET.get('molde', '') 
+    pre_molde_pk = request.POST.get('molde', '')
     molde_obj = None
 
     # Búsqueda inteligente del Molde (Igual que en CHO)
@@ -475,6 +486,7 @@ def registro_tpm_view(request):
                 # Crear la Orden TPM
                 nueva_orden = OrdenTPM.objects.create(
                     numero_orden=numero_orden,
+                    tipo_mntn = tipo_mntn,
                     molde=molde_obj,
                     maquina=molde_obj.maquina.nombre if molde_obj.maquina else None,
                     status=status_actual, # Status numérico ej. 110
@@ -496,8 +508,6 @@ def registro_tpm_view(request):
                         if nombre:
                             nombre_final = f"{nombre} (L: {lider_tec})" if lider_tec else nombre
                             
-                            # Guardamos la lista de actividades en el campo JSON 'detalles_json'
-                            # AsignacionUniversal es flexible, usamos detalles_json para guardar esto
                             detalles_str = json.dumps(lista_actividades)
 
                             AsignacionUniversal.objects.create(
@@ -523,111 +533,234 @@ def registro_tpm_view(request):
         'pre_orden': pre_orden,
         'pre_molde_nombre': pre_molde_nombre,
         'pre_molde_pk': pre_molde_pk,
+        'pre_maquina': molde_obj.maquina.nombre if molde_obj and molde_obj.maquina else '',
         # Pasamos los JSONs para que los use el JavaScript
         'actividades_json': actividades_json,
         'zonas_json': zonas_json,
+        'pre_defecto': pre_defecto,
         'tecnicos_json': tecnicos_json,
         'lideres_json': lideres_json
     }
     return render(request, 'Moldeo/registro_tpm.html', context)
+@require_http_methods(["GET", "POST"])
+@transaction.atomic
+def registro_prep_view(request):
+    # 1. Configuración Inicial
+    tipo_mntn = 'PREP'
+    status_actual = request.POST.get('statusmcm') or request.GET.get('status', '')
 
+    # Recuperar datos de GET/POST (para precargar)
+    pre_orden = request.GET.get('numero_orden', '') or request.POST.get('numero_orden', '')
+    pre_maquina = request.POST.get('maquina') or request.GET.get('maquina', '')
+    pre_defecto = request.POST.get('defecto_sap') or request.GET.get('defecto_sap', '')
+    # Manejo inteligente del Molde (Nombre vs ID)
+    pre_molde_nombre = request.GET.get('molde', '') 
+    pre_molde_pk = request.POST.get('molde', '')
+    molde_obj = None
+
+    # Búsqueda inteligente del Molde
+    if pre_molde_pk:
+        try:
+            molde_obj = Moldes.objects.get(pk=pre_molde_pk)
+            pre_molde_nombre = molde_obj.nombre
+        except: pass
+    elif pre_molde_nombre:
+        try:
+            molde_obj = Moldes.objects.filter(nombre=pre_molde_nombre).first()
+            if molde_obj: pre_molde_pk = molde_obj.pk
+        except: pass
+
+    # ==============================================================
+    # 2. PREPARACIÓN DE DATOS (CATÁLOGOS PARA JS)
+    # ==============================================================
+    
+    # A. Actividades PREP
+    actividades = list(ActividadPREP.objects.filter(activo=True).values('nombre'))
+    
+    # B. Zonas (Vacío para PREP)
+    zonas_data = [] 
+    
+    # Convertir a JSON strings seguros para el template
+    actividades_json = json.dumps(actividades)
+    zonas_json = json.dumps(zonas_data) 
+    tecnicos_json = json.dumps([{'nombre': t.nombre} for t in Moldmakers.objects.filter(activo=True).order_by('nombre')])
+    lideres_json = json.dumps([{'nombre': l.nombre} for l in Lideres.objects.filter(activo=True).order_by('nombre')])
+
+    # ==============================================================
+    # 3. PROCESAMIENTO POST (GUARDADO)
+    # ==============================================================
+    if request.method == 'POST':
+        numero_orden = request.POST.get('numero_orden')
+        # Intentamos recuperar el molde del POST si no vino antes
+        if not molde_obj and request.POST.get('molde'):
+             try:
+                 molde_obj = Moldes.objects.get(pk=request.POST.get('molde'))
+             except: pass
+
+        asignaciones_json = request.POST.get('asignaciones_json', '')
+
+        if not (numero_orden and molde_obj):
+            messages.error(request, 'Error: Faltan datos obligatorios (Orden o Molde).')
+        else:
+            try:
+                # Crear la Orden PREP
+                nueva_orden = OrdenPREP.objects.create(
+                    numero_orden=numero_orden,
+                    tipo_mntn = tipo_mntn,
+                    molde=molde_obj,
+                    maquina=molde_obj.maquina.nombre if molde_obj.maquina else None,
+                    status=status_actual, # Valor fijo
+                    estado='Activa',      # Estado legible
+                    comentarios="Inicio de Mantenimiento PREP",
+                    ultima_actualizacion=timezone.now()
+                )
+
+                # Procesar Asignaciones (JSON)
+                if asignaciones_json:
+                    data = json.loads(asignaciones_json)
+                    
+                    for item in data:
+                        nombre = item.get('nombre')
+                        lider_tec = item.get('lider', '')
+                        mesa = item.get('mesa', '-')
+                        lista_actividades = item.get('actividades', [])
+
+                        if nombre:
+                            nombre_final = f"{nombre} (L: {lider_tec})" if lider_tec else nombre
+                            
+                            # Guardamos las actividades en el JSON 'detalles_json'
+                            detalles_str = json.dumps(lista_actividades)
+
+                            AsignacionUniversal.objects.create(
+                                content_object=nueva_orden,
+                                nombre_tecnico=nombre_final,
+                                mesa=mesa,
+                                detalles_json=detalles_str, 
+                                activo=True
+                            )
+
+                messages.success(request, f'Orden PREP {numero_orden} iniciada correctamente.')
+                return redirect('Moldeo:ordenes_en_curso')
+
+            except Exception as e:
+                messages.error(request, f'Error al guardar PREP: {str(e)}')
+                print(f"Error PREP View: {e}") # Debug en consola
+
+    # ==============================================================
+    # 4. RENDERIZADO
+    # ==============================================================
+    context = {
+        'status_actual': status_actual,      
+        'tipo_mntn': tipo_mntn,
+        'pre_orden': pre_orden,
+        'pre_molde_nombre': pre_molde_nombre,
+        'pre_molde_pk': pre_molde_pk,
+        'pre_defecto': pre_defecto,
+        'pre_maquina': molde_obj.maquina.nombre if molde_obj and molde_obj.maquina else '',
+        'actividades_json': actividades_json,
+        'zonas_json': zonas_json,            
+        'tecnicos_json': tecnicos_json,
+        'lideres_json': lideres_json
+    }
+    return render(request, 'Moldeo/registro_prep.html', context)
 # --- VISTAS DE API ---
 
 @require_http_methods(["GET"])
 def api_ordenes_recientes_view(request):
-    p_asignaciones = Prefetch('asignaciones', queryset=AsignacionUniversal.objects.all())
+    # 1. Optimización de Consultas (Prefetch)
+    p_asignaciones = Prefetch('asignaciones', queryset=AsignacionUniversal.objects.filter(activo=True))
 
-    qs_mcm = OrdenMCM.objects.exclude(estado='Finalizada').select_related('molde', 'lider').prefetch_related(p_asignaciones).all()
-    qs_cho = OrdenCHO.objects.exclude(estado='Finalizada').select_related('molde', 'lider').prefetch_related(p_asignaciones).all()
-    qs_tpm = OrdenTPM.objects.exclude(estado='Finalizada').select_related('molde', 'lider').prefetch_related(p_asignaciones).all()
-    qs_prep = OrdenPREP.objects.exclude(estado='Finalizada').select_related('molde', 'lider').prefetch_related(p_asignaciones).all()
+    qs_mcm = OrdenMCM.objects.exclude(estado='Finalizada').select_related('molde', 'lider').prefetch_related(p_asignaciones)
+    qs_cho = OrdenCHO.objects.exclude(estado='Finalizada').select_related('molde', 'lider').prefetch_related(p_asignaciones)
+    qs_tpm = OrdenTPM.objects.exclude(estado='Finalizada').select_related('molde', 'lider').prefetch_related(p_asignaciones)
+    qs_prep = OrdenPREP.objects.exclude(estado='Finalizada').select_related('molde', 'lider').prefetch_related(p_asignaciones)
 
+    # 2. Unificar listas
     todas = list(chain(qs_mcm, qs_cho, qs_tpm, qs_prep))
     todas.sort(key=attrgetter('fecha_creacion'), reverse=True)
     
     data = []
+
+    # 3. Bucle Único
     for orden in todas:
-        asignaciones = list(orden.asignaciones.all())
-        nombres_defectos = set()
         tecnicos_data = []
-        nombres_visibles = [] 
-        defectos_visibles = set()
-        for asignacion in orden.asignaciones.filter(activo=True):
-            if asignacion.detalles_json:
+        elementos_visuales = set() # Aquí guardaremos Defectos (MCM) o Actividades (TPM)
+        nombres_tecnicos_visibles = []
+
+        # Recorrer asignaciones activas
+        asignaciones = orden.asignaciones.all() # Ya filtrado por el Prefetch a activo=True
+
+        for asig in asignaciones:
+            nombres_tecnicos_visibles.append(asig.nombre_tecnico)
+            
+            # Parsear JSON de detalles
+            detalles_obj = []
+            if asig.detalles_json:
                 try:
-                    detalles = json.loads(asignacion.detalles_json)
-                    for item in detalles:
+                    detalles_obj = json.loads(asig.detalles_json)
+                except: pass
+            
+            # --- LÓGICA DIFERENCIADA ---
+            if orden.tipo_mntn in ['TPM','PREP']:
+                # Si es TPM, buscamos "actividad"
+                if isinstance(detalles_obj, list):
+                    for item in detalles_obj:
+                        if 'actividad' in item:
+                            elementos_visuales.add(item['actividad'])
+            else:
+                # Si es CHO/MCM, buscamos "defecto"
+                if isinstance(detalles_obj, list):
+                    for item in detalles_obj:
                         if 'defecto' in item:
-                            nombres_defectos.add(item['defecto'])
-                except:
-                    pass
-        
-        # Si encontraron defectos, los unimos con comas. Si no, ponemos el de SAP por defecto.
-        if nombres_defectos:
-          texto_defectos = ", ".join(list(nombres_defectos))
-        else:
-            # Fallback: Si nadie ha registrado nada aún, mostramos el defecto original
-          texto_defectos = getattr(orden, 'defecto_sap', 'Sin defecto')
-        for item in asignaciones:
-            # 1. Intentar leer JSON complejo
-            try:
-                detalles_obj = json.loads(item.detalles_json) if item.detalles_json else []
-            except:
-                detalles_obj = []
+                            elementos_visuales.add(item['defecto'])
+                
+                # Compatibilidad con datos viejos planos
+                if not detalles_obj and getattr(asig, 'defecto', None):
+                     elementos_visuales.add(asig.defecto)
 
-            # 2. Compatibilidad con datos viejos (planos)
-            if not detalles_obj and (item.defecto or item.cavidad):
-                detalles_obj = [{
-                    'defecto': item.defecto or '', 
-                    'cav': item.cavidad or '-', 
-                    'circ': item.circuito or '-'
-                }]
-
-            # 3. --- CORRECCIÓN CLAVE: Extraer resumen para la tarjeta principal ---
-            # Tomamos la cavidad/circuito del PRIMER detalle para mostrarlo en el dashboard
+            # Extraer cavidad/circuito del primer detalle para la tarjeta (MCM)
             resumen_cav = '-'
             resumen_circ = '-'
-            if detalles_obj:
-                resumen_cav = detalles_obj[0].get('cav', '-')
-                resumen_circ = detalles_obj[0].get('circ', '-')
+            if detalles_obj and isinstance(detalles_obj, list) and len(detalles_obj) > 0:
+                resumen_cav = detalles_obj[0].get('cav', detalles_obj[0].get('cavidad', '-'))
+                resumen_circ = detalles_obj[0].get('circ', detalles_obj[0].get('circuito', '-'))
+            elif orden.tipo_mntn == 'TPM' and detalles_obj:
+                 # En TPM podemos mostrar la Zona como "cavidad" visualmente si quieres
+                 resumen_cav = detalles_obj[0].get('zona', '-')
 
-            # 4. Construir objeto del técnico
+            # Construir objeto del técnico para el modal
             tecnicos_data.append({
-                'id': item.id, 
-                'nombre': item.nombre_tecnico,
-                'mesa': item.mesa or '-',
-                'activo': item.activo,
-                'fecha_fin': item.fecha_fin.strftime('%H:%M') if item.fecha_fin else None,
-                'lider': str(item.lider) if hasattr(item, 'lider') and item.lider else (str(orden.lider) if orden.lider else None),
-                'detalles': detalles_obj, # Lista completa para el Modal
-                
-                # Agregamos estos campos para evitar el KeyError
-                'cavidad': resumen_cav,   
+                'id': asig.id, 
+                'nombre': asig.nombre_tecnico,
+                'mesa': asig.mesa or '-',
+                'activo': asig.activo,
+                'lider': str(orden.lider) if orden.lider else '-',
+                'detalles': detalles_obj,
+                'cavidad': resumen_cav,
                 'circuito': resumen_circ
             })
-            
-            # Recolectar nombres y defectos para el resumen visual
-            if item.activo:
-                nombres_visibles.append(item.nombre_tecnico)
-                for det in detalles_obj:
-                    if det.get('defecto'):
-                        defectos_visibles.add(det.get('defecto'))
-            
-        
-        # Ordenar: Activos primero
-        tecnicos_data.sort(key=lambda x: x['activo'], reverse=True)
 
-        tecnico_str = ", ".join(nombres_visibles) if nombres_visibles else "Sin técnico activo"
-        
+        # --- DEFINIR TEXTO DE LA COLUMNA "DEFECTOS / ACTIVIDADES" ---
+        if elementos_visuales:
+            # Si encontramos actividades (TPM) o defectos (MCM) en el JSON
+            texto_defectos = ", ".join(list(elementos_visuales))
+        else:
+            # Fallback: Usar el defecto de SAP o mensaje genérico
+            if orden.tipo_mntn == 'TPM':
+                texto_defectos = "Mantenimiento Preventivo"
+            else:
+                texto_defectos = getattr(orden, 'defecto_sap', 'Sin defecto registrado')
 
-        # Encontrar datos del primer técnico activo para mostrar en la tarjeta
-        primero_activo = next((t for t in tecnicos_data if t['activo']), None)
+        # Datos del primer técnico (para mostrar en tarjeta principal)
+        primero_activo = tecnicos_data[0] if tecnicos_data else None
         
+        # Nombre del molde seguro
         nombre_molde = "N/A"
         if orden.molde:
             try: nombre_molde = orden.molde.nombre
             except: nombre_molde = "Ref Error"
 
+        # --- CONSTRUCCIÓN FINAL DEL OBJETO ---
         data.append({
             'id': orden.id,
             'numero_orden': orden.numero_orden,
@@ -636,21 +769,18 @@ def api_ordenes_recientes_view(request):
             'fecha_creacion': timezone.localtime(orden.fecha_creacion).strftime('%d/%m/%Y %H:%M'),
             'molde': nombre_molde,
             'defecto_sap': getattr(orden, 'defecto_sap', '-'),
-            'defectos_lista': list(defectos_visibles), 
+            
+            # AQUÍ ESTÁ LA MAGIA: lista_defectos contiene Actividades si es TPM
+            'lista_defectos': texto_defectos, 
+            
             'estado': orden.estado, 
             'comentarios': orden.comentarios, 
-            'tecnico': tecnico_str,
+            'tecnico': ", ".join(nombres_tecnicos_visibles) if nombres_tecnicos_visibles else "Sin Asignar",
             'tecnicos_lista': tecnicos_data,
-            'lista_defectos': texto_defectos,
-            'orden_retorno_ref': orden.orden_retorno_ref,
-            'motivo_retorno': orden.motivo_retorno,
-            'observaciones_retorno': orden.observaciones_retorno,
             'maquina': orden.maquina if orden.maquina else None,
-            # Aquí es donde fallaba antes: ahora 'cavidad' y 'circuito' existen en 'primero_activo'
             'mesa': primero_activo['mesa'] if primero_activo else '-',
             'cavidad': primero_activo['cavidad'] if primero_activo else '-', 
             'circuito': primero_activo['circuito'] if primero_activo else '-',
-             
             'duracion_segundos': getattr(orden, 'duracion_segundos', 0),
             'ultima_actualizacion_iso': orden.ultima_actualizacion.isoformat() if hasattr(orden, 'ultima_actualizacion') and orden.ultima_actualizacion else None,
         })
@@ -1161,10 +1291,11 @@ def carga_masiva_view(request):
                 # --- PROCESO ACTIVIDADES TPM (NUEVO) ---
                 elif modelo_destino == 'actividades_tpm':
                     actividades_creadas = 0
+                    actividadesPREP_creadas = 0
                     zonas_creadas = 0
                     
                     # Detectar columnas clave
-                    col_act = next((c for c in col_names if 'ACTIVIDADES' in c.upper()), None)
+                    col_act = next((c for c in col_names if 'ACTIVIDADES TPM' in c.upper()), None)
                     col_zona = next((c for c in col_names if 'ZONAS' in c.upper()), None)
                     col_subzona = next((c for c in col_names if 'SUBZONAS' in c.upper()), None)
                     col_req = next((c for c in col_names if 'COMENTARIOS' in c.upper() or 'REQUIERE' in c.upper()), None) # Columna J en tu excel
@@ -1202,9 +1333,23 @@ def carga_masiva_view(request):
                                         defaults={'requiere_detalles': requiere}
                                     )
                                     zonas_creadas += 1
-                    
-                    messages.success(request, f"TPM Cargado: {actividades_creadas} actividades y {zonas_creadas} subzonas.")
+                    # Detectar columnas clave
+                    col_act = next((c for c in col_names if 'ACTIVIDADES PREP' in c.upper()), None)
+                        
 
+                            # 1. Cargar Actividades 
+                    if col_act:
+                        df_act = df.dropna(subset=[col_act])
+                        for _, row in df_act.iterrows():
+                            nombre = str(row[col_act]).strip()
+                            if nombre and nombre.lower() != 'nan':
+                                ActividadPREP.objects.get_or_create(nombre=nombre)
+                                actividadesPREP_creadas += 1
+                    messages.success(request, f"TPM Cargado: {actividades_creadas} actividades, PREP Cargado: {actividades_creadas} actividades, PREP Cargado: {actividadesPREP_creadas} actividades y {zonas_creadas} subzonas.")
+                       
+                            
+                            
+                            
                 elif modelo_destino == 'estatus_ordenes':
                     estatus_creados = 0
                     
