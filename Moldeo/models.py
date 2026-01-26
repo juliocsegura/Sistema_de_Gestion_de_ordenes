@@ -184,6 +184,8 @@ class OrdenCHO(OrdenBase):
   molde =models.ForeignKey(Moldes, on_delete=models.SET_NULL,null=True,blank=True,related_name='ordenes_cho',db_constraint=False)
   parte_saliente = models.CharField(max_length=100, blank=True, null=True)
   parte_entrante = models.CharField(max_length=100, blank=True, null=True)
+  detalle_saliente = models.CharField(max_length=100, blank=True, null=True)
+  detalle_entrante = models.CharField(max_length=100, blank=True, null=True)
   tipo_tarjeta = models.CharField(max_length=10, default='verde', choices=[('verde', 'Verde'), ('roja', 'Roja')])
  
 class OrdenTPM(OrdenBase):
