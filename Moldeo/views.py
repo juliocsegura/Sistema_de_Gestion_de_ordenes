@@ -340,45 +340,59 @@ def registro_cho_view(request):
                 # B. PROCESAR ORDEN VINCULADA (SOLO SI ES ROJA)
                 # =================================================
                 if tipo_tarjeta == 'roja' and orden_vinculada_id:
-                    # Buscar la orden existente que estaba pendiente
-                    orden_vinc = OrdenCHO.objects.filter(numero_orden=orden_vinculada_id).first()
+    # Intentamos obtener la MCM, si no existe, la creamos para que quede registro
+                    orden_vinc, created = OrdenMCM.objects.get_or_create(
+                        numero_orden=orden_vinculada_id,
+                        defaults={
+                            'molde': molde_obj,
+                            'maquina': maquina_input,
+                            'estado': 'Activa',
+                            'status': '110', # Status de inicio
+                            'tipo_mntn': 'MCM' # Forzamos que sea MCM
+                        }
+                    )
                     
-                    if orden_vinc:
-                        # Actualizar datos para iniciarla
+                    # Si ya existía, actualizamos sus campos para "activarla"
+                    if not created:
                         orden_vinc.estado = 'Activa'
                         orden_vinc.status = status_actual
                         orden_vinc.maquina = maquina_input
-                        orden_vinc.molde = molde_obj 
-                        
-                        # Usar sus propios datos de NP (Independientes)
-                        orden_vinc.parte_saliente = parte_saliente_vinc
-                        orden_vinc.parte_entrante = parte_entrante_vinc
-                        
-                        # Comentario de enlace
-                        comentario_extra = f"\n[Iniciada vía Tarjeta Roja vinculada a {numero_orden}]"
-                        if orden_vinc.comentarios:
-                            orden_vinc.comentarios += comentario_extra
-                        else:
-                            orden_vinc.comentarios = comentario_extra
-                            
-                        orden_vinc.ultima_actualizacion = timezone.now()
-                        orden_vinc.save()
+                        orden_vinc.molde = molde_obj
+                    
+                    # NP específicos para la correctiva
+                    orden_vinc.parte_saliente = request.POST.get('parte_saliente_vinc', '')
+                    orden_vinc.parte_entrante = request.POST.get('parte_entrante_vinc', '')
+                    
+                    # Enlace de comentarios
+                    link_msg = f"\n[VINCULADA A CHO: {numero_orden}]"
+                    orden_vinc.comentarios = (orden_vinc.comentarios or "") + link_msg
+                    orden_vinc.ultima_actualizacion = timezone.now()
+                    orden_vinc.save()
 
-                        # Copiar técnicos si se solicitó
-                        if copiar_tecnicos and asignaciones_json:
-                            for item in data:
-                                nombre = item.get('nombre')
-                                lider_tec = item.get('lider', '')
-                                mesa = item.get('mesa', '-')
-                                if nombre:
-                                    nombre_final = f"{nombre} (L: {lider_tec})" if lider_tec else nombre
-                                    AsignacionUniversal.objects.create(
-                                        content_object=orden_vinc,
-                                        nombre_tecnico=nombre_final,
-                                        mesa=mesa,
-                                        detalles_json="[]",
-                                        activo=True
-                                    )
+                    # Copiar técnicos o Procesar JSON específico de MCM
+                    asignaciones_vinc_json = request.POST.get('asignaciones_vinc_json')
+                    
+                    # Prioridad: 1. JSON específico de la pestaña vinculada, 2. Copia de la principal
+                    data_vinc = []
+                    if asignaciones_vinc_json:
+                        data_vinc = json.loads(asignaciones_vinc_json)
+                    elif copiar_tecnicos and asignaciones_json:
+                        data_vinc = json.loads(asignaciones_json)
+
+                    for item in data_vinc:
+                        nombre = item.get('nombre')
+                        if nombre:
+                            lider_tec = item.get('lider', '')
+                            mesa = item.get('mesa', '-')
+                            nombre_final = f"{nombre} (L: {lider_tec})" if lider_tec else nombre
+                            
+                            AsignacionUniversal.objects.create(
+                                content_object=orden_vinc, # Ahora apunta a la instancia MCM
+                                nombre_tecnico=nombre_final,
+                                mesa=mesa,
+                                detalles_json=json.dumps(item.get('detalles', [])),
+                                activo=True
+                            )
                         
                         messages.success(request, f'¡Éxito! Orden principal {numero_orden} y vinculada {orden_vinculada_id} iniciadas.')
                     else:
@@ -403,6 +417,7 @@ def registro_cho_view(request):
         'pre_maquina': molde_obj.maquina.nombre if molde_obj and molde_obj.maquina else '',
         'moldmakers': Moldmakers.objects.filter(activo=True).order_by('nombre'),
         'lideres_all': Lideres.objects.filter(activo=True).order_by('nombre'),
+        'lista_defectos': Defectos.objects.filter(activo=True).order_by('nombre_defecto'),
         'partes_json': partes_json 
     }
     return render(request, 'Moldeo/registro_cho.html', context)
@@ -667,7 +682,7 @@ def registro_prep_view(request):
 
 @require_http_methods(["GET"])
 def api_ordenes_recientes_view(request):
-    # 1. Optimización de Consultas (Prefetch)
+    # 1. Optimización: Traer asignaciones activas
     p_asignaciones = Prefetch('asignaciones', queryset=AsignacionUniversal.objects.filter(activo=True))
 
     qs_mcm = OrdenMCM.objects.exclude(estado='Finalizada').select_related('molde', 'lider').prefetch_related(p_asignaciones)
@@ -684,11 +699,11 @@ def api_ordenes_recientes_view(request):
     # 3. Bucle Único
     for orden in todas:
         tecnicos_data = []
-        elementos_visuales = set() # Aquí guardaremos Defectos (MCM) o Actividades (TPM)
+        elementos_visuales = set()
         nombres_tecnicos_visibles = []
 
         # Recorrer asignaciones activas
-        asignaciones = orden.asignaciones.all() # Ya filtrado por el Prefetch a activo=True
+        asignaciones = orden.asignaciones.all()
 
         for asig in asignaciones:
             nombres_tecnicos_visibles.append(asig.nombre_tecnico)
@@ -696,39 +711,33 @@ def api_ordenes_recientes_view(request):
             # Parsear JSON de detalles
             detalles_obj = []
             if asig.detalles_json:
-                try:
-                    detalles_obj = json.loads(asig.detalles_json)
+                try: detalles_obj = json.loads(asig.detalles_json)
                 except: pass
             
             # --- LÓGICA DIFERENCIADA ---
-            if orden.tipo_mntn in ['TPM','PREP']:
-                # Si es TPM, buscamos "actividad"
+            if orden.tipo_mntn in ['TPM', 'PREP']:
                 if isinstance(detalles_obj, list):
                     for item in detalles_obj:
                         if 'actividad' in item:
                             elementos_visuales.add(item['actividad'])
             else:
-                # Si es CHO/MCM, buscamos "defecto"
                 if isinstance(detalles_obj, list):
                     for item in detalles_obj:
                         if 'defecto' in item:
                             elementos_visuales.add(item['defecto'])
                 
-                # Compatibilidad con datos viejos planos
+                # Compatibilidad datos viejos
                 if not detalles_obj and getattr(asig, 'defecto', None):
                      elementos_visuales.add(asig.defecto)
 
-            # Extraer cavidad/circuito del primer detalle para la tarjeta (MCM)
+            # Resumen Cavidad/Circuito para MCM
             resumen_cav = '-'
             resumen_circ = '-'
             if detalles_obj and isinstance(detalles_obj, list) and len(detalles_obj) > 0:
                 resumen_cav = detalles_obj[0].get('cav', detalles_obj[0].get('cavidad', '-'))
                 resumen_circ = detalles_obj[0].get('circ', detalles_obj[0].get('circuito', '-'))
-            elif orden.tipo_mntn == 'TPM' and detalles_obj:
-                 # En TPM podemos mostrar la Zona como "cavidad" visualmente si quieres
-                 resumen_cav = detalles_obj[0].get('zona', '-')
 
-            # Construir objeto del técnico para el modal
+            # Objeto técnico para el modal
             tecnicos_data.append({
                 'id': asig.id, 
                 'nombre': asig.nombre_tecnico,
@@ -740,27 +749,31 @@ def api_ordenes_recientes_view(request):
                 'circuito': resumen_circ
             })
 
-        # --- DEFINIR TEXTO DE LA COLUMNA "DEFECTOS / ACTIVIDADES" ---
+        # Texto columna Defectos
         if elementos_visuales:
-            # Si encontramos actividades (TPM) o defectos (MCM) en el JSON
             texto_defectos = ", ".join(list(elementos_visuales))
         else:
-            # Fallback: Usar el defecto de SAP o mensaje genérico
-            if orden.tipo_mntn == 'TPM':
-                texto_defectos = "Mantenimiento Preventivo"
-            else:
-                texto_defectos = getattr(orden, 'defecto_sap', 'Sin defecto registrado')
+            if orden.tipo_mntn == 'TPM': texto_defectos = "Mantenimiento Preventivo"
+            elif orden.tipo_mntn == 'PREP': texto_defectos = "Preparación de Molde"
+            else: texto_defectos = getattr(orden, 'defecto_sap', 'Sin defecto registrado')
 
-        # Datos del primer técnico (para mostrar en tarjeta principal)
-        primero_activo = tecnicos_data[0] if tecnicos_data else None
-        
-        # Nombre del molde seguro
         nombre_molde = "N/A"
         if orden.molde:
             try: nombre_molde = orden.molde.nombre
             except: nombre_molde = "Ref Error"
+            
+        primero_activo = tecnicos_data[0] if tecnicos_data else None
 
-        # --- CONSTRUCCIÓN FINAL DEL OBJETO ---
+        # --- DATOS DE RETORNO (¡ESTO FALTABA!) ---
+        # Usamos getattr por si algún modelo antiguo no tiene estos campos
+        retorno_ref = getattr(orden, 'orden_retorno_ref', None)
+        motivo = getattr(orden, 'motivo_retorno', '')
+        obs = getattr(orden, 'observaciones_retorno', '')
+
+        # Limpiar valor "None" string si viene de BD
+        if retorno_ref == 'None' or retorno_ref == 'null': 
+            retorno_ref = None
+
         data.append({
             'id': orden.id,
             'numero_orden': orden.numero_orden,
@@ -769,20 +782,20 @@ def api_ordenes_recientes_view(request):
             'fecha_creacion': timezone.localtime(orden.fecha_creacion).strftime('%d/%m/%Y %H:%M'),
             'molde': nombre_molde,
             'defecto_sap': getattr(orden, 'defecto_sap', '-'),
-            
-            # AQUÍ ESTÁ LA MAGIA: lista_defectos contiene Actividades si es TPM
             'lista_defectos': texto_defectos, 
-            
             'estado': orden.estado, 
             'comentarios': orden.comentarios, 
             'tecnico': ", ".join(nombres_tecnicos_visibles) if nombres_tecnicos_visibles else "Sin Asignar",
             'tecnicos_lista': tecnicos_data,
             'maquina': orden.maquina if orden.maquina else None,
             'mesa': primero_activo['mesa'] if primero_activo else '-',
-            'cavidad': primero_activo['cavidad'] if primero_activo else '-', 
-            'circuito': primero_activo['circuito'] if primero_activo else '-',
             'duracion_segundos': getattr(orden, 'duracion_segundos', 0),
             'ultima_actualizacion_iso': orden.ultima_actualizacion.isoformat() if hasattr(orden, 'ultima_actualizacion') and orden.ultima_actualizacion else None,
+            
+            # --- AQUÍ ESTÁ LA CORRECCIÓN ---
+            'orden_retorno_ref': retorno_ref,
+            'motivo_retorno': motivo,
+            'observaciones_retorno': obs
         })
     
     return JsonResponse({'ordenes': data})
@@ -1659,6 +1672,9 @@ def detalle_orden_historial_api(request):
         return JsonResponse({'success': False, 'message': str(e)})
 def api_ordenes_pendientes(request):
     molde_id = request.GET.get('molde_id')
+    # Lógica para filtrar órdenes que NO sean la actual y estén abiertas
+   
+   
     print(f"--- DEBUG API --- Buscando órdenes para Molde ID: {molde_id}")
 
     if not molde_id:
@@ -1672,7 +1688,11 @@ def api_ordenes_pendientes(request):
         ids_mcm = set(str(x) for x in OrdenMCM.objects.values_list('numero_orden', flat=True))
         
         # Unimos todos los sets en uno solo para búsqueda rápida
-        ids_ocupados = ids_cho.union(ids_tpm).union(ids_mcm)
+        ids_ocupados = set(
+                str(n) for n in list(OrdenCHO.objects.values_list('numero_orden', flat=True)) +
+                list(OrdenTPM.objects.values_list('numero_orden', flat=True)) +
+                list(OrdenMCM.objects.values_list('numero_orden', flat=True))
+                )
         print(f"--- DEBUG API --- Total órdenes ya ocupadas en el sistema: {len(ids_ocupados)}")
 
         # 2. Buscar en OrdenSAP
@@ -1682,26 +1702,19 @@ def api_ordenes_pendientes(request):
         try:
             molde_obj = Moldes.objects.get(pk=molde_id)
             # Asumiendo que el nombre del molde es igual al work_center en SAP
-            qs_sap = OrdenSAP.objects.filter(work_center=molde_obj.nombre) 
+            qs_sap = OrdenSAP.objects.filter(work_center__icontains=molde_obj.nombre) 
         except Moldes.DoesNotExist:
             qs_sap = []
         print(f"--- DEBUG API --- Órdenes SAP encontradas para este molde (Total bruto): {qs_sap.count()}")
 
-        data = []
-        for orden in qs_sap:
-            # Convertimos el número de orden SAP a string
-            num_sap = str(orden.order) 
-            
-            # Verificamos si NO está en la lista de ocupados
-            if num_sap not in ids_ocupados:
-                data.append({
-                    'numero': orden.order,       
-                    'descripcion': orden.description or 'Sin descripción'
-                })
-        
-        print(f"--- DEBUG API --- Órdenes disponibles retornadas al frontend: {len(data)}")
-        return JsonResponse({'ordenes': data})
+        data = OrdenSAP.objects.filter(
+            work_center__icontains=molde_obj.nombre
+        ).exclude(
+            order__in=list(ids_ocupados)
+        ).values('order', 'description')
 
+        results = [{'numero': x['order'], 'descripcion': x['description'] or 'Sin descripción'} for x in data]
+        return JsonResponse({'ordenes': results})
     except Exception as e:
         print(f"--- DEBUG API ERROR --- Ocurrió un error: {str(e)}")
         return JsonResponse({'ordenes': []})

@@ -25,37 +25,26 @@
                 </div>
             {% endif %}
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 justify-center gap-6 sm:gap-10">
-                <!-- Botón Registrar -->
-                <a 
-                id="btn-203"
-                href="{% url 'Moldeo:registrar_prep' %}?status=230&numero_orden={{ pre_orden }}&defecto_sap={{ pre_defecto }}&molde={{ pre_molde }}&maquina={{ pre_maquina }}" 
-                class="flex-1 text-center bg-green-500 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-green-300">
-                    PREPARACION
-                </a>
-                
-                <!-- Botón En Curso -->
-                <a 
-                id="btn-204"
-                href="{% url 'Moldeo:registrar_prep' %}?status=230&numero_orden={{ pre_orden }}&defecto_sap={{ pre_defecto }}&molde={{ pre_molde }}&maquina={{ pre_maquina }}" 
-                class="flex-1 text-center bg-green-500 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-green-300">
-                    PREPARACION CON REPARACION  
-                </a>
-                <!-- Botón Registrar -->
-                <a
-                id="btn-206" 
-                href="{% url 'Moldeo:registrar_prep' %}?status=230&numero_orden={{ pre_orden }}&defecto_sap={{ pre_defecto }}&molde={{ pre_molde }}&maquina={{ pre_maquina }}" 
-                class="flex-1 text-center bg-green-500 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-green-300">
-                    PREPARACION CON FLASH
-                </a>
-                
-                <!-- Botón En Curso -->
-                <a
-                id="btn-212" 
-                href="{% url 'Moldeo:registrar_prep' %}?status=220&numero_orden={{ pre_orden }}&defecto_sap={{ pre_defecto }}&molde={{ pre_molde }}&maquina={{ pre_maquina }}" 
-                class="flex-1 text-center bg-green-500 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-green-300">
-                    PREPARACION CON CAMBIO DE CONFIGURACION
-                </a>
-            </div>
+    <div class="container mx-auto max-w-5xl px-4 py-16">
+        <div class="grid grid-cols-1 sm:grid-cols-3 justify-center gap-6 sm:gap-10">
+        <a id="btn-203"
+           href="{% url 'Moldeo:registrar_prep' %}?status=230&numero_orden={{ pre_orden }}&defecto_sap={{ pre_defecto }}&molde={{ pre_molde }}&maquina={{ pre_maquina }}&subtipo_prep=simple" 
+           class="flex-1 text-center bg-green-500 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-green-300">
+            PREPARACION
+        </a>
+        
+        <a id="btn-204"
+           href="{% url 'Moldeo:registrar_prep' %}?status=230&numero_orden={{ pre_orden }}&defecto_sap={{ pre_defecto }}&molde={{ pre_molde }}&maquina={{ pre_maquina }}&subtipo_prep=reparacion" 
+           class="flex-1 text-center bg-blue-600 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-blue-500">
+            PREPARACION CON REPARACION  
+        </a>
+
+        <a id="btn-212" 
+           href="{% url 'Moldeo:registrar_prep' %}?status=220&numero_orden={{ pre_orden }}&defecto_sap={{ pre_defecto }}&molde={{ pre_molde }}&maquina={{ pre_maquina }}&subtipo_prep=cambio" 
+           class="flex-1 text-center bg-purple-600 text-white text-2xl font-bold py-8 px-12 rounded-lg shadow-lg transform transition hover:scale-105 hover:bg-purple-500">
+            PREPARACION CON CAMBIO DE CONFIGURACION
+        </a>
         </div>
+    </div>
+</div>
 {%endblock%}

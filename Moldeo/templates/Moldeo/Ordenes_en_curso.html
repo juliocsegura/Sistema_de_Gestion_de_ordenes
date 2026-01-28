@@ -28,8 +28,7 @@
             <thead>
                 <tr class="text-slate-400 border-b border-slate-600 text-[11px] font-bold uppercase tracking-wider bg-[#1e293b]">
                     <th class="py-4 px-4 w-32">Fecha</th>
-                    <th class="py-4 px-2 w-24">Orden</th>
-                    <th class="py-4 px-2 w-32">Maquina</th>
+                    <th class="py-4 px-2 w-32">Orden</th> <th class="py-4 px-2 w-32">Maquina</th>
                     <th class="py-4 px-2 w-32">Molde</th>
                     <th class="py-4 px-2">Defecto / Actividad</th>
                     <th class="py-4 px-2 w-20">Tipo</th>
@@ -77,13 +76,21 @@
                 </div>
             </div>
 
-            <div id="modal-info-retorno" class="hidden mt-2 bg-yellow-900/20 border border-yellow-600/50 rounded-lg p-4 relative">
+            <div id="modal-info-retorno" class="hidden mt-2 bg-red-900/20 border border-red-500/50 rounded-lg p-4 relative animate-pulse">
                 <div class="flex items-start gap-3">
-                    <svg class="w-5 h-5 text-yellow-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    <svg class="w-6 h-6 text-red-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                     <div class="w-full">
-                        <h4 class="text-yellow-400 font-bold text-sm uppercase mb-1">⚠️ Retorno (Ref: <span id="modal-ret-ref" class="text-white"></span>)</h4>
-                        <p id="modal-ret-motivo" class="text-slate-300 text-xs"></p>
-                        <div id="modal-ret-obs" class="text-slate-400 text-xs font-mono mt-1 italic"></div>
+                        <h4 class="text-red-400 font-bold text-sm uppercase mb-1">⚠️ Orden de Retorno (Ref: <span id="modal-ret-ref" class="text-white"></span>)</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                            <div>
+                                <span class="text-[10px] text-red-300 font-bold uppercase">Motivo:</span>
+                                <p id="modal-ret-motivo" class="text-slate-200 text-xs"></p>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-red-300 font-bold uppercase">Observaciones:</span>
+                                <p id="modal-ret-obs" class="text-slate-200 text-xs font-mono italic"></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -127,7 +134,16 @@
                                     class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-xs text-white focus:border-blue-500 outline-none">
                                 <div id="temp-defecto-list" class="hidden absolute top-full left-0 w-full bg-slate-700 border border-slate-600 z-50 max-h-40 overflow-y-auto shadow-xl"></div>
                             </div>
-
+                             <div id="cho-details-inputs" class="col-span-12 grid grid-cols-2 gap-2 mt-2 hidden">
+                                <div>
+                                    <label class="block text-[9px] font-bold text-slate-500 uppercase">Detalle Entrante</label>
+                                    <input type="text" id="temp-entrante" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1 text-xs text-white outline-none focus:border-emerald-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-bold text-slate-500 uppercase">Detalle Saliente</label>
+                                    <input type="text" id="temp-saliente" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1 text-xs text-white outline-none focus:border-red-500">
+                                </div>
+                            </div>
                             <div class="col-span-6 md:col-span-2 group-mcm-details">
                                 <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1 text-center">Cavidad</label>
                                 <select id="temp-cav-select" class="w-full bg-slate-900 border border-slate-600 rounded px-1 py-1.5 text-xs text-white text-center focus:border-blue-500 outline-none">
@@ -222,7 +238,7 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. DATOS
+    // 1. DATOS SEGUROS
     const tecnicosData = [{% for t in moldmakers %}{ nombre: "{{ t.nombre|escapejs }}" },{% endfor %}];
     const lideresData = [{% for l in lideres_all %}{ nombre: "{{ l.nombre|escapejs }}" },{% endfor %}];
     const defectosData = [{% if lista_defectos %}{% for d in lista_defectos %}{ nombre: "{{ d.nombre|escapejs }}" },{% endfor %}{% endif %}];
@@ -242,47 +258,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const onClk = (id, fn) => { const el = getEl(id); if(el) el.onclick = fn; };
 
     // --- 2. CONFIGURACIÓN DINÁMICA DEL MODAL ---
-    function configurarModalPorTipo(tipo) {
-        const divMcm = document.querySelectorAll('.group-mcm-details');
-        const containerPrincipal = getEl('container-input-principal');
-        const lblPrincipal = getEl('lbl-input-principal');
-        const inputPrincipal = getEl('temp-defecto');
+   function configurarModalPorTipo(tipo) {
+    const divMcm = document.querySelectorAll('.group-mcm-details');
+    const divCho = getEl('cho-details-inputs');
+    const containerPrincipal = getEl('container-input-principal');
+    const lblPrincipal = getEl('lbl-input-principal');
+    const inputPrincipal = getEl('temp-defecto');
 
-        // Reset input
-        if(inputPrincipal) {
-            const nuevoInput = inputPrincipal.cloneNode(true);
-            inputPrincipal.parentNode.replaceChild(nuevoInput, inputPrincipal);
-        }
-        const newInput = getEl('temp-defecto'); 
-
-        let listaUsar = [];
-        
-        if (tipo === 'MCM') {
-            // MODO MCM: Mostrar Todo
-            divMcm.forEach(el => el.classList.remove('hidden'));
-            if(containerPrincipal) {
-                containerPrincipal.classList.replace('col-span-12', 'col-span-12'); 
-                containerPrincipal.classList.replace('md:col-span-11', 'md:col-span-4');
-            }
-            if(lblPrincipal) lblPrincipal.innerText = "DEFECTO";
-            if(newInput) newInput.placeholder = "Seleccionar Defecto...";
-            listaUsar = defectosData;
-
-        } else {
-            // MODO PREP/CHO/TPM: Ocultar detalles técnicos, expandir input
-            divMcm.forEach(el => el.classList.add('hidden'));
-            if(containerPrincipal) {
-                containerPrincipal.classList.remove('md:col-span-4');
-                containerPrincipal.classList.add('md:col-span-11'); 
-            }
-            if(lblPrincipal) lblPrincipal.innerText = "ACTIVIDAD";
-            if(newInput) newInput.placeholder = "Escribe actividad...";
-            listaUsar = actividadesData;
-        }
-        
-        setupCombobox('temp-defecto', 'temp-defecto-list', listaUsar);
+    // Mantenemos siempre visibles los detalles de Cavidad/Circuito
+    divMcm.forEach(el => el.classList.remove('hidden'));
+    
+    if(containerPrincipal) {
+        containerPrincipal.classList.replace('md:col-span-11', 'md:col-span-4');
     }
 
+    if (tipo === 'CHO') {
+        divCho.classList.remove('hidden'); // Mostramos Entrante/Saliente
+        lblPrincipal.innerText = "ACTIVIDAD";
+        inputPrincipal.placeholder = "Seleccionar actividad...";
+        setupCombobox('temp-defecto', 'temp-defecto-list', actividadesData);
+    } else {
+        divCho.classList.add('hidden');
+        lblPrincipal.innerText = "DEFECTO";
+        inputPrincipal.placeholder = "Seleccionar defecto...";
+        setupCombobox('temp-defecto', 'temp-defecto-list', defectosData);
+    }
+}
     // --- 3. INIT FORMULARIO ---
     function initFormularioDetalles() {
         const selCav = getEl('temp-cav-select');
@@ -354,58 +355,70 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 5. AGREGAR DETALLE (+) ---
     onClk('btn-add-detalle-temp', (e) => {
-        e.preventDefault();
-        const defInput = getEl('temp-defecto');
-        const valPrincipal = defInput.value.trim();
-        if(!valPrincipal) { defInput.classList.add('ring-2', 'ring-red-500'); return; }
+    e.preventDefault();
+    const defInput = getEl('temp-defecto');
+    const valPrincipal = defInput.value.trim();
+    if(!valPrincipal) { defInput.classList.add('ring-2', 'ring-red-500'); return; }
 
-        if (currentOrdenTipo === 'MCM') {
-            const checkedCircs = Array.from(document.querySelectorAll('.chk-circ-temp:checked')).map(cb => cb.value);
-            const chkFijo = getEl('chk-fijo').checked;
-            const chkMovil = getEl('chk-movil').checked;
-            if (!chkFijo && !chkMovil) { alert("Selecciona Lado (Fijo/Móvil)"); return; }
+    const checkedCircs = Array.from(document.querySelectorAll('.chk-circ-temp:checked')).map(cb => cb.value);
+    const chkFijo = getEl('chk-fijo').checked;
+    const chkMovil = getEl('chk-movil').checked;
 
-            tempDetalles.push({
-                tipo: 'defecto', descripcion: valPrincipal, cav: getEl('temp-cav-select').value,
-                circ: checkedCircs.length > 0 ? checkedCircs.join(', ') : 'Todos', fijo: chkFijo, movil: chkMovil
-            });
-        } else {
-            // PREP, CHO, TPM -> Solo Actividad
-            tempDetalles.push({ tipo: 'actividad', descripcion: valPrincipal });
-        }
-        defInput.value = ''; defInput.focus();
-        renderListaTemporal();
+    // Guardamos la estructura técnica siempre
+    tempDetalles.push({
+        tipo: currentOrdenTipo === 'MCM' ? 'defecto' : 'actividad', 
+        descripcion: valPrincipal, 
+        cav: getEl('temp-cav-select').value,
+        circ: checkedCircs.length > 0 ? checkedCircs.join(', ') : 'Todas', 
+        fijo: chkFijo, 
+        movil: chkMovil
     });
 
+    // Limpiar campos técnicos después de agregar
+    defInput.value = '';
+    defInput.classList.remove('ring-2', 'ring-red-500');
+    getEl('btn-limpiar-circ').click();
+    getEl('chk-fijo').checked = false;
+    getEl('chk-movil').checked = false;
+    defInput.focus();
+    
+    renderListaTemporal();
+});
+
     function renderListaTemporal() {
-        const lista = getEl('lista-detalles-temp');
-        const header = getEl('header-lista-temp');
-        const emptyMsg = getEl('empty-msg-temp');
-        if(!lista) return;
-        lista.innerHTML = '';
+    const lista = getEl('lista-detalles-temp');
+    const header = getEl('header-lista-temp');
+    const emptyMsg = getEl('empty-msg-temp');
+    if(!lista) return;
+    lista.innerHTML = '';
 
-        if (currentOrdenTipo === 'MCM') {
-            header.innerHTML = `<div class="col-span-5 text-left">Defecto</div><div class="col-span-2">Cav</div><div class="col-span-2">Circ</div><div class="col-span-2">Lado</div><div class="col-span-1"></div>`;
-        } else {
-            header.innerHTML = `<div class="col-span-11 text-left pl-2">Actividad / Registro</div><div class="col-span-1"></div>`;
-        }
+    // Header siempre técnico
+    header.innerHTML = `<div class="col-span-5 text-left">Actividad/Defecto</div><div class="col-span-2">Cav</div><div class="col-span-2">Circ</div><div class="col-span-2">Lado</div><div class="col-span-1"></div>`;
 
-        if(tempDetalles.length === 0) emptyMsg.classList.remove('hidden');
-        else {
-            emptyMsg.classList.add('hidden');
-            tempDetalles.forEach((item, index) => {
-                const li = document.createElement('li');
-                li.className = "flex justify-between items-center bg-slate-900 px-3 py-1.5 rounded border border-slate-600 hover:border-slate-400 transition";
-                if (currentOrdenTipo === 'MCM') {
-                    const ladoStr = (item.fijo ? 'F' : '') + (item.movil ? 'M' : '');
-                    li.innerHTML = `<div class="grid grid-cols-12 w-full text-xs items-center text-center"><span class="col-span-5 text-red-400 font-bold truncate text-left">● ${item.descripcion}</span><span class="col-span-2 text-blue-300 font-mono">${item.cav}</span><span class="col-span-2 text-yellow-300 font-mono truncate">${item.circ}</span><span class="col-span-2 text-gray-300 font-bold">${ladoStr}</span><div class="col-span-1 text-right"><button onclick="window.borrarDetalleTemp(${index})" class="text-gray-600 hover:text-red-500 font-bold">&times;</button></div></div>`;
-                } else {
-                    li.innerHTML = `<div class="flex justify-between w-full text-xs items-center"><span class="text-green-400 font-bold truncate pl-2">✓ ${item.descripcion}</span><button onclick="window.borrarDetalleTemp(${index})" class="text-gray-600 hover:text-red-500 font-bold px-2">&times;</button></div>`;
-                }
-                lista.appendChild(li);
-            });
-        }
+    if(tempDetalles.length === 0) {
+        emptyMsg.classList.remove('hidden');
+    } else {
+        emptyMsg.classList.add('hidden');
+        tempDetalles.forEach((item, index) => {
+            const ladoStr = (item.fijo ? 'F' : '') + (item.movil ? 'M' : '');
+            const li = document.createElement('li');
+            li.className = "bg-slate-900 px-2 py-1.5 rounded border border-slate-600 mb-1";
+            li.innerHTML = `
+                <div class="grid grid-cols-12 w-full text-[10px] items-center text-center italic">
+                    <span class="col-span-5 ${currentOrdenTipo === 'MCM' ? 'text-red-400' : 'text-emerald-400'} font-bold truncate text-left uppercase">
+                        ${item.descripcion}
+                    </span>
+                    <span class="col-span-2 text-blue-300 font-mono">${item.cav}</span>
+                    <span class="col-span-2 text-yellow-300 font-mono truncate">${item.circ}</span>
+                    <span class="col-span-2 text-gray-300 font-bold">${ladoStr || '-'}</span>
+                    <div class="col-span-1 text-right">
+                        <button onclick="window.borrarDetalleTemp(${index})" class="text-gray-500 hover:text-red-500 font-bold px-1">&times;</button>
+                    </div>
+                </div>`;
+            lista.appendChild(li);
+        });
     }
+}
     window.borrarDetalleTemp = (i) => { tempDetalles.splice(i, 1); renderListaTemporal(); };
 
     // --- 6. GUARDAR EXTRA ---
@@ -454,7 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const divRet = getEl('modal-info-retorno');
         if(divRet) {
-            if(orden.orden_retorno_ref && orden.orden_retorno_ref !== 'None') {
+            if(orden.orden_retorno_ref && orden.orden_retorno_ref !== 'None' && orden.orden_retorno_ref !== 'null' && orden.orden_retorno_ref !== '') {
                 setText('modal-ret-ref', orden.orden_retorno_ref);
                 setText('modal-ret-motivo', orden.motivo_retorno || '-');
                 setText('modal-ret-obs', orden.observaciones_retorno || '');
@@ -467,26 +480,80 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 8. RENDER LISTA TÉCNICOS ---
-    function renderTecnicosModal(lista) {
-        const c = getEl('modal-lista-tecnicos'); if(!c) return;
-        c.innerHTML = '';
-        if(!lista || !lista.length) { c.innerHTML='<div class="text-center text-slate-500 text-xs py-4">Sin asignaciones</div>'; return; }
-        
-        lista.forEach(t => {
-            const row = document.createElement('div');
-            row.className = `flex justify-between items-center bg-slate-800 p-2 rounded border ${t.activo?'border-emerald-800':'border-slate-700 opacity-70'}`;
-            let descrip = '';
-            if(t.detalles && t.detalles.length > 0) {
-                let d = t.detalles[0];
-                if(d.actividad) descrip = `<span class="text-emerald-400">Act: ${d.actividad}</span>`;
-                else if(d.defecto) descrip = `<span class="text-red-400">Def: ${d.defecto}</span>`;
-                else descrip = '<span class="text-slate-500">-</span>';
-                if(t.detalles.length>1) descrip += ` <span class="text-slate-500 text-[10px]">(+${t.detalles.length-1})</span>`;
-            }
-            row.innerHTML = `<div><div class="text-sm font-bold text-white flex items-center gap-2"><div class="w-2 h-2 rounded-full ${t.activo?'bg-emerald-500':'bg-red-500'}"></div>${t.nombre}</div><div class="text-[10px] ml-4 font-mono">${descrip}</div></div><div class="flex gap-2 items-center">${t.activo ? `<button onclick="abrirRelevo(${t.id},'${t.nombre}')" class="bg-yellow-700 text-white text-[9px] px-2 py-1 rounded hover:bg-yellow-600">RELEVO</button><button onclick="gestionarTecnicoAPI('baja',{item_id:${t.id}})" class="bg-red-700 text-white text-[9px] px-2 py-1 rounded hover:bg-red-600">SALIR</button>` : `<span class="text-[9px] text-slate-500">Fin: ${t.fecha_fin}</span>`}</div>`;
-            c.appendChild(row);
-        });
+   function renderTecnicosModal(lista) {
+    const c = getEl('modal-lista-tecnicos'); if(!c) return;
+    c.innerHTML = '';
+    if(!lista || !lista.length) { 
+        c.innerHTML = '<div class="text-center text-slate-500 text-xs py-4 italic">Sin asignaciones registradas</div>'; 
+        return; 
     }
+    
+    lista.forEach(t => {
+        const row = document.createElement('div');
+        row.className = `bg-slate-800 rounded-lg border ${t.activo ? 'border-emerald-500/30' : 'border-slate-700 opacity-75'} overflow-hidden mb-3 shadow-lg`;
+        
+        let detallesHtml = '';
+        if(t.detalles && t.detalles.length > 0) {
+            detallesHtml = t.detalles.map(d => {
+                // Lógica de etiquetas dinámicas (Drop/PG/Cavidad)
+                let labelCav = "Cav";
+                let labelCirc = "Circ";
+                const desc = (d.defecto || d.actividad || '').toLowerCase();
+                if (desc.includes('hot runner') || desc.includes('colada')) { labelCav = 'Drop'; labelCirc = 'Zona'; }
+                else if (desc.includes('sensor')) { labelCav = 'PG'; labelCirc = 'EO'; }
+
+                // Mostrar Detalle Entrante/Saliente solo si existen (Caso CHO)
+                const infoExtraCHO = (d.entrante || d.saliente) ? `
+                    <div class="grid grid-cols-2 gap-2 mt-1 border-t border-slate-700 pt-1">
+                        <div class="text-[9px]"><span class="text-slate-500">ENT:</span> <span class="text-emerald-400 font-bold">${d.entrante || '-'}</span></div>
+                        <div class="text-[9px]"><span class="text-slate-500">SAL:</span> <span class="text-red-400 font-bold">${d.saliente || '-'}</span></div>
+                    </div>
+                ` : '';
+
+                return `
+                    <div class="p-2 bg-slate-900/50 rounded border border-slate-700 mb-1 last:mb-0">
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="text-[10px] font-bold ${d.defecto ? 'text-red-400' : 'text-emerald-400'} uppercase">
+                                ${d.defecto || d.actividad}
+                            </span>
+                        </div>
+                        <div class="flex flex-wrap gap-2 text-[9px] font-mono">
+                            <span class="bg-blue-900/30 text-blue-300 px-1.5 py-0.5 rounded">${labelCav}: ${d.cavidad || d.cav || 'N/A'}</span>
+                            <span class="bg-yellow-900/30 text-yellow-300 px-1.5 py-0.5 rounded">${labelCirc}: ${d.circuito || d.circ || 'N/A'}</span>
+                            <span class="bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded font-bold">${d.fijo ? 'Fijo' : ''} ${d.movil ? 'Móvil' : ''}</span>
+                        </div>
+                        ${infoExtraCHO}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        row.innerHTML = `
+            <div class="p-3 border-b border-slate-700 bg-slate-800/50 flex justify-between items-center">
+                <div>
+                    <div class="text-sm font-bold text-white flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full ${t.activo ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}"></div>
+                        ${t.nombre}
+                    </div>
+                    <div class="text-[10px] text-slate-400 mt-0.5 font-medium uppercase tracking-tighter">
+                         Mesa: <span class="text-blue-400">${t.mesa || '-'}</span> | Lider: <span class="text-yellow-500">${t.lider || 'N/A'}</span>
+                    </div>
+                </div>
+                <div class="flex gap-1">
+                    ${t.activo ? 
+                        `<button onclick="abrirRelevo(${t.id},'${t.nombre}')" class="bg-yellow-600/20 hover:bg-yellow-600 text-yellow-500 hover:text-white text-[9px] font-bold px-2 py-1 rounded border border-yellow-600/50 transition-all uppercase">Relevo</button>
+                         <button onclick="gestionarTecnicoAPI('baja',{item_id:${t.id}})" class="bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white text-[9px] font-bold px-2 py-1 rounded border border-red-600/50 transition-all uppercase">Salir</button>` : 
+                        `<span class="text-[9px] text-slate-500 italic bg-slate-900 px-2 py-1 rounded">Finalizado: ${t.fecha_fin}</span>`
+                    }
+                </div>
+            </div>
+            <div class="p-2 space-y-1 bg-[#0f172a]/30">
+                ${detallesHtml || '<div class="text-center py-2 text-[10px] text-slate-600">Sin registros técnicos</div>'}
+            </div>
+        `;
+        c.appendChild(row);
+    });
+}
 
     // --- 9. API CALLS ---
     window.gestionarTecnicoAPI = async(accion, extra) => {
@@ -542,7 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     setInterval(fetchOrdenes, 5000); fetchOrdenes();
 
-    // --- 11. RENDER TABLA (Diseño Exacto) ---
+    // --- 11. RENDER TABLA ---
     function renderTabla(ordenes) {
         const tbody = getEl('ordenes-tbody');
         if(!tbody) return;
@@ -557,11 +624,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const paused = o.estado==='Pausada';
             
             // Colores Tipo
-            let colorTipo = 'text-orange-400';
-            let bordeIzq = 'border-orange-500'; // Default CHO
-            if(o.tipo === 'PREP') { colorTipo = 'text-green-400'; bordeIzq = 'border-green-500'; }
+            let colorTipo = 'text-blue-400';
+            let bordeIzq = 'border-blue-500'; 
+            if(o.tipo === 'PREP') { colorTipo = 'text-emerald-400'; bordeIzq = 'border-emerald-500'; }
             if(o.tipo === 'TPM') { colorTipo = 'text-yellow-400'; bordeIzq = 'border-yellow-500'; }
             if(o.tipo === 'MCM') { colorTipo = 'text-red-400'; bordeIzq = 'border-red-500'; }
+            if(o.tipo === 'CHO') { colorTipo = 'text-orange-400'; bordeIzq = 'border-orange-500'; }
+            
+            // Lógica robusta para Alerta Retorno
+            let alertaRetorno = '';
+            if (o.orden_retorno_ref && o.orden_retorno_ref !== 'None' && o.orden_retorno_ref !== 'null' && o.orden_retorno_ref.trim() !== '') {
+                alertaRetorno = `
+                <div class="mt-1 inline-flex items-center px-1.5 py-0.5 rounded border border-red-500/50 bg-red-500/10 text-red-400 text-[10px] font-bold uppercase tracking-wider gap-1 animate-pulse">
+                     <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                     Retorno: ${o.orden_retorno_ref}
+                </div>`;
+            }
 
             html += `
             <tr class="hover:bg-slate-800/50 border-b border-slate-700/50 transition cursor-pointer" onclick="openModalById(${o.id})">
@@ -569,12 +647,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="absolute left-0 top-0 bottom-0 w-1 ${bordeIzq.replace('border', 'bg')}"></div>
                     ${o.fecha_creacion}
                 </td>
-                <td class="py-4 px-2 font-bold text-white text-lg align-middle">${o.numero_orden}</td>
+                <td class="py-4 px-2 align-middle">
+                    <div class="font-bold text-white text-lg leading-tight">${o.numero_orden}</div>
+                    ${alertaRetorno}
+                </td>
                 <td class="py-4 px-2 align-middle">
                     <span class="border border-green-600/50 text-green-400 bg-green-900/20 px-2 py-1 rounded text-xs font-bold">${o.maquina || '-'}</span>
                 </td>
                 <td class="py-4 px-2 font-bold text-blue-400 align-middle">${o.molde}</td>
-                <td class="py-4 px-2 text-xs text-slate-400 uppercase tracking-wide max-w-[200px] truncate align-middle">${o.lista_defectos}</td>
+                <td class="py-4 px-2 text-xs text-slate-400 uppercase tracking-wide max-w-[200px] truncate align-middle" title="${o.lista_defectos}">${o.lista_defectos}</td>
                 <td class="py-4 px-2 font-bold text-xs ${colorTipo} align-middle">${o.tipo}</td>
                 <td class="py-4 px-2 align-middle text-center">
                     <span class="border border-slate-600 text-slate-300 px-3 py-1 rounded text-xs font-bold">${o.status || '-'}</span>

@@ -66,28 +66,58 @@
                     </div>
 
                     <div class="col-span-1 sm:col-span-2 mt-4 bg-gray-900/50 p-4 rounded border border-gray-600">
-                        <label class="block text-sm font-bold text-green-400 mb-3 text-center uppercase tracking-wider">Tipo de Preparación</label>
-                        <div class="flex flex-wrap justify-center gap-4">
-                            <label class="cursor-pointer">
-                                <input type="radio" name="subtipo_prep" value="simple" class="peer sr-only" onchange="togglePrepMode('simple')" checked>
-                                <div class="px-4 py-2 bg-gray-800 border border-gray-600 rounded text-gray-400 text-sm font-bold peer-checked:bg-green-900 peer-checked:text-white peer-checked:border-green-500 transition">
-                                    Solo Preparación
-                                </div>
-                            </label>
-                            <label class="cursor-pointer">
-                                <input type="radio" name="subtipo_prep" value="reparacion" class="peer sr-only" onchange="togglePrepMode('reparacion')">
-                                <div class="px-4 py-2 bg-gray-800 border border-gray-600 rounded text-gray-400 text-sm font-bold peer-checked:bg-blue-900 peer-checked:text-white peer-checked:border-blue-500 transition">
-                                    Con Reparación (MCM)
-                                </div>
-                            </label>
-                            <label class="cursor-pointer">
-                                <input type="radio" name="subtipo_prep" value="cambio" class="peer sr-only" onchange="togglePrepMode('cambio')">
-                                <div class="px-4 py-2 bg-gray-800 border border-gray-600 rounded text-gray-400 text-sm font-bold peer-checked:bg-purple-900 peer-checked:text-white peer-checked:border-purple-500 transition">
-                                    Con Cambio Config. (CHO)
-                                </div>
-                            </label>
-                        </div>
+                    <label class="block text-sm font-bold text-green-400 mb-3 text-center uppercase tracking-wider">Tipo de Preparación</label>
+                    
+                    {% if request.GET.subtipo_prep %}
+                        <input type="hidden" name="subtipo_prep" value="{{ request.GET.subtipo_prep }}">
+                    {% endif %}
+
+                    <div class="flex flex-wrap justify-center gap-4">
+                        
+                        <label class="{% if request.GET.subtipo_prep %}cursor-not-allowed{% else %}cursor-pointer{% endif %}">
+                            <input type="radio" 
+                                name="subtipo_prep" 
+                                value="simple" 
+                                class="peer sr-only" 
+                                onchange="togglePrepMode('simple')" 
+                                {% if request.GET.subtipo_prep == 'simple' or not request.GET.subtipo_prep %}checked{% endif %}
+                                {% if request.GET.subtipo_prep %}disabled{% endif %}> <div class="px-4 py-2 bg-gray-800 border border-gray-600 rounded text-gray-400 text-sm font-bold 
+                                        peer-checked:bg-green-900 peer-checked:text-white peer-checked:border-green-500 
+                                        peer-disabled:opacity-50 peer-disabled:cursor-not-allowed transition">
+                                Solo Preparación
+                            </div>
+                        </label>
+
+                        <label class="{% if request.GET.subtipo_prep %}cursor-not-allowed{% else %}cursor-pointer{% endif %}">
+                            <input type="radio" 
+                                name="subtipo_prep" 
+                                value="reparacion" 
+                                class="peer sr-only" 
+                                onchange="togglePrepMode('reparacion')"
+                                {% if request.GET.subtipo_prep == 'reparacion' %}checked{% endif %}
+                                {% if request.GET.subtipo_prep %}disabled{% endif %}> <div class="px-4 py-2 bg-gray-800 border border-gray-600 rounded text-gray-400 text-sm font-bold 
+                                        peer-checked:bg-blue-900 peer-checked:text-white peer-checked:border-blue-500 
+                                        peer-disabled:opacity-50 peer-disabled:cursor-not-allowed transition">
+                                Con Reparación (MCM)
+                            </div>
+                        </label>
+
+                        <label class="{% if request.GET.subtipo_prep %}cursor-not-allowed{% else %}cursor-pointer{% endif %}">
+                            <input type="radio" 
+                                name="subtipo_prep" 
+                                value="cambio" 
+                                class="peer sr-only" 
+                                onchange="togglePrepMode('cambio')"
+                                {% if request.GET.subtipo_prep == 'cambio' %}checked{% endif %}
+                                {% if request.GET.subtipo_prep %}disabled{% endif %}> <div class="px-4 py-2 bg-gray-800 border border-gray-600 rounded text-gray-400 text-sm font-bold 
+                                        peer-checked:bg-purple-900 peer-checked:text-white peer-checked:border-purple-500 
+                                        peer-disabled:opacity-50 peer-disabled:cursor-not-allowed transition">
+                                Con Cambio Config. (CHO)
+                            </div>
+                        </label>
+
                     </div>
+                </div>
 
                     <div class="col-span-1 sm:col-span-2 mt-4 border-t border-gray-700 pt-4">
                         <div class="flex justify-center gap-6">
@@ -676,5 +706,13 @@
         if(error) { alert("Datos incompletos."); return null; }
         return arr;
     }
+    document.addEventListener("DOMContentLoaded", function() {
+        // Obtener el valor seleccionado actualmente (gracias al checked de Django)
+        const selected = document.querySelector('input[name="subtipo_prep"]:checked').value;
+        // Ejecutar la función para mostrar/ocultar campos según corresponda
+        if(typeof togglePrepMode === 'function') {
+            togglePrepMode(selected);
+        }
+    });
 </script>
 {% endblock %}
