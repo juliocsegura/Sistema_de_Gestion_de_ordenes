@@ -64,11 +64,10 @@
                          <label class="block text-sm font-medium text-gray-400 mb-1">Defecto (SAP)</label>
                          <input type="text" name="defecto_sap" value="{{ pre_defecto }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold px-3 py-2">
                     </div>
-
-                    <div class="col-span-1 sm:col-span-2 mt-4 bg-gray-900/50 p-4 rounded border border-gray-600">
-                    <label class="block text-sm font-bold text-green-400 mb-3 text-center uppercase tracking-wider">Tipo de Preparación</label>
                     
-                    {% if request.GET.subtipo_prep %}
+                    <div class="col-span-1 sm:col-span-2 mt-4 bg-gray-900/50 p-4 rounded border border-gray-600">
+                        <label class="block text-sm font-bold text-green-400 mb-3 text-center uppercase tracking-wider">Tipo de Preparación</label>
+                         {% if request.GET.subtipo_prep %}
                         <input type="hidden" name="subtipo_prep" value="{{ request.GET.subtipo_prep }}">
                     {% endif %}
 
@@ -119,21 +118,22 @@
                     </div>
                 </div>
 
-                    <div class="col-span-1 sm:col-span-2 mt-4 border-t border-gray-700 pt-4">
-                        <div class="flex justify-center gap-6">
+                    <div class="col-span-1 sm:col-span-2 mt-6 border-t border-gray-700 pt-6">
+                        <div class="flex justify-center gap-6 mb-4">
                             <label class="cursor-pointer relative group">
                                 <input type="radio" name="tipo_tarjeta" value="verde" class="peer sr-only" onchange="toggleCardType('verde')" checked>
-                                <div class="w-32 h-10 bg-gray-800 border border-gray-600 rounded flex items-center justify-center peer-checked:bg-green-900/40 peer-checked:border-green-500 text-xs font-bold text-gray-400 peer-checked:text-green-400">
-                                    TARJETA VERDE
+                                <div class="w-32 h-16 bg-gray-800 border-2 border-gray-600 rounded-lg flex items-center justify-center peer-checked:bg-green-900/40 peer-checked:border-green-500 transition-all">
+                                    <span class="text-gray-400 font-bold peer-checked:text-green-400">VERDE</span>
                                 </div>
                             </label>
                             <label class="cursor-pointer relative group">
                                 <input type="radio" name="tipo_tarjeta" value="roja" class="peer sr-only" onchange="toggleCardType('roja')">
-                                <div class="w-32 h-10 bg-gray-800 border border-gray-600 rounded flex items-center justify-center peer-checked:bg-red-900/40 peer-checked:border-red-500 text-xs font-bold text-gray-400 peer-checked:text-red-400">
-                                    TARJETA ROJA
+                                <div class="w-32 h-16 bg-gray-800 border-2 border-gray-600 rounded-lg flex items-center justify-center peer-checked:bg-red-900/40 peer-checked:border-red-500 transition-all">
+                                    <span class="text-gray-400 font-bold peer-checked:text-red-400">ROJA</span>
                                 </div>
                             </label>
                         </div>
+                        <p class="text-center text-xs text-gray-500 italic" id="txt-help-tarjeta">Tarjeta Verde: Mantenimiento PREP estándar.</p>
                     </div>
                 </div>
 
@@ -157,29 +157,43 @@
 
             <div id="view-vinculada" class="hidden animate-fade-in">
                 <div class="bg-red-900/10 border border-red-700/50 rounded-lg p-6">
-                    <h3 class="text-xl font-bold text-red-500 mb-6 border-b border-red-800 pb-2">Configuración de Tarjeta Roja</h3>
+                    <h3 class="text-xl font-bold text-red-500 mb-6 flex items-center gap-2 border-b border-red-800 pb-2">
+                        Configuración de Tarjeta Roja
+                    </h3>
+                    
                     <div class="mb-8">
-                        <label class="block text-sm font-bold text-red-400 uppercase mb-2">1. Seleccionar Orden Pendiente</label>
+                        <label class="block text-sm font-bold text-red-400 uppercase mb-2">Seleccionar Orden Pendiente</label>
                         <div class="relative">
-                            <input type="text" id="input-orden-vinculada" class="w-full bg-gray-900 border border-red-500 text-white rounded-md font-bold px-4 py-3 focus:ring-2 focus:ring-red-500 outline-none placeholder-red-300/30" placeholder="Buscar orden pendiente..." autocomplete="off">
+                            <input type="text" id="input-orden-vinculada" 
+                                class="w-full bg-gray-900 border border-red-500 text-white rounded-md font-bold px-4 py-3 focus:ring-2 focus:ring-red-500 outline-none placeholder-red-300/30" 
+                                placeholder="Buscar orden pendiente..." autocomplete="off">
                             <input type="hidden" name="orden_vinculada_id" id="orden-vinculada-id">
                             <div id="list-ordenes-pendientes" class="hidden absolute top-full left-0 w-full bg-gray-800 border border-red-500 z-50 max-h-48 overflow-y-auto shadow-xl rounded-b-lg"></div>
                         </div>
                     </div>
+
                     <div id="wrapper-inputs-vinculada" class="opacity-50 pointer-events-none transition-opacity">
                         <div class="bg-gray-800 p-4 rounded border border-gray-600 flex items-center mb-6">
-                            <input type="checkbox" name="copiar_tecnicos" id="check-copiar-tecnicos" value="true" checked class="w-5 h-5 text-red-600 bg-gray-700 border-gray-500 rounded focus:ring-red-500 cursor-pointer">
-                            <label for="check-copiar-tecnicos" class="ml-3 text-sm text-gray-300 cursor-pointer select-none">Asignar mismos técnicos de la orden principal.</label>
+                            <input type="checkbox" name="copiar_tecnicos" id="check-copiar-tecnicos" value="true" checked 
+                                   class="w-5 h-5 text-red-600 bg-gray-700 border-gray-500 rounded focus:ring-red-500 cursor-pointer">
+                            <label for="check-copiar-tecnicos" class="ml-3 text-sm text-gray-300 cursor-pointer select-none">
+                                Asignar mismos técnicos de la orden principal.
+                            </label>
                         </div>
+
                         <div class="space-y-4 border-t border-red-800/50 pt-4">
                             <div class="flex justify-between items-center bg-red-900/30 p-2 rounded-t-lg border-b border-red-800">
                                 <h3 class="text-lg font-bold text-red-300 pl-2">Técnicos (Orden Vinculada)</h3>
-                                <button type="button" onclick="createNewTechCard('vinc')" class="bg-red-700 hover:bg-red-600 text-white text-xs font-bold py-2 px-4 rounded shadow flex items-center gap-1"><span class="text-lg leading-none">+</span> Nuevo Técnico</button>
+                                <button type="button" onclick="createNewTechCard('vinc')" class="bg-red-700 hover:bg-red-600 text-white text-xs font-bold py-2 px-4 rounded shadow flex items-center gap-1">
+                                    <span class="text-lg leading-none">+</span> Nuevo Técnico
+                                </button>
                             </div>
                             <div class="bg-gray-900/30 rounded-b-lg border border-red-800 min-h-[200px] flex flex-col overflow-visible">
                                 <div class="flex overflow-x-auto bg-gray-800 border-b border-red-800 p-1 space-x-1 custom-scrollbar" id="tech-tabs-bar-vinc"></div>
                                 <div id="tech-cards-content-vinc" class="p-4 flex-1 relative overflow-visible">
-                                    <div class="empty-state absolute inset-0 flex flex-col items-center justify-center text-gray-500 italic pointer-events-none"><span>Sin técnicos en orden vinculada.</span></div>
+                                    <div class="empty-state absolute inset-0 flex flex-col items-center justify-center text-gray-500 italic pointer-events-none">
+                                        <span>Sin técnicos en orden vinculada.</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -195,6 +209,32 @@
             </div>
         </div>
     </form>
+</div>
+<div id="modal-warning-hydra" class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-90 hidden backdrop-blur-sm transition-opacity duration-300">
+    <div class="bg-gray-800 border-2 border-yellow-500 rounded-xl shadow-2xl w-full max-w-md transform scale-100 p-6 relative">
+        <div class="text-center">
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-900/50 mb-4 border border-yellow-500 animate-pulse">
+                <svg class="h-10 w-10 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            
+            <h3 class="text-2xl font-bold text-white mb-2">¡Atención!</h3>
+            <p class="text-gray-300 text-base mb-6">
+                Antes de continuar, asegúrate de haber realizado el movimiento correspondiente en:
+                <br><span class="text-yellow-400 font-bold text-xl block mt-2"> HYDRA</span>
+            </p>
+
+            <div class="flex justify-center gap-4">
+                <button type="button" onclick="cerrarWarningHydra()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-semibold transition">
+                    Cancelar
+                </button>
+                <button type="button" id="btn-confirmar-hydra" class="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg font-bold shadow-lg shadow-yellow-600/30 transition transform hover:-translate-y-1">
+                    Ya lo hice, Continuar
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <template id="tech-card-template">
@@ -219,25 +259,26 @@
             </div>
         </div>
         
-        <div class="bg-gray-800/50 rounded border border-gray-700 p-3 mb-3">
+        <div class="main-activity-module bg-gray-800/50 rounded border border-gray-700 p-3">
             <div class="flex items-center gap-2 border-b border-gray-600 pb-2 mb-3 overflow-x-auto custom-scrollbar">
                 <div class="activity-tabs-container flex gap-1"></div>
                 <button type="button" class="btn-add-activity-tab shrink-0 bg-blue-600 hover:bg-blue-500 text-white w-8 h-8 rounded flex items-center justify-center font-bold shadow transition" title="Agregar Actividad">+</button>
             </div>
-            <div class="activity-cards-content relative min-h-[50px]">
-                <div class="empty-activities-state absolute inset-0 flex items-center justify-center text-gray-500 text-xs italic">Sin actividades. Pulsa "+" para agregar.</div>
+            <div class="activity-cards-content relative min-h-[150px]">
+                <div class="empty-activities-state absolute inset-0 flex items-center justify-center text-gray-500 text-xs italic">
+                    Sin actividades. Pulsa "+" para agregar.
+                </div>
             </div>
         </div>
 
-        <div class="extra-module-container hidden bg-gray-800/30 rounded border border-gray-600 p-3 animate-fade-in">
-            <h4 class="text-xs font-bold text-gray-400 uppercase mb-2 module-title">Módulo Adicional</h4>
-            <div class="flex items-center gap-2 border-b border-gray-600 pb-2 mb-3">
-                 <button type="button" class="btn-add-defect-tab bg-purple-600 hover:bg-purple-500 text-white w-6 h-6 rounded text-xs shadow flex items-center justify-center font-bold">+</button>
-                 <span class="text-xs text-gray-500">Registros</span>
-                 <div class="defect-tabs-container flex gap-1 ml-2 overflow-x-auto custom-scrollbar"></div>
+        <div class="extra-module-container hidden mt-4 bg-red-900/10 rounded border border-red-700/50 p-3">
+            <div class="flex items-center gap-2 border-b border-red-800 pb-2 mb-3">
+                <button type="button" class="btn-add-defect-tab bg-red-600 hover:bg-red-500 text-white w-6 h-6 rounded text-xs shadow flex items-center justify-center font-bold">+</button>
+                <span class="text-xs text-red-400 font-bold uppercase">Defectos / Cambios</span>
+                <div class="defect-tabs-container flex gap-1 ml-2 overflow-x-auto custom-scrollbar"></div>
             </div>
             <div class="defect-cards-content relative min-h-[50px]">
-                 <div class="empty-defects-state absolute inset-0 flex items-center justify-center text-gray-500 text-xs italic">Agrega un registro...</div>
+                <div class="empty-defects-state absolute inset-0 flex items-center justify-center text-gray-500 text-xs italic">Agrega un registro...</div>
             </div>
         </div>
     </div>
@@ -254,57 +295,56 @@
     </div>
 </template>
 
-<template id="defect-card-template">
+<template id="defect-card-template-T_roja">
     <div class="defect-card bg-gray-800/80 border border-gray-600 rounded p-3 relative animate-fade-in mb-3">
-        <button type="button" class="btn-remove-defect-card absolute top-2 right-2 text-gray-600 hover:text-red-400 p-1 text-xl font-bold" title="Eliminar">&times;</button>
+        <button type="button" class="btn-remove-defect-card absolute top-2 right-2 text-gray-600 hover:text-red-400 p-1 text-xl font-bold">&times;</button>
         
         <div class="mb-3 relative group-combo-def pr-6">
-            <label class="block text-[9px] text-purple-400 uppercase font-bold mb-1">Descripción</label>
-            <input type="text" class="input-defecto w-full bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white font-bold validate-required" placeholder="Defecto o Tipo de Cambio..." autocomplete="off">
+            <label class="block text-[9px] text-purple-400 uppercase font-bold mb-1">Defecto</label>
+            <input type="text" class="input-defecto w-full bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white font-bold validate-required" placeholder="Seleccionar..." autocomplete="off">
             <div class="combo-list-def hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 z-50 max-h-40 overflow-y-auto shadow-xl rounded-b"></div>
         </div>
 
-        <div class="bg-gray-900/50 rounded border border-gray-700/50 overflow-hidden">
-            <div class="grid grid-cols-12 bg-gray-700/50 px-2 py-1 text-[9px] text-gray-400 uppercase font-bold text-center gap-1">
-                <div class="col-span-2 col-cho hidden" title="Cantidad Entrante">Entrante</div>
-                <div class="col-span-2 col-cho hidden" title="Cantidad Saliente">Saliente</div>
-                <div class="col-span-2 col-mcm">Cavidad</div>
-                <div class="col-span-2 col-mcm">Circuito</div>
-                <div class="col-span-3 col-mcm">Ubicación</div> 
-                <div class="col-span-1"></div> 
+        <div class="bg-gray-900/50 rounded border border-gray-700/50 overflow-visible">
+            <div class="grid grid-cols-12 bg-gray-700/50 px-2 py-1 text-[9px] text-gray-400 uppercase font-bold text-center">
+                <div class="col-span-3 label-cav">Cavidad</div>
+                <div class="col-span-3 label-circ">Circuito</div>
+                <div class="col-span-4">Ubicación</div> 
+                <div class="col-span-2"></div>
             </div>
-            <div class="location-rows-container p-1 space-y-1"></div>
-            <button type="button" class="btn-add-location-row w-full bg-gray-800 hover:bg-gray-700 text-blue-400 hover:text-blue-300 text-[10px] font-bold py-1.5 border-t border-gray-700 transition flex items-center justify-center gap-1">
-                <span>+ Agregar Detalle</span>
-            </button>
+            <div class="location-rows-container"></div>
+            <button type="button" class="btn-add-location-row w-full bg-gray-700/30 hover:bg-gray-700 text-gray-400 hover:text-white text-[10px] py-1 border-t border-gray-700 transition rounded-b">+ Agregar Ubicación</button>
         </div>
     </div>
 </template>
 
-<template id="location-row-template">
-    <div class="location-row grid grid-cols-12 gap-1 px-2 py-1 border-b border-gray-700/30 last:border-0 items-center animate-fade-in relative">
-        <div class="col-span-2 col-cho hidden">
-            <input type="text" class="input-entrante w-full bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-center text-white focus:border-blue-500 outline-none placeholder-gray-600" placeholder="-">
+<template id="location-row-template-T_roja">
+     <div class="location-row grid grid-cols-12 gap-1 px-2 py-1 border-b border-gray-700/30 last:border-0 items-center animate-fade-in relative z-10 hover:z-20">
+        <div class="col-span-3 relative custom-select-container">
+            <input type="text" class="input-cav input-select w-full bg-transparent border-b border-gray-600 focus:border-blue-500 text-center text-xs text-white placeholder-gray-600 focus:outline-none py-1 cursor-pointer validate-required" placeholder="-" readonly>
+            <div class="select-menu hidden absolute top-full left-0 w-full bg-gray-800 border border-gray-600 shadow-2xl rounded max-h-60 overflow-y-auto z-50">
+                {% for i in "x"|rjust:"128" %}<div class="select-option p-2 hover:bg-blue-600 text-white text-center text-xs cursor-pointer border-b border-gray-700 last:border-0" data-value="{{ forloop.counter }}">{{ forloop.counter }}</div>{% endfor %}
+            </div>
         </div>
-        <div class="col-span-2 col-cho hidden">
-            <input type="text" class="input-saliente w-full bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-center text-white focus:border-blue-500 outline-none placeholder-gray-600" placeholder="-">
+        <div class="col-span-3 relative group-circuito">
+            <input type="text" class="input-circ w-full bg-transparent border-b border-gray-600 focus:border-yellow-500 text-center text-xs text-white placeholder-gray-600 focus:outline-none py-1 cursor-pointer validate-required" placeholder="-" readonly>
+            <div class="circuito-menu hidden absolute top-full left-0 w-64 bg-gray-800 border border-gray-600 shadow-2xl rounded z-[100] p-2 max-h-60 overflow-y-auto">
+                <label class="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded cursor-pointer border-b border-gray-600 mb-2"><input type="checkbox" value="Todas" class="chk-todas form-checkbox h-4 w-4 text-yellow-600 bg-gray-900 border-gray-500 rounded"><span class="text-xs text-white font-bold">TODAS</span></label>
+                <div class="grid grid-cols-4 gap-2">{% for i in "x"|rjust:"126" %}<label class="flex items-center justify-center p-1 hover:bg-gray-700 rounded cursor-pointer"><input type="checkbox" value="{{ forloop.counter }}" class="chk-num form-checkbox h-3 w-3 text-yellow-500 bg-gray-900 border-gray-500 rounded mr-1"><span class="text-[10px] text-gray-300">{{ forloop.counter }}</span></label>{% endfor %}</div>
+            </div>
         </div>
-
-        <div class="col-span-2 col-mcm">
-            <input type="text" class="input-cavidad w-full bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-center text-white focus:border-yellow-500 outline-none" placeholder="Cav">
+        <div class="col-span-4 flex items-center justify-center gap-3">
+            <label class="inline-flex items-center cursor-pointer group">
+                <input type="checkbox" class="input-fijo form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded focus:ring-emerald-500">
+                <span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Fijo</span>
+            </label>
+            <label class="inline-flex items-center cursor-pointer group">
+                <input type="checkbox" class="input-movil form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded focus:ring-emerald-500">
+                <span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Móvil</span>
+            </label>
         </div>
-        <div class="col-span-2 col-mcm">
-            <input type="text" class="input-circuito w-full bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-center text-white focus:border-yellow-500 outline-none" placeholder="Cir">
-        </div>
-        <div class="col-span-3 col-mcm">
-            <select class="input-lado w-full bg-gray-800 border border-gray-600 rounded px-1 py-1 text-[10px] text-white focus:border-yellow-500 outline-none cursor-pointer">
-                <option value="">Lado...</option>
-                <option value="Fijo">Fijo</option>
-                <option value="Movil">Móvil</option>
-            </select>
-        </div>
-        <div class="col-span-1 flex justify-center">
-            <button type="button" class="btn-remove-row text-gray-500 hover:text-red-500 font-bold text-lg leading-none">&times;</button>
+        <div class="col-span-2 text-center">
+            <button type="button" class="btn-remove-loc text-gray-600 hover:text-red-500 font-bold px-2 text-xl">&times;</button>
         </div>
     </div>
 </template>
@@ -313,57 +353,45 @@
 
 {% block scripts %}
 <script>
+    // --- 1. DEFINICIONES GLOBALES ---
     const contexts = {
-        main: { tabs: 'tech-tabs-bar-main', content: 'tech-cards-content-main', empty: '#tech-cards-content-main .empty-state' },
-        vinc: { tabs: 'tech-tabs-bar-vinc', content: 'tech-cards-content-vinc', empty: '#tech-cards-content-vinc .empty-state' }
+        main: { 
+            tabs: 'tech-tabs-bar-main', 
+            content: 'tech-cards-content-main', 
+            empty: '#tech-cards-content-main .empty-state',
+            type: 'prep'
+        },
+        vinc: { 
+            tabs: 'tech-tabs-bar-vinc', 
+            content: 'tech-cards-content-vinc', 
+            empty: '#tech-cards-content-vinc .empty-state',
+            type: 'red_card' // Importante para diferenciar
+        }
     };
     let techGlobalCounter = 0;
     let activityCounters = {}; 
-    let defectCounters = {};
-    let currentPrepMode = 'simple'; // simple, reparacion, cambio
+    let defectCounters = {}; 
+    let ordenesPendientesCache = [];
 
-    // DATOS
+    // DATOS DJANGO
     const catalogoActividades = {{ actividades_json|default:"[]"|safe }};
     const tecnicosData = {{ tecnicos_json|default:"[]"|safe }};
     const lideresData = {{ lideres_json|default:"[]"|safe }};
-    // Mock data for defects
-    const defectList = [{nombre:"Falla General"}, {nombre:"Desgaste"}, {nombre:"Rotura"}]; 
+    const defectList = [{% if lista_defectos %}{% for d in lista_defectos %}{ nombre: "{{ d.nombre_defecto|escapejs }}" },{% endfor %}{% else %}{ nombre: "Falla General" }{% endif %}];
 
-    // --- MODO PREP ---
-    window.togglePrepMode = function(mode) {
-        currentPrepMode = mode;
-        const allExtraModules = document.querySelectorAll('.extra-module-container');
+    // --- 2. SETUP AL CARGAR ---
+    document.addEventListener('DOMContentLoaded', () => {
+        setupPendingSearch();
+        window.addEventListener('click', closeAllMenus);
+        // Crear primera tarjeta de técnico en pestaña principal
+        createNewTechCard('main');
         
-        allExtraModules.forEach(mod => {
-            if(mode === 'simple') {
-                mod.classList.add('hidden');
-            } else {
-                mod.classList.remove('hidden');
-                // Ajustar Títulos y Columnas
-                const title = mod.querySelector('.module-title');
-                if(mode === 'reparacion') {
-                    title.innerText = "REPARACIÓN (MCM)";
-                    mod.querySelectorAll('.col-cho').forEach(el => el.classList.add('hidden'));
-                    mod.querySelectorAll('.col-mcm').forEach(el => {
-                        el.classList.remove('hidden', 'col-span-2', 'col-span-3'); // Reset
-                        if(el.querySelector('select')) el.classList.add('col-span-4'); 
-                        else el.classList.add('col-span-3'); 
-                    });
-                } else if(mode === 'cambio') {
-                    title.innerText = "CAMBIO CONFIG (CHO)";
-                    mod.querySelectorAll('.col-cho').forEach(el => el.classList.remove('hidden'));
-                    mod.querySelectorAll('.col-mcm').forEach(el => {
-                       // Reset clases MCM para que convivan
-                       el.classList.remove('col-span-3', 'col-span-4');
-                       if(el.querySelector('select')) el.classList.add('col-span-3');
-                       else el.classList.add('col-span-2');
-                    });
-                }
-            }
-        });
-    }
+        // Ejecutar togglePrepMode inicial si existe algo seleccionado
+        const prepMode = document.querySelector('input[name="subtipo_prep"]:checked');
+        if(prepMode) togglePrepMode(prepMode.value);
+    });
 
-    // --- TABS GENERALES ---
+    // --- 3. LÓGICA DE TABS Y MODOS ---
     function switchTab(tabName) {
         const viewGeneral = document.getElementById('view-general');
         const viewVinculada = document.getElementById('view-vinculada');
@@ -381,16 +409,36 @@
         }
     }
 
+    window.togglePrepMode = function(mode) {
+        // En PREP, el modo puede ser 'simple', 'reparacion', 'cambio'
+        const radioRoja = document.querySelector('input[name="tipo_tarjeta"][value="roja"]');
+        const radioVerde = document.querySelector('input[name="tipo_tarjeta"][value="verde"]');
+
+        // Si es REPARACIÓN (MCM) -> Forzar Tarjeta Roja y deshabilitar Verde
+        if(mode === 'reparacion') {
+            if(radioRoja) { radioRoja.checked = true; toggleCardType('roja'); }
+            if(radioVerde) { radioVerde.disabled = true; radioVerde.parentElement.classList.add('opacity-50', 'cursor-not-allowed'); }
+        } else {
+            // Restaurar
+            if(radioVerde) { radioVerde.disabled = false; radioVerde.parentElement.classList.remove('opacity-50', 'cursor-not-allowed'); }
+        }
+        
+        // Si es CAMBIO CONFIG (CHO) -> Mostrar módulo extra en tarjeta técnica principal
+        // En este template, "Extra Module" se usa para T_ROJA dentro del mismo flujo, pero aquí PREP maneja "MCM Vinculado" aparte.
+        // La lógica de "Módulo Adicional" la aplicaremos si queremos meter defectos en la tarjeta principal (como en CHO).
+        // Para PREP, usualmente la tarjeta principal son solo Actividades.
+    }
+
     window.toggleCardType = function(type) {
         const btnTabVinculada = document.getElementById('tab-btn-vinculada');
         const txtHelp = document.getElementById('txt-help-tarjeta');
         if (type === 'roja') {
             btnTabVinculada.classList.remove('hidden');
-            txtHelp.innerText = "Tarjeta Roja: Vincular orden PREP pendiente.";
+            if(txtHelp) txtHelp.innerText = "Tarjeta Roja: Vincular orden PREP pendiente.";
             cargarOrdenesPendientes(); 
         } else {
             btnTabVinculada.classList.add('hidden');
-            txtHelp.innerText = "Tarjeta Verde: Mantenimiento PREP estándar.";
+            if(txtHelp) txtHelp.innerText = "Tarjeta Verde: Mantenimiento PREP estándar.";
             switchTab('general');
             document.getElementById('input-orden-vinculada').value = '';
             document.getElementById('orden-vinculada-id').value = '';
@@ -398,42 +446,7 @@
         }
     }
 
-    // --- API PENDIENTES ---
-    async function cargarOrdenesPendientes() {
-        const moldeId = document.getElementById('input-molde-id').value;
-        if(!moldeId) return;
-        try {
-            const res = await fetch(`/moldeo/api/ordenes-pendientes/?molde_id=${moldeId}`);
-            const data = await res.json();
-            const listContainer = document.getElementById('list-ordenes-pendientes');
-            const inputDisplay = document.getElementById('input-orden-vinculada');
-            
-            const renderLista = (q='') => {
-                listContainer.innerHTML = '';
-                const f = data.ordenes.filter(o => o.numero.toString().toLowerCase().includes(q.toLowerCase()));
-                if(f.length === 0) listContainer.innerHTML = '<div class="p-2 text-xs text-gray-500">Sin resultados.</div>';
-                
-                f.forEach(o => {
-                    const div = document.createElement('div');
-                    div.className = "p-2 hover:bg-red-800 cursor-pointer text-sm text-white border-b border-red-700/30";
-                    div.innerHTML = `<div class="font-bold">${o.numero}</div><div class="text-[10px] text-gray-400">${o.descripcion}</div>`;
-                    div.onclick = () => {
-                        inputDisplay.value = o.numero;
-                        document.getElementById('orden-vinculada-id').value = o.numero;
-                        listContainer.classList.add('hidden');
-                        document.getElementById('wrapper-inputs-vinculada').classList.remove('opacity-50', 'pointer-events-none');
-                    };
-                    listContainer.appendChild(div);
-                });
-                listContainer.classList.remove('hidden');
-            };
-            inputDisplay.oninput = (e) => renderLista(e.target.value);
-            inputDisplay.onfocus = () => renderLista(inputDisplay.value);
-            window.addEventListener('click', (e) => { if(!inputDisplay.contains(e.target) && !listContainer.contains(e.target)) listContainer.classList.add('hidden'); });
-        } catch(e) { console.error(e); }
-    }
-
-    // --- GESTIÓN DE TÉCNICOS ---
+    // --- 4. GESTIÓN DE TARJETAS TÉCNICAS ---
     function createNewTechCard(contextKey) {
         const cfg = contexts[contextKey];
         if(!cfg) return;
@@ -448,6 +461,7 @@
         const tabBtn = document.createElement('div');
         tabBtn.className = "tech-tab-btn flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-t-lg border-t-2 border-transparent cursor-pointer bg-gray-800 text-gray-400 shrink-0 select-none";
         tabBtn.innerHTML = `<span>Nuevo Técnico</span> <button type="button" class="ml-2 hover:text-red-400">&times;</button>`;
+        
         tabBtn.onclick = (e) => {
             if(e.target.tagName === 'BUTTON') { 
                 if(confirm("¿Eliminar técnico?")) {
@@ -457,6 +471,7 @@
                     else if(containerTabs.children.length > 0) containerTabs.firstElementChild.click();
                 }
             } else { 
+                // Reset styles
                 Array.from(containerTabs.children).forEach(t => { 
                     t.classList.remove('bg-gray-700','text-white','border-green-500','border-red-500'); 
                     t.classList.add('bg-gray-800','text-gray-400','border-transparent'); 
@@ -464,6 +479,7 @@
                 Array.from(containerCards.children).forEach(c => { 
                     if(!c.classList.contains('empty-state')) c.classList.add('hidden'); 
                 });
+                
                 const activeColor = (contextKey === 'main') ? 'border-green-500' : 'border-red-500';
                 tabBtn.classList.add('bg-gray-700','text-white', activeColor); 
                 tabBtn.classList.remove('bg-gray-800','text-gray-400','border-transparent');
@@ -481,15 +497,12 @@
             tabBtn.querySelector('span').innerText = e.target.value.substring(0,10) || 'Nuevo'; 
         });
 
-        initCardLogic(cardDiv, currentId);
+        initCardLogic(cardDiv, currentId, contextKey);
         containerCards.appendChild(cardDiv);
         tabBtn.click(); 
-        
-        // Aplicar estado actual de PREP al nuevo card
-        togglePrepMode(currentPrepMode);
     }
 
-    function initCardLogic(card, techId) {
+    function initCardLogic(card, techId, contextKey) {
         setupCombobox(card.querySelector('.input-nombre'), card.querySelector('.combo-list'), tecnicosData);
         setupCombobox(card.querySelector('.input-lider'), card.querySelector('.combo-list-lider'), lideresData);
         
@@ -497,171 +510,431 @@
         mesaInp.onclick = (e) => { e.stopPropagation(); closeAllMenus(); mesaMenu.classList.remove('hidden'); };
         mesaMenu.onclick = (e) => { if(e.target.classList.contains('select-option')){ mesaInp.value = e.target.dataset.value; mesaMenu.classList.add('hidden'); } };
 
-        // === ACTIVIDADES (PREP) ===
-        const activityTabsContainer = card.querySelector('.activity-tabs-container');
-        const activityCardsContent = card.querySelector('.activity-cards-content');
-        const emptyActivitiesMsg = card.querySelector('.empty-activities-state');
-        const btnAddActivity = card.querySelector('.btn-add-activity-tab');
-        activityCounters[techId] = 0;
+        // === 4.1 ACTIVIDADES (Solo en tarjeta principal PREP) ===
+        if(contextKey === 'main') {
+            const activityTabsContainer = card.querySelector('.activity-tabs-container');
+            const activityCardsContent = card.querySelector('.activity-cards-content');
+            const emptyActivitiesMsg = card.querySelector('.empty-activities-state');
+            const btnAddActivity = card.querySelector('.btn-add-activity-tab');
+            activityCounters[techId] = 0;
 
-        if (btnAddActivity) {
-            btnAddActivity.onclick = () => {
-                activityCounters[techId]++;
-                const actCount = activityCounters[techId];
-                const activityId = `${techId}-act-${actCount}`; 
-                
-                if(emptyActivitiesMsg) emptyActivitiesMsg.classList.add('hidden');
+            if (btnAddActivity) {
+                btnAddActivity.onclick = () => {
+                    activityCounters[techId]++;
+                    const actCount = activityCounters[techId];
+                    const activityId = `${techId}-act-${actCount}`; 
+                    
+                    if(emptyActivitiesMsg) emptyActivitiesMsg.classList.add('hidden');
 
-                const actTabBtn = document.createElement('button');
-                actTabBtn.type = 'button'; actTabBtn.id = `tab-btn-${activityId}`;
-                actTabBtn.className = "activity-tab-btn flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded bg-gray-800 text-gray-400 border border-gray-600 hover:bg-gray-700 transition select-none shrink-0";
-                actTabBtn.innerHTML = `<span class="tab-lbl">Actividad ${actCount}</span> <span class="ml-1 text-red-400 hover:text-white cursor-pointer" onclick="removeActivityTab('${activityId}', '${techId}', event)">&times;</span>`;
-                actTabBtn.onclick = (e) => { if(e.target.tagName === 'SPAN' && e.target.innerText === '×') return; switchActivityTab(card, activityId); };
-                activityTabsContainer.appendChild(actTabBtn);
+                    // Tab
+                    const actTabBtn = document.createElement('button');
+                    actTabBtn.type = 'button'; actTabBtn.id = `tab-btn-${activityId}`;
+                    actTabBtn.className = "activity-tab-btn flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded bg-gray-800 text-gray-400 border border-gray-600 hover:bg-gray-700 transition select-none shrink-0";
+                    actTabBtn.innerHTML = `<span class="tab-lbl">Actividad ${actCount}</span> <span class="ml-1 text-red-400 hover:text-white cursor-pointer" onclick="removeActivityTab('${activityId}', '${techId}', event)">&times;</span>`;
+                    actTabBtn.onclick = (e) => { if(e.target.tagName !== 'SPAN') switchActivityTab(card, activityId); };
+                    activityTabsContainer.appendChild(actTabBtn);
 
-                const tmpl = document.getElementById('activity-card-template');
-                const clone = tmpl.content.cloneNode(true);
-                const actCard = clone.querySelector('.activity-card');
-                actCard.id = `content-${activityId}`; actCard.classList.add('hidden');
+                    // Content
+                    const tmpl = document.getElementById('activity-card-template');
+                    const clone = tmpl.content.cloneNode(true);
+                    const actCard = clone.querySelector('.activity-card');
+                    actCard.id = `content-${activityId}`; actCard.classList.add('hidden');
 
-                const inpAct = actCard.querySelector('.input-actividad');
-                const listAct = actCard.querySelector('.combo-list-actividad');
-                actCard.querySelector('.btn-remove-activity').onclick = (e) => removeActivityTab(activityId, techId, e);
-                setupCombobox(inpAct, listAct, catalogoActividades, (val) => { 
-                    actTabBtn.querySelector('.tab-lbl').innerText = val.substring(0, 12) + '...'; 
-                });
-                activityCardsContent.appendChild(actCard);
-                switchActivityTab(card, activityId);
-            };
-            btnAddActivity.click();
+                    const inpAct = actCard.querySelector('.input-actividad');
+                    const listAct = actCard.querySelector('.combo-list-actividad');
+                    actCard.querySelector('.btn-remove-activity').onclick = (e) => removeActivityTab(activityId, techId, e);
+                    setupCombobox(inpAct, listAct, catalogoActividades, (val) => { 
+                        actTabBtn.querySelector('.tab-lbl').innerText = val.substring(0, 12) + '...'; 
+                    });
+                    activityCardsContent.appendChild(actCard);
+                    switchActivityTab(card, activityId);
+                };
+                // Crear una inicial
+                btnAddActivity.click();
+            }
+            
+            // Ocultar módulo extra de defectos en la tarjeta principal PREP
+            card.querySelector('.extra-module-container').classList.add('hidden');
         }
 
-        // === DEFECTOS/CAMBIOS (MCM/CHO) ===
-        const btnAddDefect = card.querySelector('.btn-add-defect-tab');
-        const defectTabsContainer = card.querySelector('.defect-tabs-container');
-        const defectContentArea = card.querySelector('.defect-cards-content');
-        defectCounters[techId] = 0;
+        // === 4.2 DEFECTOS (Solo en tarjeta vinculada T_ROJA) ===
+        if(contextKey === 'vinc') {
+            // En tarjeta vinculada, ocultamos actividades y mostramos defectos
+            card.querySelector('.main-activity-module').classList.add('hidden');
+            
+            const extraModule = card.querySelector('.extra-module-container');
+            extraModule.classList.remove('hidden');
+            
+            const btnAddDefect = extraModule.querySelector('.btn-add-defect-tab');
+            const defectTabsContainer = extraModule.querySelector('.defect-tabs-container');
+            const defectContentArea = extraModule.querySelector('.defect-cards-content');
+            defectCounters[techId] = 0;
 
-        if(btnAddDefect) {
-            btnAddDefect.onclick = () => {
-                defectCounters[techId]++;
-                const count = defectCounters[techId];
-                const defectId = `${techId}-def-${count}`;
-                card.querySelector('.empty-defects-state').classList.add('hidden');
+            if(btnAddDefect) {
+                btnAddDefect.onclick = () => {
+                    defectCounters[techId]++;
+                    const count = defectCounters[techId];
+                    const defectId = `${techId}-def-${count}`;
+                    extraModule.querySelector('.empty-defects-state').classList.add('hidden');
 
-                const tabButton = document.createElement('button');
-                tabButton.type = 'button'; tabButton.id = `tab-btn-${defectId}`;
-                tabButton.className = "defect-tab-btn flex items-center gap-1 px-2 py-1 text-[10px] font-bold rounded bg-gray-800 text-gray-400 border border-gray-600 hover:bg-gray-700 transition shrink-0";
-                tabButton.innerHTML = `<span class="tab-lbl">Item ${count}</span> <span class="ml-1 text-red-400 hover:text-white" onclick="removeDefectTab('${defectId}', '${techId}', event)">&times;</span>`;
-                tabButton.onclick = (e) => { if(e.target.tagName === 'SPAN' && e.target.innerText === '×') return; switchDefectTab(card, defectId); };
-                defectTabsContainer.appendChild(tabButton);
+                    const tabButton = document.createElement('button');
+                    tabButton.type = 'button'; tabButton.id = `tab-btn-${defectId}`;
+                    tabButton.className = "defect-tab-btn flex items-center gap-1 px-2 py-1 text-[10px] font-bold rounded bg-gray-800 text-gray-400 border border-gray-600 hover:bg-gray-700 shrink-0";
+                    tabButton.innerHTML = `<span class="tab-lbl">Item ${count}</span> <span class="ml-1 text-red-400 hover:text-white" onclick="removeDefectTab('${defectId}', '${techId}', event)">&times;</span>`;
+                    tabButton.onclick = (e) => { if(e.target.tagName !== 'SPAN') switchDefectTab(card, defectId); };
+                    defectTabsContainer.appendChild(tabButton);
 
-                const defTemplate = document.getElementById('defect-card-template');
-                const defClone = defTemplate.content.cloneNode(true);
-                const defCard = defClone.querySelector('.defect-card');
-                defCard.id = `content-${defectId}`; defCard.classList.add('hidden');
-                
-                const inputDefecto = defCard.querySelector('.input-defecto');
-                setupCombobox(inputDefecto, defCard.querySelector('.combo-list-def'), defectList, (val) => { 
-                    tabButton.querySelector('.tab-lbl').innerText = val.substring(0,10)+'...'; 
-                });
-                
-                defCard.querySelector('.btn-remove-defect-card').onclick = (e) => removeDefectTab(defectId, techId, e);
-                const locContainer = defCard.querySelector('.location-rows-container');
-                defCard.querySelector('.btn-add-location-row').onclick = () => createNewLocationRow(locContainer);
-                createNewLocationRow(locContainer); 
+                    // USAR TEMPLATE T_ROJA
+                    const defTemplate = document.getElementById('defect-card-template-T_roja');
+                    const defClone = defTemplate.content.cloneNode(true);
+                    const defCard = defClone.querySelector('.defect-card');
+                    defCard.id = `content-${defectId}`; defCard.classList.add('hidden');
+                    
+                    const inputDefecto = defCard.querySelector('.input-defecto');
+                    setupCombobox(inputDefecto, defCard.querySelector('.combo-list-def'), defectList, (val) => { 
+                        tabButton.querySelector('.tab-lbl').innerText = val.substring(0,10)+'...'; 
+                    });
+                    
+                    inputDefecto.addEventListener('input', (e) => { tabButton.querySelector('.tab-lbl').innerText = e.target.value.substring(0,10)+'...'; });
+                    defCard.querySelector('.btn-remove-defect-card').onclick = (e) => removeDefectTab(defectId, techId, e);
+                    
+                    const locContainer = defCard.querySelector('.location-rows-container');
+                    defCard.querySelector('.btn-add-location-row').onclick = () => createNewLocationRow(locContainer);
+                    createNewLocationRow(locContainer); // Row T_Roja
 
-                defectContentArea.appendChild(defCard);
-                switchDefectTab(card, defectId);
-                
-                // Re-aplicar visibilidad de columnas según el modo actual
-                togglePrepMode(currentPrepMode);
-            };
+                    defectContentArea.appendChild(defCard);
+                    switchDefectTab(card, defectId);
+                };
+                btnAddDefect.click();
+            }
         }
     }
 
-    // --- UI HELPERS ---
-    window.switchActivityTab = function(card, id) {
-        card.querySelectorAll('.activity-tab-btn').forEach(b => b.classList.replace('bg-blue-600', 'bg-gray-800'));
-        card.querySelectorAll('.activity-card').forEach(c => c.classList.add('hidden'));
-        const btn = card.querySelector(`#tab-btn-${id}`);
-        const cnt = card.querySelector(`#content-${id}`);
-        if(btn && cnt) { btn.classList.replace('bg-gray-800', 'bg-blue-600'); cnt.classList.remove('hidden'); }
+    // --- 5. HELPERS ACTIVIDADES ---
+    window.switchActivityTab = function(techCard, activityId) {
+        const allTabs = techCard.querySelectorAll('.activity-tab-btn');
+        const allContents = techCard.querySelectorAll('.activity-card');
+        allTabs.forEach(btn => { btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-500'); btn.classList.add('bg-gray-800', 'text-gray-400', 'border-gray-600'); });
+        allContents.forEach(c => c.classList.add('hidden'));
+        const activeTab = techCard.querySelector(`#tab-btn-${activityId}`);
+        const activeContent = techCard.querySelector(`#content-${activityId}`);
+        if(activeTab && activeContent) { activeTab.classList.replace('bg-gray-800', 'bg-blue-600'); activeContent.classList.remove('hidden'); }
     };
-    window.removeActivityTab = function(id, techId, e) {
-        e.stopPropagation(); document.getElementById(`tab-btn-${id}`)?.remove(); document.getElementById(`content-${id}`)?.remove();
-    };
-    
-    window.switchDefectTab = function(card, id) {
-        card.querySelectorAll('.defect-tab-btn').forEach(b => b.classList.replace('bg-purple-600', 'bg-gray-800'));
-        card.querySelectorAll('.defect-card').forEach(c => c.classList.add('hidden'));
-        const btn = card.querySelector(`#tab-btn-${id}`);
-        const cnt = card.querySelector(`#content-${id}`);
-        if(btn && cnt) { btn.classList.replace('bg-gray-800', 'bg-purple-600'); cnt.classList.remove('hidden'); }
-    };
-    window.removeDefectTab = function(id, techId, e) {
-        e.stopPropagation(); document.getElementById(`tab-btn-${id}`)?.remove(); document.getElementById(`content-${id}`)?.remove();
+    window.removeActivityTab = function(activityId, techId, e) {
+        e.stopPropagation(); document.getElementById(`tab-btn-${activityId}`)?.remove(); document.getElementById(`content-${activityId}`)?.remove();
+        const card = document.getElementById(techId);
+        if(card.querySelectorAll('.activity-tab-btn').length === 0) card.querySelector('.empty-activities-state').classList.remove('hidden');
     };
 
-    window.createNewLocationRow = function(container) {
-        const tmpl = document.getElementById('location-row-template');
+    // --- 6. HELPERS DEFECTOS (T_ROJA) ---
+    window.switchDefectTab = function(techCard, defectId) {
+        const allTabs = techCard.querySelectorAll('.defect-tab-btn');
+        const allContents = techCard.querySelectorAll('.defect-card');
+        allTabs.forEach(btn => { btn.classList.replace('bg-purple-600', 'bg-gray-800'); }); // Purple para distinguir
+        allContents.forEach(c => c.classList.add('hidden'));
+        const activeTab = techCard.querySelector(`#tab-btn-${defectId}`);
+        const activeContent = techCard.querySelector(`#content-${defectId}`);
+        if(activeTab && activeContent) { activeTab.classList.replace('bg-gray-800', 'bg-purple-600'); activeContent.classList.remove('hidden'); }
+    };
+    window.removeDefectTab = function(defectId, techId, e) {
+        e.stopPropagation(); document.getElementById(`tab-btn-${defectId}`)?.remove(); document.getElementById(`content-${defectId}`)?.remove();
+        const card = document.getElementById(techId);
+        if(card.querySelectorAll('.defect-tab-btn').length === 0) card.querySelector('.empty-defects-state').classList.remove('hidden');
+    };
+
+    // --- 7. LOCATION ROWS (T_ROJA) ---
+    function createNewLocationRow(container) {
+        const tmpl = document.getElementById('location-row-template-T_roja');
         const clone = tmpl.content.cloneNode(true);
         const row = clone.querySelector('.location-row');
-        row.querySelector('.btn-remove-row').onclick = () => row.remove();
+        row.querySelector('.btn-remove-loc').onclick = () => row.remove();
+        
+        const inpCav = row.querySelector('.input-cav'); const menuCav = row.querySelector('.select-menu');
+        if(inpCav) {
+            inpCav.onclick = (e) => { e.stopPropagation(); closeAllMenus(); menuCav.classList.remove('hidden'); };
+            menuCav.onclick = (e) => { if(e.target.classList.contains('select-option')) { inpCav.value = e.target.dataset.value; menuCav.classList.add('hidden'); } };
+        }
+        setupCircuitoMultiselect(row);
         container.appendChild(row);
     }
 
-    function closeAllMenus() { document.querySelectorAll('.combo-list, .combo-list-lider, .select-menu, .combo-list-actividad, .combo-list-def').forEach(m => m.classList.add('hidden')); }
-    window.addEventListener('click', closeAllMenus);
+    function setupCircuitoMultiselect(row) {
+        const input = row.querySelector('.input-circ'); const menu = row.querySelector('.circuito-menu');
+        if(!input || !menu) return;
+        const all = menu.querySelector('.chk-todas'); const nums = menu.querySelectorAll('.chk-num');
+        input.addEventListener('click', (e) => { e.stopPropagation(); closeAllMenus(); menu.classList.remove('hidden'); });
+        menu.addEventListener('click', (e) => e.stopPropagation());
+        const update = () => {
+            if (all.checked) { input.value = "Todas"; nums.forEach(c => c.checked=false); }
+            else { input.value = Array.from(nums).filter(c=>c.checked).map(c=>c.value).join(', '); }
+        };
+        all.addEventListener('change', () => { if(all.checked) nums.forEach(c=>c.checked=false); update(); });
+        nums.forEach(c => c.addEventListener('change', () => { if(c.checked) all.checked=false; update(); }));
+    }
 
+    // --- 8. HELPERS COMUNES ---
+    function closeAllMenus() { document.querySelectorAll('.combo-list, .combo-list-lider, .select-menu, .combo-list-actividad, .combo-list-def, [id^="list-"], .circuito-menu').forEach(m => m.classList.add('hidden')); }
+    
     function setupCombobox(inp, lst, data, cb) {
         if(!inp) return;
-        inp.oninput = () => {
-            lst.innerHTML = ''; 
-            const f = data.filter(d => d.nombre.toLowerCase().includes(inp.value.toLowerCase()));
+        const render = (q='') => {
+            lst.innerHTML = ''; const f = data.filter(d => d.nombre.toLowerCase().includes(q.toLowerCase()));
             if(f.length===0) { lst.classList.add('hidden'); return; }
             lst.classList.remove('hidden');
             f.forEach(x => {
-                const d = document.createElement('div'); d.className = 'p-2 hover:bg-gray-600 cursor-pointer text-white text-xs border-b border-gray-600';
-                d.innerText = x.nombre; 
+                const d = document.createElement('div'); d.className = 'p-2 hover:bg-gray-600 cursor-pointer text-white text-xs border-b border-gray-600'; d.innerText = x.nombre;
                 d.onmousedown = (e) => { e.preventDefault(); inp.value = x.nombre; lst.classList.add('hidden'); if(cb) cb(x.nombre); };
                 lst.appendChild(d);
             });
         };
-        inp.onfocus = inp.oninput; inp.onclick = (e) => { e.stopPropagation(); closeAllMenus(); inp.oninput(); };
+        inp.oninput = (e) => render(e.target.value); inp.onfocus = () => render(inp.value); inp.onclick = (e) => { e.stopPropagation(); closeAllMenus(); render(inp.value); };
     }
 
-    // --- SUBMIT ---
-    const form = document.getElementById('form-registro');
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        let isValid = true; 
-        const mainCards = document.querySelectorAll('#tech-cards-content-main .tech-card-wrapper');
-        if(mainCards.length === 0) { alert("Falta técnico en Orden Principal"); return; }
-        
-        const asignacionesMain = extractData(mainCards);
-        if(!asignacionesMain) return;
+    // --- 9. BÚSQUEDA ORDEN VINCULADA ---
+    function setupPendingSearch() {
+        const input = document.getElementById('input-orden-vinculada');
+        const list = document.getElementById('list-ordenes-pendientes');
+        const hidden = document.getElementById('orden-vinculada-id');
+        if(!input) return;
+        const render = (q) => {
+            if(!ordenesPendientesCache.length) return;
+            list.innerHTML='';
+            const f = ordenesPendientesCache.filter(o=>o.numero.toString().includes(q));
+            if(f.length===0) list.innerHTML='<div class="p-2 text-xs text-gray-500">Sin resultados</div>';
+            else f.forEach(o=>{
+                const d=document.createElement('div'); d.className="p-3 hover:bg-red-800 cursor-pointer text-sm text-white border-b border-red-700/30";
+                d.innerHTML=`<div class="font-bold">${o.numero}</div><div class="text-[10px]">${o.descripcion||'-'}</div>`;
+                d.onmousedown=(e)=>{ e.stopPropagation(); input.value=o.numero; hidden.value=o.numero; list.classList.add('hidden'); document.getElementById('wrapper-inputs-vinculada').classList.remove('opacity-50','pointer-events-none'); };
+                list.appendChild(d);
+            });
+            list.classList.remove('hidden');
+        };
+        input.oninput=(e)=>render(e.target.value); input.onfocus=()=>render(input.value);
+    }
 
-        let asignacionesVinc = [];
-        const tipo = document.querySelector('input[name="tipo_tarjeta"]:checked').value;
-        if(tipo === 'roja') {
-            const vincId = document.getElementById('orden-vinculada-id').value;
-            if(!vincId) { alert("Selecciona orden vinculada"); switchTab('vinculada'); return; }
-            const vincCards = document.querySelectorAll('#tech-cards-content-vinc .tech-card-wrapper');
-            const copiarTecnicos = document.getElementById('check-copiar-tecnicos').checked;
-            if(!copiarTecnicos) {
-                if(vincCards.length === 0) { alert("Falta técnico en Orden Vinculada"); switchTab('vinculada'); return; }
-                asignacionesVinc = extractData(vincCards);
-                if(!asignacionesVinc) { switchTab('vinculada'); return; }
-            }
+    async function cargarOrdenesPendientes() {
+        const mid = document.getElementById('input-molde-id').value; if(!mid) return;
+        try { const r=await fetch(`/moldeo/api/ordenes-pendientes/?molde_id=${mid}`); const d=await r.json(); ordenesPendientesCache=d.ordenes||[]; } catch(e){}
+    }
+    const modalHydra = document.getElementById('modal-warning-hydra');
+        const btnConfirmHydra = document.getElementById('btn-confirmar-hydra');
+        let formToSubmit = null; // Variable para guardar el formulario pendiente
+
+        window.cerrarWarningHydra = function() {
+            modalHydra.classList.add('hidden');
+            formToSubmit = null;
         }
 
-        document.getElementById('asignaciones-json').value = JSON.stringify(asignacionesMain);
-        if(asignacionesVinc.length > 0) document.getElementById('asignaciones-vinc-json').value = JSON.stringify(asignacionesVinc);
-        form.submit();
+        // Acción al confirmar en el modal
+        btnConfirmHydra.addEventListener('click', () => {
+            if (formToSubmit) {
+                // Desactivar validación HTML5 para evitar loops y enviar
+                formToSubmit.submit(); 
+            }
+        });
+
+    // --- MANEJO DEL SUBMIT CON VALIDACIÓN INTEGRAL ---
+const form = document.getElementById('form-registro');
+form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    // --- 1. REFERENCIAS DE ELEMENTOS ---
+    const statusInput = document.getElementById('input-status');
+    const statusVal = statusInput ? statusInput.value.trim() : '';
+    const tipoTarjeta = document.querySelector('input[name="tipo_tarjeta"]:checked').value;
+    const ordenRetornoInput = document.getElementById('input-buscar-orden');
+
+    // --- 2. VALIDACIÓN: RETORNO OBLIGATORIO (Estatus 203/204) ---
+    if (statusVal === '203' || statusVal === '204') {
+        // 2.1 Orden anterior obligatoria
+        if (ordenRetornoInput && !ordenRetornoInput.value.trim()) {
+            alert("⚠️ Para estatus de Retorno (203/204), debes buscar y seleccionar la orden anterior en la pestaña 'Información de Retorno'.");
+            switchTab('retorno'); 
+            ordenRetornoInput.classList.add('border-red-500');
+            ordenRetornoInput.focus();
+            return; 
+        }
+
+        // 2.2 Defecto de retorno obligatorio
+        const motivoRetornoVal = document.getElementById('input-motivo-val');
+        const motivoRetornoDisplay = document.getElementById('input-motivo-display');
+        if (motivoRetornoVal && !motivoRetornoVal.value.trim()) {
+            alert("⚠️ Para estatus de Retorno, debes seleccionar al menos un 'Defecto de retorno' en la pestaña 'Información de Retorno'.");
+            switchTab('retorno');
+            motivoRetornoDisplay.classList.add('border-red-500');
+            return;
+        }
+
+        // 2.3 Validación de SELECCIÓN VISUAL (Checkboxes en grid)
+        const defectosRetornoSeleccionados = document.querySelectorAll('#grid-tarjetas-retorno .chk-defecto:checked');
+        if (defectosRetornoSeleccionados.length === 0) {
+             alert("⚠️ Para estatus de Retorno, debes seleccionar al menos un defecto de la orden anterior en el 'Resumen Visual'.");
+             switchTab('retorno');
+             return;
+        }
+    }
+
+    // --- 3. VALIDACIÓN: TARJETA ROJA (VINCULACIÓN) ---
+    if (tipoTarjeta === 'roja') {
+        const vincId = document.getElementById('orden-vinculada-id').value;
+        if (!vincId) {
+            alert("⚠️ Seleccione una Orden Vinculada para la Tarjeta Roja.");
+            switchTab('vinculada');
+            return;
+        }
+    }
+
+    // --- 4. VALIDACIÓN DE TÉCNICOS Y DETALLES (ORDEN PRINCIPAL) ---
+    const mainCards = document.querySelectorAll('#tech-cards-content-main .tech-card-wrapper');
+    if (mainCards.length === 0) {
+        alert("⚠️ Agrega al menos un técnico.");
+        switchTab('general');
+        return;
+    }
+
+    let isValid = true;
+    let firstErrorTab = null;
+    let totalDefectos = 0;
+    const asignaciones = [];
+    let resumenTexto = "--- INICIO DE ORDEN ---\n";
+    resumenTexto += `Fecha: ${new Date().toLocaleString()}\n`;
+
+    // Procesar Técnicos
+    mainCards.forEach((wrapper, index) => {
+        const card = wrapper.querySelector('.tech-card');
+        let cardError = false;
+
+        // Validar campos obligatorios del técnico
+        card.querySelectorAll('.validate-required').forEach(inp => {
+            if (!inp.value.trim() || inp.value === '-') {
+                inp.classList.add('border-red-500');
+                isValid = false;
+                cardError = true;
+            } else {
+                inp.classList.remove('border-red-500');
+            }
+        });
+
+        const nombre = card.querySelector('.input-nombre').value.trim();
+        const lider = card.querySelector('.input-lider').value.trim();
+        const mesa = card.querySelector('.input-mesa').value.trim();
+        const defCards = card.querySelectorAll('.defect-card');
+        const detalles = [];
+        let textoDefectosTécnico = "";
+
+        if (defCards.length === 0) {
+            alert(`⚠️ Falta agregar defectos/actividades para el técnico: ${nombre || (index + 1)}`);
+            isValid = false; cardError = true;
+        } else {
+            defCards.forEach(dc => {
+                // Obtener nombre del defecto (soporta select o input manual)
+                const selectDef = dc.querySelector('.select-defecto');
+                const inputDef = dc.querySelector('.input-defecto');
+                const nomDef = selectDef ? selectDef.value : (inputDef ? inputDef.value.trim() : '');
+
+                if (!nomDef) {
+                    (inputDef || selectDef).classList.add('border-red-500');
+                    isValid = false; cardError = true;
+                }
+
+                const rows = dc.querySelectorAll('.location-row');
+                if (rows.length === 0) {
+                    alert(`⚠️ Falta ubicación en el defecto "${nomDef}"`);
+                    isValid = false; cardError = true;
+                }
+
+                rows.forEach(r => {
+                    const type = r.dataset.type;
+                    const cav = r.querySelector('.input-cav').value.trim();
+                    const circ = r.querySelector('.input-circ').value.trim();
+                    const esFijo = r.querySelector('.input-fijo').checked;
+                    const esMovil = r.querySelector('.input-movil').checked;
+
+                    // Validación de Cavidad/Circuito
+                    if (!cav || cav === '-' || !circ || circ === '-') {
+                        if (!cav || cav === '-') r.querySelector('.input-cav').classList.add('border-red-500');
+                        if (!circ || circ === '-') r.querySelector('.input-circ').classList.add('border-red-500');
+                        isValid = false; cardError = true;
+                    }
+
+                    // Validación de Lado (Fijo/Móvil) - No aplica a fechadores
+                    if (type !== 'fechador' && !esFijo && !esMovil) {
+                        alert(`⚠️ En "${nomDef}", debes seleccionar Fijo o Móvil.`);
+                        r.querySelector('.input-fijo').parentElement.classList.add('text-red-500');
+                        r.querySelector('.input-movil').parentElement.classList.add('text-red-500');
+                        isValid = false; cardError = true;
+                    } else {
+                        r.querySelector('.input-fijo')?.parentElement.classList.remove('text-red-500');
+                        r.querySelector('.input-movil')?.parentElement.classList.remove('text-red-500');
+                    }
+
+                    if (isValid) {
+                        let ent = '', sal = '';
+                        if (type === 'fechador') {
+                            ent = r.querySelector('.input-mes').value;
+                            sal = r.querySelector('.input-anio').value;
+                        } else {
+                            ent = r.querySelector('.input-entrante').value;
+                            sal = r.querySelector('.input-saliente').value;
+                        }
+
+                        detalles.push({ defecto: nomDef, entrante: ent, saliente: sal, cav, circ, fijo: esFijo, movil: esMovil });
+                        textoDefectosTécnico += `   - ${nomDef} (Cav:${cav}, Circ:${circ}${type === 'fechador' ? ', Fecha:' + ent + '/' + sal : ''})\n`;
+                        totalDefectos++;
+                    }
+                });
+            });
+        }
+
+        // Manejo visual de pestañas con error
+        const tabBtn = document.querySelectorAll('#tech-tabs-bar-main .tech-tab-btn')[index];
+        if (cardError) {
+            tabBtn?.classList.add('text-red-500', 'border-red-500');
+            if (!firstErrorTab) firstErrorTab = index;
+        } else {
+            tabBtn?.classList.remove('text-red-500', 'border-red-500');
+        }
+
+        if (!cardError) {
+            asignaciones.push({ nombre, lider, mesa, detalles });
+            resumenTexto += `\n> TÉCNICO: ${nombre}\n  LÍDER: ${lider} | MESA: ${mesa}\n${textoDefectosTécnico}`;
+        }
     });
 
-    function extractData(cardsNodeList) {
+    // --- 5. RESULTADO FINAL ---
+    if (!isValid) {
+        alert("⚠️ Hay errores en el formulario. Revisa los campos marcados en rojo.");
+        if (firstErrorTab !== null) {
+            switchTab('general');
+            document.querySelectorAll('#tech-tabs-bar-main .tech-tab-btn')[firstErrorTab].click();
+        }
+        return;
+    }
+
+    // Guardar datos en campos ocultos
+    document.getElementById('asignaciones-json').value = JSON.stringify(asignaciones);
+    document.getElementById('comentarios-generados').value = resumenTexto;
+
+    // Lógica para Orden Vinculada (Si es roja)
+    if (tipoTarjeta === 'roja') {
+        const copiar = document.getElementById('check-copiar-tecnicos').checked;
+        if (copiar) {
+            document.getElementById('asignaciones-vinc-json').value = JSON.stringify(asignaciones);
+        } else {
+            const vincCards = document.querySelectorAll('#tech-cards-content-vinc .tech-card-wrapper');
+            // Aquí llamarías a una función similar para validar la pestaña vinculada...
+            const asignVinc = extractData(vincCards); // Usando tu función extractData existente
+            if (!asignVinc) { switchTab('vinculada'); return; }
+            document.getElementById('asignaciones-vinc-json').value = JSON.stringify(asignVinc);
+        }
+    }
+
+    // Mostrar Modal Hydra antes de enviar
+    formToSubmit = form;
+    document.getElementById('modal-warning-hydra').classList.remove('hidden');
+});
+
+    function extractData(cardsNodeList, contextType) {
         const arr = []; let error = false;
         cardsNodeList.forEach(card => {
             const n = card.querySelector('.input-nombre').value.trim();
@@ -670,49 +943,37 @@
             if(!n || !l || !m) { card.querySelector('.input-nombre').classList.add('border-red-500'); error = true; }
             
             const actividades = [];
-            // Actividades
-            card.querySelectorAll('.activity-card').forEach(row => {
-                const act = row.querySelector('.input-actividad').value.trim();
-                if(act) actividades.push({ actividad: act });
-            });
-
-            // Defectos/Cambios (Solo si no es 'simple')
-            if(currentPrepMode !== 'simple') {
+            
+            if(contextType === 'main') {
+                // PREP: Extraer solo actividades
+                card.querySelectorAll('.activity-card').forEach(ac => {
+                    const act = ac.querySelector('.input-actividad').value.trim();
+                    if(act) actividades.push({ actividad: act }); else { error=true; ac.classList.add('border-red-500'); }
+                });
+                if(actividades.length === 0) error = true;
+            } else {
+                // VINC (MCM): Extraer defectos T_ROJA
                 card.querySelectorAll('.defect-card').forEach(dc => {
                     const dn = dc.querySelector('.input-defecto').value.trim();
                     if(dn) {
                         dc.querySelectorAll('.location-row').forEach(row => {
-                            // Extraemos todo, el backend o el toggle de vista decide qué importa
-                            const ent = row.querySelector('.input-entrante').value;
-                            const sal = row.querySelector('.input-saliente').value;
-                            const cav = row.querySelector('.input-cavidad').value;
-                            const cir = row.querySelector('.input-circuito').value;
-                            const lad = row.querySelector('.input-lado').value;
-                            
-                            actividades.push({ 
-                                actividad: dn, // Guardamos el nombre del defecto como actividad
-                                is_defect: true,
-                                entrante: ent, saliente: sal, 
-                                cavidad: cav, circuito: cir, lado: lad 
-                            });
+                            const cav = row.querySelector('.input-cav').value;
+                            const circ = row.querySelector('.input-circ').value;
+                            const fijo = row.querySelector('.input-fijo').checked;
+                            const movil = row.querySelector('.input-movil').checked;
+                            if(!cav || !circ || (!fijo && !movil)) { error = true; row.classList.add('bg-red-900/20'); }
+                            else { row.classList.remove('bg-red-900/20'); actividades.push({ defecto: dn, cav, circ, fijo, movil }); }
                         });
-                    }
+                    } else { error=true; dc.querySelector('.input-defecto').classList.add('border-red-500'); }
                 });
+                if(actividades.length === 0) error = true;
             }
             
-            if(actividades.length === 0) error = true;
-            arr.push({ nombre: n, lider: l, mesa: m, actividades: actividades });
+            // Unificamos estructura: para MCM 'detalles' contiene los defectos
+            arr.push({ nombre: n, lider: l, mesa: m, actividades: (contextType === 'main' ? actividades : []), detalles: (contextType === 'vinc' ? actividades : []) });
         });
         if(error) { alert("Datos incompletos."); return null; }
         return arr;
     }
-    document.addEventListener("DOMContentLoaded", function() {
-        // Obtener el valor seleccionado actualmente (gracias al checked de Django)
-        const selected = document.querySelector('input[name="subtipo_prep"]:checked').value;
-        // Ejecutar la función para mostrar/ocultar campos según corresponda
-        if(typeof togglePrepMode === 'function') {
-            togglePrepMode(selected);
-        }
-    });
 </script>
 {% endblock %}

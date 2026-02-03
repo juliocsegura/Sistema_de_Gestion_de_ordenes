@@ -236,7 +236,7 @@ def registro_cho_view(request):
     
     molde_obj = None
     partes_data = [] # Lista para el dropdown
-
+    comentarios_generados = request.POST.get('comentarios_generados', '')
     # Búsqueda inteligente del Molde
     if pre_molde_pk:
         try:
@@ -436,7 +436,7 @@ def registro_tpm_view(request):
     pre_molde_nombre = request.GET.get('molde', '') 
     pre_molde_pk = request.POST.get('molde', '')
     molde_obj = None
-
+    comentarios_generados = request.POST.get('comentarios_generados', '')
     # Búsqueda inteligente del Molde (Igual que en CHO)
     if pre_molde_pk:
         try:
@@ -506,7 +506,7 @@ def registro_tpm_view(request):
                     maquina=molde_obj.maquina.nombre if molde_obj.maquina else None,
                     status=status_actual, # Status numérico ej. 110
                     estado='Activa',      # Estado legible ej. Activa
-                    comentarios="Inicio de Mantenimiento TPM",
+                    comentarios=comentarios_generados,
                     ultima_actualizacion=timezone.now()
                 )
 
@@ -554,6 +554,7 @@ def registro_tpm_view(request):
         'zonas_json': zonas_json,
         'pre_defecto': pre_defecto,
         'tecnicos_json': tecnicos_json,
+        'lista_defectos': Defectos.objects.filter(activo=True).order_by('nombre_defecto'),
         'lideres_json': lideres_json
     }
     return render(request, 'Moldeo/registro_tpm.html', context)
@@ -675,6 +676,7 @@ def registro_prep_view(request):
         'actividades_json': actividades_json,
         'zonas_json': zonas_json,            
         'tecnicos_json': tecnicos_json,
+        'lista_defectos': Defectos.objects.filter(activo=True).order_by('nombre_defecto'),
         'lideres_json': lideres_json
     }
     return render(request, 'Moldeo/registro_prep.html', context)

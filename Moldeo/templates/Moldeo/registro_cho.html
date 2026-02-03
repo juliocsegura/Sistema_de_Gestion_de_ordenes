@@ -1,5 +1,4 @@
 {% extends 'Moldeo/base.html' %}
-
 {% block title %}Registrar Orden - CHO{% endblock %}
 
 {% block content %}
@@ -65,6 +64,7 @@
                          <label class="block text-sm font-medium text-gray-400 mb-1">Defecto (SAP)</label>
                          <input type="text" name="defecto_sap" value="{{ pre_defecto }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold px-3 py-2">
                     </div>
+                    
                     <div class="relative">
                         <label class="block text-sm font-medium text-blue-400 mb-1">NP Saliente (Principal)</label>
                         <input type="text" name="parte_saliente" id="input-saliente-main" class="block w-full bg-gray-800 border-gray-500 text-white rounded-md font-bold px-3 py-2 outline-none placeholder-gray-500" placeholder="Buscar NP..." autocomplete="off">
@@ -152,6 +152,33 @@
     </form>
 </div>
 
+<div id="modal-warning-hydra" class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-90 hidden backdrop-blur-sm transition-opacity duration-300">
+    <div class="bg-gray-800 border-2 border-yellow-500 rounded-xl shadow-2xl w-full max-w-md transform scale-100 p-6 relative">
+        <div class="text-center">
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-900/50 mb-4 border border-yellow-500 animate-pulse">
+                <svg class="h-10 w-10 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            
+            <h3 class="text-2xl font-bold text-white mb-2">¡Atención!</h3>
+            <p class="text-gray-300 text-base mb-6">
+                Antes de continuar, asegúrate de haber realizado el movimiento correspondiente en:
+                <br><span class="text-yellow-400 font-bold text-xl block mt-2"> HYDRA</span>
+            </p>
+
+            <div class="flex justify-center gap-4">
+                <button type="button" onclick="cerrarWarningHydra()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-semibold transition">
+                    Cancelar
+                </button>
+                <button type="button" id="btn-confirmar-hydra" class="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg font-bold shadow-lg shadow-yellow-600/30 transition transform hover:-translate-y-1">
+                    Ya lo hice, Continuar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <template id="tech-card-template">
     <div class="tech-card animate-fade-in relative">
         <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 pr-2">
@@ -174,67 +201,45 @@
             </div>
         </div>
         <div class="flex items-center gap-2 border-b border-gray-600 pb-2 mb-3">
-             <button type="button" class="btn-add-defect-tab bg-blue-600 hover:bg-blue-500 text-white w-6 h-6 rounded text-xs shadow flex items-center justify-center font-bold" title="Agregar Defecto">+</button>
-             <span class="text-xs text-gray-500">Defectos</span>
+             <button type="button" class="btn-add-defect-tab bg-blue-600 hover:bg-blue-500 text-white w-6 h-6 rounded text-xs shadow flex items-center justify-center font-bold" title="Agregar Detalle">+</button>
+             <span class="text-xs text-gray-500">Detalles de Configuración</span>
              <div class="defect-tabs-container flex gap-1 ml-2 overflow-x-auto custom-scrollbar"></div>
         </div>
         <div class="defect-cards-content relative min-h-[50px]">
-             <div class="empty-defects-state absolute inset-0 flex items-center justify-center text-gray-500 text-xs italic">Cargando defecto...</div>
+             <div class="empty-defects-state absolute inset-0 flex items-center justify-center text-gray-500 text-xs italic">Agrega detalles de cambio o fechadores...</div>
         </div>
     </div>
 </template>
-<template id="defect-card-template-T_roja">
-    <div class="defect-card bg-gray-800/80 border border-gray-600 rounded p-3 relative animate-fade-in mb-3">
-        <button type="button" class="btn-remove-defect-card absolute top-2 right-2 text-gray-600 hover:text-red-400 p-1 text-xl font-bold">&times;</button>
-        <div class="mb-3 relative group-combo-def pr-6">
-            <label class="block text-[9px] text-blue-400 uppercase font-bold mb-1">Defecto</label>
-            <input type="text" class="input-defecto w-full bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white font-bold validate-required" placeholder="Seleccionar..." autocomplete="off">
-            <div class="combo-list-def hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 z-50 max-h-40 overflow-y-auto shadow-xl rounded-b"></div>
-        </div>
-        <div class="bg-gray-900/50 rounded border border-gray-700/50">
-            <div class="grid grid-cols-12 bg-gray-700/50 px-2 py-1 text-[9px] text-gray-400 uppercase font-bold text-center">
-                <div class="col-span-3 label-cav">Cavidad</div>
-                <div class="col-span-3 label-circ">Circuito</div>
-                <div class="col-span-4">Ubicación</div> <div class="col-span-2"></div>
-            </div>
-            <div class="location-rows-container"></div>
-            <button type="button" class="btn-add-location-row w-full bg-gray-700/30 hover:bg-gray-700 text-gray-400 hover:text-white text-[10px] py-1 border-t border-gray-700 transition">+ Agregar Ubicación</button>
-        </div>
-    </div>
-</template>
+
 <template id="defect-card-template">
     <div class="defect-card bg-gray-800/80 border border-gray-600 rounded p-3 relative animate-fade-in mb-3">
-        <button type="button" class="btn-remove-defect-card absolute top-2 right-2 text-gray-600 hover:text-red-400 p-1 text-xl font-bold">&times;</button>
-       <div class="mb-3 relative pr-6">
-            <label class="block text-[9px] text-blue-400 uppercase font-bold mb-1">Defecto</label>
-            <input type="text" 
-                   class="input-defecto w-full bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-300 font-bold cursor-not-allowed outline-none" 
-                   value="CAMBIO DE CONFIGURACION" 
-                   readonly>
-            </div>
-        <div class="bg-gray-900/50 rounded border border-gray-700/50">
-            <div class="grid grid-cols-12 bg-gray-700/50 px-2 py-1 text-[9px] text-gray-400 uppercase font-bold text-center">
-                <div class="col-span-2 label-cav">Detalle Entrante</div>
-                <div class="col-span-2 label-cav">Detalle Saliente</div>
-                <div class="col-span-2 label-cav">Cavidad</div>
-                <div class="col-span-2 label-circ">Circuito</div>
-                <div class="col-span-3">Ubicación</div> <div class="col-span-2"></div>
-            </div>
-            <div class="location-rows-container"></div>
-            <button type="button" class="btn-add-location-row w-full bg-gray-700/30 hover:bg-gray-700 text-gray-400 hover:text-white text-[10px] py-1 border-t border-gray-700 transition">+ Agregar Ubicación</button>
+        <button type="button" class="btn-remove-defect-card absolute top-2 right-2 text-gray-600 hover:text-red-400 p-1 text-xl font-bold" title="Eliminar">&times;</button>
+        
+        <div class="mb-3 relative pr-6">
+            <label class="block text-[9px] text-blue-400 uppercase font-bold mb-1">Tipo de Evento</label>
+            <select class="select-defecto w-full bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white font-bold outline-none focus:border-blue-500 cursor-pointer">
+                <option value="CAMBIO DE CONFIGURACION">CAMBIO DE CONFIGURACION</option>
+                <option value="FECHADORES">FECHADORES</option>
+            </select>
+        </div>
+
+        <div class="bg-gray-900/50 rounded border border-gray-700/50 overflow-visible">
+            <div class="header-row grid grid-cols-12 bg-gray-700/50 px-2 py-1 text-[9px] text-gray-400 uppercase font-bold text-center gap-1">
+                </div>
+            
+            <div class="location-rows-container p-1 space-y-1"></div>
+            
+            <button type="button" class="btn-add-location-row w-full bg-gray-800 hover:bg-gray-700 text-blue-400 hover:text-blue-300 text-[10px] font-bold py-1.5 border-t border-gray-700 transition flex items-center justify-center gap-1">
+                <span>+ Agregar Fila</span>
+            </button>
         </div>
     </div>
 </template>
 
-<template id="location-row-template">
-    <div class="location-row grid grid-cols-12 gap-1 px-2 py-1 border-b border-gray-700/30 last:border-0 items-center animate-fade-in relative">
-        <div class="col-span-2">
-            <input type="text" class="input-entrante w-full bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-center text-white focus:border-blue-500 outline-none placeholder-gray-600" placeholder="-">
-        </div>
-
-        <div class="col-span-2">
-            <input type="text" class="input-saliente w-full bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-center text-white focus:border-blue-500 outline-none placeholder-gray-600" placeholder="-">
-        </div>
+<template id="row-config-template">
+    <div class="location-row grid grid-cols-12 gap-1 items-center animate-fade-in" data-type="config">
+        <div class="col-span-2"><input type="text" class="input-entrante w-full bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-center text-white focus:border-blue-500 outline-none" placeholder="-"></div>
+        <div class="col-span-2"><input type="text" class="input-saliente w-full bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-center text-white focus:border-blue-500 outline-none" placeholder="-"></div>
         <div class="col-span-2 relative custom-select-container">
             <input type="text" class="input-cav input-select w-full bg-transparent border-b border-gray-600 focus:border-blue-500 text-center text-xs text-white placeholder-gray-600 focus:outline-none py-1 cursor-pointer validate-required" placeholder="-" readonly>
             <div class="select-menu hidden absolute top-full left-0 w-full bg-gray-800 border border-gray-600 shadow-2xl rounded max-h-60 overflow-y-auto z-50">
@@ -258,17 +263,71 @@
                 </div>
             </div>
         </div>
-        <div class="col-span-3 flex items-center justify-center gap-2">
-            <label class="inline-flex items-center cursor-pointer group"><input type="checkbox" class="input-fijo form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded"><span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Fijo</span></label>
-            <label class="inline-flex items-center cursor-pointer group"><input type="checkbox" class="input-movil form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded"><span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Móvil</span></label>
+        <div class="col-span-3 flex justify-center gap-2">
+             <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" class="input-fijo form-checkbox h-3 w-3 text-emerald-500 bg-gray-700 border-gray-500 rounded"><span class="text-[9px] text-gray-300 font-bold">Fijo</span></label>
+             <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" class="input-movil form-checkbox h-3 w-3 text-blue-500 bg-gray-700 border-gray-500 rounded"><span class="text-[9px] text-gray-300 font-bold">Movil</span></label>
         </div>
-        <div class="col-span-1 text-center">
-            <button type="button" class="btn-remove-loc text-gray-600 hover:text-red-500 font-bold px-2 text-xl">&times;</button>
+        <div class="col-span-1 flex justify-center"><button type="button" class="btn-remove-row text-gray-500 hover:text-red-500 font-bold text-lg leading-none">&times;</button></div>
+    </div>
+</template>
+
+<template id="row-fechador-template">
+    <div class="location-row grid grid-cols-12 gap-1 items-center animate-fade-in" data-type="fechador">
+        <div class="col-span-5">
+            <select class="input-mes w-full bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-center text-white focus:border-blue-500 outline-none cursor-pointer">
+                <option value="" disabled selected>Mes</option>
+                <option value="Enero">Enero</option>
+                <option value="Febrero">Febrero</option>
+                <option value="Marzo">Marzo</option>
+                <option value="Abril">Abril</option>
+                <option value="Mayo">Mayo</option>
+                <option value="Junio">Junio</option>
+                <option value="Julio">Julio</option>
+                <option value="Agosto">Agosto</option>
+                <option value="Septiembre">Septiembre</option>
+                <option value="Octubre">Octubre</option>
+                <option value="Noviembre">Noviembre</option>
+                <option value="Diciembre">Diciembre</option>
+            </select>
+        </div>
+        <div class="col-span-5">
+             <select class="input-anio w-full bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-center text-white focus:border-blue-500 outline-none cursor-pointer">
+                <option value="" disabled selected>Año</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+                <option value="2028">2028</option>
+                <option value="2029">2029</option>
+                <option value="2030">2030</option>
+            </select>
+        </div>
+        <div class="col-span-2 flex justify-center"><button type="button" class="btn-remove-row text-gray-500 hover:text-red-500 font-bold text-lg leading-none">&times;</button></div>
+    </div>
+</template>
+
+<template id="defect-card-template-T_roja">
+    <div class="defect-card bg-gray-800/80 border border-gray-600 rounded p-3 relative animate-fade-in mb-3">
+        <button type="button" class="btn-remove-defect-card absolute top-2 right-2 text-gray-600 hover:text-red-400 p-1 text-xl font-bold">&times;</button>
+        <div class="mb-3 relative group-combo-def pr-6">
+            <label class="block text-[9px] text-blue-400 uppercase font-bold mb-1">Defecto</label>
+            <input type="text" class="input-defecto w-full bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white font-bold validate-required" placeholder="Seleccionar..." autocomplete="off">
+            <div class="combo-list-def hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 z-50 max-h-40 overflow-y-auto shadow-xl rounded-b"></div>
+        </div>
+        <div class="bg-gray-900/50 rounded border border-gray-700/50">
+            <div class="grid grid-cols-12 bg-gray-700/50 px-2 py-1 text-[9px] text-gray-400 uppercase font-bold text-center">
+                <div class="col-span-3 label-cav">Cavidad</div>
+                <div class="col-span-3 label-circ">Circuito</div>
+                <div class="col-span-4">Ubicación</div> <div class="col-span-2"></div>
+            </div>
+            <div class="location-rows-container"></div>
+            <button type="button" class="btn-add-location-row w-full bg-gray-700/30 hover:bg-gray-700 text-gray-400 hover:text-white text-[10px] py-1 border-t border-gray-700 transition">+ Agregar Ubicación</button>
         </div>
     </div>
 </template>
+
 <template id="location-row-template-T_roja">
-     <div class="location-row grid grid-cols-12 gap-1 px-2 py-1 border-b border-gray-700/30 last:border-0 items-center animate-fade-in relative">
+     <div class="location-row grid grid-cols-12 gap-1 px-2 py-1 border-b border-gray-700/30 last:border-0 items-center animate-fade-in relative z-10 hover:z-20">
         <div class="col-span-3 relative custom-select-container">
             <input type="text" class="input-cav input-select w-full bg-transparent border-b border-gray-600 focus:border-blue-500 text-center text-xs text-white placeholder-gray-600 focus:outline-none py-1 cursor-pointer validate-required" placeholder="-" readonly>
             <div class="select-menu hidden absolute top-full left-0 w-full bg-gray-800 border border-gray-600 shadow-2xl rounded max-h-60 overflow-y-auto z-50">
@@ -297,11 +356,12 @@
         </div>
     </div>
 </template>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // Configuración de contextos para diferenciar CHO (Main) de MCM (Vinc)
+    // --- 1. DEFINICIONES GLOBALES ---
     const contexts = {
         main: { 
             tabs: 'tech-tabs-bar-main', 
@@ -309,7 +369,7 @@
             empty: '#tech-cards-content-main .empty-state',
             defectList: [{ nombre: "CAMBIO DE CONFIGURACION" }],
             templateDefecto: 'defect-card-template',
-            templateLocationRow: 'location-row-template'
+            templateLocationRow: 'row-config-template'
         },
         vinc: { 
             tabs: 'tech-tabs-bar-vinc', 
@@ -322,9 +382,122 @@
     };
 
     let techGlobalCounter = 0;
-    let defectCounters = {}; 
+    let ordenesPendientesCache = [];
 
-    // --- NAVEGACIÓN Y TABS ---
+    // --- CARGA DE DATOS ---
+    const tecnicosData = [{% for t in moldmakers %}{ nombre: "{{ t.nombre|escapejs }}" },{% endfor %}];
+    const lideresData = [{% for l in lideres_all %}{ nombre: "{{ l.nombre|escapejs }}" },{% endfor %}];
+    const partesData = {{ partes_json|default:"[]"|safe }};
+
+    // --- 2. SETUP AL CARGAR ---
+    document.addEventListener('DOMContentLoaded', () => {
+        setupPendingSearch();
+        window.addEventListener('click', closeAllMenus);
+
+        ['input-saliente-main','input-entrante-main'].forEach(id => {
+            const el = document.getElementById(id); const ls = document.getElementById(id.replace('input','list'));
+            if(el && ls) setupCombobox(el, ls, partesData);
+        });
+
+        // Crear tarjeta inicial
+        createNewTechCard('main');
+    });
+
+    // --- 3. LÓGICA DE DEFECTOS DINÁMICOS ---
+    function updateDefectCardUI(card) {
+        const select = card.querySelector('.select-defecto');
+        const header = card.querySelector('.header-row');
+        const container = card.querySelector('.location-rows-container');
+        const tipo = select.value;
+
+        container.innerHTML = ''; // Limpiar filas
+
+        if (tipo === 'FECHADORES') {
+            header.innerHTML = `
+                <div class="col-span-5">Mes</div>
+                <div class="col-span-5">Año</div>
+                <div class="col-span-2">Acción</div>
+            `;
+        } else {
+            header.innerHTML = `
+                <div class="col-span-2">Entrante</div>
+                <div class="col-span-2">Saliente</div>
+                <div class="col-span-2">Cavidad</div>
+                <div class="col-span-2">Circuito</div>
+                <div class="col-span-3">Ubicación</div> 
+                <div class="col-span-1"></div>
+            `;
+        }
+        addLocationRow(container, tipo);
+    }
+
+    function addLocationRow(container, tipo) {
+        let templateId = (tipo === 'FECHADORES') ? 'row-fechador-template' : 'row-config-template';
+        const tmpl = document.getElementById(templateId);
+        const clone = tmpl.content.cloneNode(true);
+        const row = clone.querySelector('.location-row');
+        
+        row.querySelector('.btn-remove-row').onclick = () => row.remove();
+        
+        if(tipo !== 'FECHADORES') {
+            const inpCav = row.querySelector('.input-cav'); const menuCav = row.querySelector('.select-menu');
+            if(inpCav) {
+                inpCav.onclick = (e) => { e.stopPropagation(); closeAllMenus(); menuCav.classList.remove('hidden'); };
+                menuCav.onclick = (e) => { if(e.target.classList.contains('select-option')) { inpCav.value = e.target.dataset.value; menuCav.classList.add('hidden'); } };
+            }
+            setupCircuitoMultiselect(row);
+        }
+        container.appendChild(row);
+    }
+
+    // --- 4. BÚSQUEDA ORDEN VINCULADA ---
+    function setupPendingSearch() {
+        const input = document.getElementById('input-orden-vinculada');
+        const list = document.getElementById('list-ordenes-pendientes');
+        const hiddenInput = document.getElementById('orden-vinculada-id');
+
+        if(!input || !list) return;
+
+        const render = (query) => {
+            if(!ordenesPendientesCache.length) return;
+            list.innerHTML = '';
+            const filtered = ordenesPendientesCache.filter(o => o.numero.toString().toLowerCase().includes(query.toLowerCase()));
+            
+            if(filtered.length === 0) {
+                list.innerHTML = '<div class="p-2 text-xs text-gray-500">Sin resultados.</div>';
+            } else {
+                filtered.forEach(o => {
+                    const div = document.createElement('div');
+                    div.className = "p-3 hover:bg-red-800 cursor-pointer text-sm text-white border-b border-red-700/30 transition-colors";
+                    div.innerHTML = `<div class="font-bold text-red-400">${o.numero}</div><div class="text-[10px] text-gray-300 uppercase">${o.descripcion || 'Sin descripción'}</div>`;
+                    div.onclick = (e) => {
+                        e.stopPropagation();
+                        input.value = o.numero;
+                        hiddenInput.value = o.numero;
+                        list.classList.add('hidden');
+                        document.getElementById('wrapper-inputs-vinculada').classList.remove('opacity-50', 'pointer-events-none');
+                    };
+                    list.appendChild(div);
+                });
+            }
+            list.classList.remove('hidden');
+        };
+
+        input.addEventListener('input', (e) => render(e.target.value));
+        input.addEventListener('focus', () => render(input.value));
+    }
+
+    async function cargarOrdenesPendientes() {
+        const moldeId = document.getElementById('input-molde-id').value;
+        if(!moldeId) return;
+        try {
+            const res = await fetch(`/moldeo/api/ordenes-pendientes/?molde_id=${moldeId}`);
+            const data = await res.json();
+            ordenesPendientesCache = data.ordenes || [];
+        } catch(e) { console.error("Error fetching ordenes:", e); }
+    }
+
+    // --- 5. TABS & TOGGLES ---
     function switchTab(tabName) {
         const viewGeneral = document.getElementById('view-general');
         const viewVinculada = document.getElementById('view-vinculada');
@@ -333,36 +506,36 @@
 
         if(tabName === 'general') {
             viewGeneral.classList.remove('hidden'); viewVinculada.classList.add('hidden');
-            btnGeneral.classList.replace('text-gray-400', 'text-emerald-500'); btnGeneral.classList.add('border-emerald-500');
-            btnVinculada.classList.replace('text-red-400', 'text-gray-400'); btnVinculada.classList.remove('border-red-500');
+            btnGeneral.classList.replace('border-transparent', 'border-emerald-500'); btnGeneral.classList.replace('text-gray-400', 'text-emerald-500');
+            btnVinculada.classList.replace('border-red-500', 'border-transparent'); btnVinculada.classList.replace('text-red-400', 'text-gray-400');
         } else {
             viewGeneral.classList.add('hidden'); viewVinculada.classList.remove('hidden');
-            btnVinculada.classList.replace('text-gray-400', 'text-red-400'); btnVinculada.classList.add('border-red-500');
-            btnGeneral.classList.replace('text-emerald-500', 'text-gray-400'); btnGeneral.classList.remove('border-emerald-500');
+            btnVinculada.classList.replace('border-transparent', 'border-red-500'); btnVinculada.classList.replace('text-gray-400', 'text-red-400');
+            btnGeneral.classList.replace('border-emerald-500', 'border-transparent'); btnGeneral.classList.replace('text-emerald-500', 'text-gray-400');
         }
     }
 
     window.toggleCardType = function(type) {
         const btnTabVinculada = document.getElementById('tab-btn-vinculada');
-        const txtHelp = document.getElementById('txt-help-tarjeta');
         if (type === 'roja') {
             btnTabVinculada.classList.remove('hidden');
-            txtHelp.innerText = "Tarjeta Roja: Se generará una Orden MCM vinculada.";
             cargarOrdenesPendientes(); 
         } else {
             btnTabVinculada.classList.add('hidden');
-            txtHelp.innerText = "Tarjeta Verde: Mantenimiento estándar.";
             switchTab('general');
+            document.getElementById('input-orden-vinculada').value = '';
+            document.getElementById('orden-vinculada-id').value = '';
+            document.getElementById('wrapper-inputs-vinculada').classList.add('opacity-50', 'pointer-events-none');
         }
     }
 
-    // --- MANEJO DE TÉCNICOS ---
+    // --- 6. GESTIÓN DE TARJETAS ---
     function createNewTechCard(contextKey) {
         const cfg = contexts[contextKey];
+        if(!cfg) return;
         const containerTabs = document.getElementById(cfg.tabs);
         const containerCards = document.getElementById(cfg.content);
         const emptyMsg = containerCards.querySelector('.empty-state');
-        
         if(emptyMsg) emptyMsg.style.display = 'none';
         
         techGlobalCounter++;
@@ -371,7 +544,6 @@
         const tabBtn = document.createElement('div');
         tabBtn.className = "tech-tab-btn flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-t-lg border-t-2 border-transparent cursor-pointer bg-gray-800 text-gray-400 shrink-0 select-none";
         tabBtn.innerHTML = `<span>Nuevo Técnico</span> <button type="button" class="ml-2 hover:text-red-400">&times;</button>`;
-        
         tabBtn.onclick = (e) => {
             if(e.target.tagName === 'BUTTON') { 
                 if(confirm("¿Eliminar técnico?")) {
@@ -380,13 +552,10 @@
                     else if(containerTabs.children.length > 0) containerTabs.firstElementChild.click();
                 }
             } else { 
-                Array.from(containerTabs.children).forEach(t => { 
-                    t.classList.remove('bg-gray-700','text-white','border-blue-500','border-red-500'); 
-                    t.classList.add('bg-gray-800','text-gray-400','border-transparent'); 
-                });
+                Array.from(containerTabs.children).forEach(t => { t.classList.remove('bg-gray-700','text-white','border-blue-500','border-red-500'); t.classList.add('bg-gray-800','text-gray-400','border-transparent'); });
                 Array.from(containerCards.children).forEach(c => { if(!c.classList.contains('empty-state')) c.classList.add('hidden'); });
                 const activeColor = (contextKey === 'main') ? 'border-blue-500' : 'border-red-500';
-                tabBtn.classList.add('bg-gray-700','text-white', activeColor);
+                tabBtn.classList.add('bg-gray-700','text-white', activeColor); tabBtn.classList.remove('bg-gray-800','text-gray-400','border-transparent');
                 document.getElementById(currentId).classList.remove('hidden');
             }
         };
@@ -397,10 +566,7 @@
         const cardDiv = clone.querySelector('.tech-card');
         cardDiv.id = currentId;
         cardDiv.classList.add('tech-card-wrapper', 'hidden'); 
-        
-        cardDiv.querySelector('.input-nombre').addEventListener('input', (e) => {
-            tabBtn.querySelector('span').innerText = e.target.value.substring(0,10) || 'Nuevo';
-        });
+        cardDiv.querySelector('.input-nombre').addEventListener('input', (e) => { tabBtn.querySelector('span').innerText = e.target.value.substring(0,10) || 'Nuevo'; });
 
         initCardLogic(cardDiv, currentId, contextKey);
         containerCards.appendChild(cardDiv);
@@ -409,57 +575,66 @@
 
     function initCardLogic(card, uniqueId, contextKey) {
         const cfg = contexts[contextKey];
-        defectCounters[uniqueId] = 0;
+        setupCombobox(card.querySelector('.input-nombre'), card.querySelector('.combo-list'), tecnicosData);
+        setupCombobox(card.querySelector('.input-lider'), card.querySelector('.combo-list-lider'), lideresData);
         
-        setupCombobox(card.querySelector('.input-nombre'), card.querySelector('.combo-list'), window.TECNICOS_DATA);
-        setupCombobox(card.querySelector('.input-lider'), card.querySelector('.combo-list-lider'), window.LIDERES_DATA);
-        
-        const mesaInp = card.querySelector('.input-mesa');
-        const mesaMenu = card.querySelector('.select-menu');
+        const mesaInp = card.querySelector('.input-mesa'); const mesaMenu = card.querySelector('.select-menu');
         mesaInp.onclick = (e) => { e.stopPropagation(); closeAllMenus(); mesaMenu.classList.remove('hidden'); };
         mesaMenu.onclick = (e) => { if(e.target.classList.contains('select-option')){ mesaInp.value = e.target.dataset.value; mesaMenu.classList.add('hidden'); } };
 
         const btnAddDefect = card.querySelector('.btn-add-defect-tab');
-        btnAddDefect.onclick = () => {
-            defectCounters[uniqueId]++;
-            const count = defectCounters[uniqueId];
-            const defectId = `${uniqueId}-def-${count}`;
-            card.querySelector('.empty-defects-state').classList.add('hidden');
+        if(btnAddDefect) {
+            btnAddDefect.onclick = () => {
+                const defectId = `${uniqueId}-def-${Date.now()}`;
+                card.querySelector('.empty-defects-state').classList.add('hidden');
 
-            const tabButton = document.createElement('button');
-            tabButton.type = 'button'; tabButton.id = `tab-btn-${defectId}`;
-            tabButton.className = "defect-tab-btn flex items-center gap-1 px-2 py-1 text-[10px] font-bold rounded bg-gray-800 text-gray-400 border border-gray-600 hover:bg-gray-700 shrink-0";
-            tabButton.innerHTML = `<span class="tab-lbl">Defecto ${count}</span> <span class="ml-1 text-red-400 hover:text-white" onclick="removeDefectTab('${defectId}', '${uniqueId}', event)">&times;</span>`;
-            tabButton.onclick = (e) => { if(e.target.tagName !== 'SPAN') switchDefectTab(card, defectId); };
-            card.querySelector('.defect-tabs-container').appendChild(tabButton);
+                const tabButton = document.createElement('button');
+                tabButton.type = 'button'; tabButton.id = `tab-btn-${defectId}`;
+                tabButton.className = "defect-tab-btn flex items-center gap-1 px-2 py-1 text-[10px] font-bold rounded bg-gray-800 text-gray-400 border border-gray-600 hover:bg-gray-700 transition shrink-0";
+                tabButton.innerHTML = `<span class="tab-lbl">Nuevo</span> <span class="ml-1 text-red-400 hover:text-white" onclick="removeDefectTab('${defectId}', '${uniqueId}', event)">&times;</span>`;
+                tabButton.onclick = (e) => { if(e.target.tagName !== 'SPAN') switchDefectTab(card, defectId); };
+                card.querySelector('.defect-tabs-container').appendChild(tabButton);
 
-            const defTemplate = document.getElementById(cfg.templateDefecto);
-            const defClone = defTemplate.content.cloneNode(true);
-            const defCard = defClone.querySelector('.defect-card');
-            defCard.id = `content-${defectId}`; defCard.classList.add('hidden');
-            
-            const inputDefecto = defCard.querySelector('.input-defecto');
-            const listDefecto = defCard.querySelector('.combo-list-def');
-            
-            setupCombobox(inputDefecto, listDefecto, cfg.defectList, (val) => { 
-                updateLabels(defCard, val); 
-                tabButton.querySelector('.tab-lbl').innerText = val.substring(0,10)+'...'; 
-            });
-            
-            defCard.querySelector('.btn-remove-defect-card').onclick = (e) => removeDefectTab(defectId, uniqueId, e);
-            const locContainer = defCard.querySelector('.location-rows-container');
-            
-            // Usar el template de fila configurado en el contexto (CHO vs MCM)
-            defCard.querySelector('.btn-add-location-row').onclick = () => createNewLocationRow(locContainer, cfg.templateLocationRow);
-            createNewLocationRow(locContainer, cfg.templateLocationRow); 
+                const defTemplate = document.getElementById(cfg.templateDefecto);
+                const defClone = defTemplate.content.cloneNode(true);
+                const defCard = defClone.querySelector('.defect-card');
+                defCard.id = `content-${defectId}`; defCard.classList.add('hidden');
 
-            card.querySelector('.defect-cards-content').appendChild(defCard);
-            switchDefectTab(card, defectId);
-        };
-        btnAddDefect.click();
+                if(contextKey === 'main') {
+                    const selector = defCard.querySelector('.select-defecto');
+                    const locContainer = defCard.querySelector('.location-rows-container');
+                    const btnAddRow = defCard.querySelector('.btn-add-location-row');
+                    
+                    selector.onchange = () => {
+                        updateDefectCardUI(defCard);
+                        tabButton.querySelector('.tab-lbl').innerText = selector.value === 'FECHADORES' ? 'Fechador' : 'Config';
+                    };
+                    updateDefectCardUI(defCard); 
+                    
+                    tabButton.querySelector('.tab-lbl').innerText = 'Config';
+
+                    btnAddRow.onclick = () => addLocationRow(locContainer, selector.value);
+                } else {
+                    const inputDefecto = defCard.querySelector('.input-defecto');
+                    setupCombobox(inputDefecto, defCard.querySelector('.combo-list-def'), cfg.defectList, (val) => { 
+                        tabButton.querySelector('.tab-lbl').innerText = val.substring(0,10)+'...'; 
+                    });
+                    inputDefecto.addEventListener('input', (e) => { tabButton.querySelector('.tab-lbl').innerText = e.target.value.substring(0,10)+'...'; });
+                    
+                    const locContainer = defCard.querySelector('.location-rows-container');
+                    defCard.querySelector('.btn-add-location-row').onclick = () => createNewLocationRow(locContainer, cfg.templateLocationRow);
+                    createNewLocationRow(locContainer, cfg.templateLocationRow);
+                }
+
+                defCard.querySelector('.btn-remove-defect-card').onclick = (e) => removeDefectTab(defectId, uniqueId, e);
+                card.querySelector('.defect-cards-content').appendChild(defCard);
+                switchDefectTab(card, defectId);
+            };
+            btnAddDefect.click(); 
+        }
     }
 
-    // --- FUNCIONES GLOBALES ---
+    // --- 7. HELPERS GLOBALES ---
     window.switchDefectTab = function(techCard, defectId) {
         const allTabs = techCard.querySelectorAll('.defect-tab-btn'); const allContents = techCard.querySelectorAll('.defect-card');
         allTabs.forEach(btn => { btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-500'); btn.classList.add('bg-gray-800', 'text-gray-400', 'border-gray-600'); });
@@ -469,16 +644,52 @@
     };
 
     window.removeDefectTab = function(defectId, techId, e) {
-        if(e) e.stopPropagation(); if(!confirm("¿Eliminar defecto?")) return;
+        e.stopPropagation(); if(!confirm("¿Eliminar defecto?")) return;
         document.getElementById(`tab-btn-${defectId}`)?.remove(); document.getElementById(`content-${defectId}`)?.remove();
         const card = document.getElementById(techId); const tabs = card.querySelectorAll('.defect-tab-btn');
         if(tabs.length > 0) tabs[0].click(); else card.querySelector('.empty-defects-state').classList.remove('hidden');
     };
 
-    window.createNewLocationRow = function(container, templateId = 'location-row-template') {
-        const locTempl = document.getElementById(templateId);
-        const locClone = locTempl.content.cloneNode(true);
-        const row = locClone.querySelector('.location-row');
+    // --- COMBOBOX ---
+    function setupCombobox(inp, lst, data, cb) {
+        if(!inp) return;
+        const render = (q='') => {
+            lst.innerHTML = ''; const f = data.filter(x => x.nombre.toLowerCase().includes(q.toLowerCase()));
+            if(f.length===0) { lst.classList.add('hidden'); return; }
+            lst.classList.remove('hidden');
+            f.forEach(x => {
+                const d = document.createElement('div'); d.className = 'p-2 hover:bg-gray-600 cursor-pointer text-white text-xs border-b border-gray-600'; d.innerText = x.nombre;
+                d.onmousedown = (e) => { e.preventDefault(); inp.value = x.nombre; lst.classList.add('hidden'); if(cb) cb(x.nombre); };
+                lst.appendChild(d);
+            });
+        };
+        inp.oninput = (e) => render(e.target.value); 
+        inp.onfocus = () => render(inp.value); // FIX: Mostrar lista al hacer clic
+        inp.onclick = (e) => { e.stopPropagation(); closeAllMenus(); render(inp.value); };
+    }
+    
+    function closeAllMenus() { document.querySelectorAll('.combo-list, .combo-list-lider, .select-menu, .combo-list-def, [id^="list-"], .circuito-menu').forEach(m => m.classList.add('hidden')); }
+    
+    function setupCircuitoMultiselect(row) {
+        const input = row.querySelector('.input-circ'); const menu = row.querySelector('.circuito-menu');
+        if(!input || !menu) return;
+        const all = menu.querySelector('.chk-todas'); const nums = menu.querySelectorAll('.chk-num');
+        input.addEventListener('click', (e) => { e.stopPropagation(); closeAllMenus(); menu.classList.remove('hidden'); });
+        menu.addEventListener('click', (e) => e.stopPropagation());
+        const update = () => {
+            if (all.checked) { input.value = "Todas"; nums.forEach(c => c.checked = false); } else { 
+                const v = Array.from(nums).filter(c => c.checked).map(c => c.value); 
+                input.value = v.join(', '); 
+            }
+        };
+        all.addEventListener('change', () => { if(all.checked) nums.forEach(c=>c.checked=false); update(); });
+        nums.forEach(c => c.addEventListener('change', () => { if(c.checked) all.checked=false; update(); }));
+    }
+
+    function createNewLocationRow(container, templateId = 'location-row-template-T_roja') {
+        const tmpl = document.getElementById(templateId);
+        const clone = tmpl.content.cloneNode(true);
+        const row = clone.querySelector('.location-row');
         row.querySelector('.btn-remove-loc').onclick = () => row.remove();
         
         const inpCav = row.querySelector('.input-cav'); const menuCav = row.querySelector('.select-menu');
@@ -486,174 +697,138 @@
             inpCav.onclick = (e) => { e.stopPropagation(); closeAllMenus(); menuCav.classList.remove('hidden'); };
             menuCav.onclick = (e) => { if(e.target.classList.contains('select-option')) { inpCav.value = e.target.dataset.value; menuCav.classList.add('hidden'); } };
         }
-        
         setupCircuitoMultiselect(row);
         container.appendChild(row);
     }
 
-    function setupCircuitoMultiselect(row) {
-        const input = row.querySelector('.input-circ');
-        const menu = row.querySelector('.circuito-menu');
-        if(!input || !menu) return;
+    // --- 8. LOGICA DE VALIDACIÓN Y SUBMIT (HYDRA) ---
+    let formToSubmit = null;
+    const modalHydra = document.getElementById('modal-warning-hydra');
+    const btnConfirmHydra = document.getElementById('btn-confirmar-hydra');
 
-        const chkTodas = menu.querySelector('.chk-todas');
-        const chkNums = menu.querySelectorAll('.chk-num');
-        
-        input.addEventListener('click', (e) => { e.stopPropagation(); closeAllMenus(); menu.classList.remove('hidden'); });
-        menu.addEventListener('click', (e) => e.stopPropagation());
-        
-        const update = () => {
-            if (chkTodas.checked) { 
-                input.value = "Todas"; 
-                chkNums.forEach(c => c.checked = false); 
-            } else { 
-                const v = Array.from(chkNums).filter(c => c.checked).map(c => c.value); 
-                input.value = v.join(', '); 
-            }
-        };
-        
-        chkTodas.addEventListener('change', () => { if(chkTodas.checked) chkNums.forEach(c => c.checked = false); update(); });
-        chkNums.forEach(c => { c.addEventListener('change', () => { if(c.checked) chkTodas.checked = false; update(); }); });
-    }
+    window.cerrarWarningHydra = function() { modalHydra.classList.add('hidden'); formToSubmit = null; }
+    btnConfirmHydra.addEventListener('click', () => { if(formToSubmit) formToSubmit.submit(); });
 
-    function updateLabels(defCard, val) {
-        const lblCav = defCard.querySelector('.label-cav'); const lblCirc = defCard.querySelector('.label-circ');
-        if(!lblCav || !lblCirc) return;
-        const term = val.toLowerCase();
-        if (term.includes('hot runner') || term.includes('colada')) { lblCav.textContent = 'Drop'; lblCirc.textContent = 'Zona'; } 
-        else if (term.includes('sensor')) { lblCav.textContent = 'PG'; lblCirc.textContent = 'EO'; } 
-        else { lblCav.textContent = 'Cavidad'; lblCirc.textContent = 'Circuito'; }
-    }
-
-    // --- CARGA INICIAL Y COMBOS ---
-    document.addEventListener('DOMContentLoaded', () => {
-        window.TECNICOS_DATA = [{% for t in moldmakers %}{ nombre: "{{ t.nombre|escapejs }}" },{% endfor %}];
-        window.LIDERES_DATA = [{% for l in lideres_all %}{ nombre: "{{ l.nombre|escapejs }}" },{% endfor %}]; 
-        const partesData = {{ partes_json|default:"[]"|safe }};
-
-        ['input-saliente-main','input-entrante-main'].forEach(id => {
-            const el = document.getElementById(id); const ls = document.getElementById(id.replace('input','list'));
-            if(el && ls) setupCombobox(el, ls, partesData);
-        });
-
-        window.addEventListener('click', closeAllMenus);
-        
-        // Crear el primer técnico por defecto
-        createNewTechCard('main');
-    });
-
-    function closeAllMenus() { document.querySelectorAll('.combo-list, .combo-list-lider, .select-menu, .combo-list-def, [id^="list-"], .circuito-menu').forEach(m => m.classList.add('hidden')); }
-
-    function setupCombobox(inp, lst, data, callback=null) {
-        if(!inp || !lst) return;
-        const render = (q='') => {
-            lst.innerHTML = ''; const f = data.filter(x => x.nombre.toLowerCase().includes(q.toLowerCase()));
-            if(f.length === 0) { lst.classList.add('hidden'); return; }
-            lst.classList.remove('hidden');
-            f.forEach(x => {
-                const d = document.createElement('div'); d.className = 'p-2 hover:bg-gray-600 cursor-pointer text-white text-xs border-b border-gray-600'; d.innerText = x.nombre;
-                d.onmousedown = (e) => { e.preventDefault(); inp.value = x.nombre; lst.classList.add('hidden'); if(callback) callback(x.nombre); };
-                lst.appendChild(d);
-            });
-        };
-        inp.oninput = (e) => render(e.target.value); inp.onfocus = () => render(inp.value); inp.onclick = (e) => { e.stopPropagation(); closeAllMenus(); render(inp.value); };
-    }
-
-    async function cargarOrdenesPendientes() {
-        const moldeId = document.getElementById('input-molde-id').value;
-        const listContainer = document.getElementById('list-ordenes-pendientes');
-        const inputDisplay = document.getElementById('input-orden-vinculada');
-        if(!moldeId) return;
-
-        try {
-            const res = await fetch(`/moldeo/api/ordenes-pendientes/?molde_id=${moldeId}`);
-            const data = await res.json();
-            
-            const renderLista = (q = '') => {
-                listContainer.innerHTML = '';
-                const f = data.ordenes.filter(o => o.numero.toString().toLowerCase().includes(q.toLowerCase()));
-                if(f.length === 0) listContainer.innerHTML = '<div class="p-2 text-xs text-gray-500 italic">No hay órdenes pendientes.</div>';
-                else {
-                    f.forEach(o => {
-                        const div = document.createElement('div');
-                        div.className = "p-3 hover:bg-red-800 cursor-pointer text-sm text-white border-b border-red-700/30 transition-colors";
-                        div.innerHTML = `<div class="font-bold text-red-400">${o.numero}</div><div class="text-[10px] text-gray-300 uppercase">${o.descripcion || 'Sin descripción'}</div>`;
-                        div.onmousedown = (e) => {
-                            e.preventDefault();
-                            inputDisplay.value = o.numero;
-                            document.getElementById('orden-vinculada-id').value = o.numero;
-                            listContainer.classList.add('hidden');
-                            document.getElementById('wrapper-inputs-vinculada').classList.remove('opacity-50', 'pointer-events-none');
-                        };
-                        listContainer.appendChild(div);
-                    });
-                }
-                listContainer.classList.remove('hidden');
-            };
-            inputDisplay.oninput = (e) => renderLista(e.target.value);
-            inputDisplay.onfocus = () => renderLista(inputDisplay.value);
-        } catch(e) { console.error(e); }
-    }
-
-    // --- PROCESAMIENTO FINAL ---
-    document.getElementById('form-registro').addEventListener('submit', function(e) {
+    const form = document.getElementById('form-registro');
+    form.addEventListener('submit', (e) => {
         e.preventDefault();
         
         const mainCards = document.querySelectorAll('#tech-cards-content-main .tech-card-wrapper');
-        const asignacionesMain = extractData(mainCards);
-        if(!asignacionesMain) return;
+        if(mainCards.length === 0) { alert("Falta técnico en Orden Principal"); switchTab('general'); return; }
+        
+        const npSal = document.getElementById('input-saliente-main');
+        const npEnt = document.getElementById('input-entrante-main');
 
-        const tipo = document.querySelector('input[name="tipo_tarjeta"]:checked').value;
+        if(!npSal.value.trim()) { alert("Falta NP Saliente"); npSal.classList.add('border-red-500'); switchTab('general'); return; } else npSal.classList.remove('border-red-500');
+        if(!npEnt.value.trim()) { alert("Falta NP Entrante"); npEnt.classList.add('border-red-500'); switchTab('general'); return; } else npEnt.classList.remove('border-red-500');
+
+        const resultMain = extractData(mainCards, 'main');
+        if(!resultMain) return;
+
         let asignacionesVinc = [];
-
+        const tipo = document.querySelector('input[name="tipo_tarjeta"]:checked').value;
         if(tipo === 'roja') {
             const vincId = document.getElementById('orden-vinculada-id').value;
-            if(!vincId) { alert("Debe seleccionar una Orden MCM."); switchTab('vinculada'); return; }
-            
+            if(!vincId) { alert("Seleccione Orden Vinculada"); switchTab('vinculada'); return; }
             const copiar = document.getElementById('check-copiar-tecnicos').checked;
             if(copiar) {
-                asignacionesVinc = JSON.parse(JSON.stringify(asignacionesMain));
+                asignacionesVinc = resultMain.data.map(item => ({ ...item, detalles: [] })); 
             } else {
                 const vincCards = document.querySelectorAll('#tech-cards-content-vinc .tech-card-wrapper');
-                asignacionesVinc = extractData(vincCards);
-                if(!asignacionesVinc) { switchTab('vinculada'); return; }
+                if(vincCards.length === 0) { alert("Falta técnico en Orden Vinculada"); switchTab('vinculada'); return; }
+                const resultVinc = extractData(vincCards, 'vinc');
+                if(!resultVinc) { switchTab('vinculada'); return; }
+                asignacionesVinc = resultVinc.data;
             }
         }
 
-        document.getElementById('asignaciones-json').value = JSON.stringify(asignacionesMain);
+        let comentariosFinales = "--- REPORTE DE CAMBIO (CHO) ---\n";
+        comentariosFinales += `NP Saliente: ${npSal.value}\nNP Entrante: ${npEnt.value}\n\n`;
+        comentariosFinales += resultMain.log;
+
+        document.getElementById('asignaciones-json').value = JSON.stringify(resultMain.data);
         document.getElementById('asignaciones-vinc-json').value = JSON.stringify(asignacionesVinc);
-        this.submit();
+        document.getElementById('comentarios-generados').value = comentariosFinales;
+        
+        formToSubmit = form;
+        modalHydra.classList.remove('hidden');
     });
 
-    function extractData(cardsNodeList) {
-        const arr = []; let error = false;
+    function extractData(cardsNodeList, context) {
+        const arr = []; 
+        let logText = "";
+        let error = false;
+
         cardsNodeList.forEach(card => {
             const n = card.querySelector('.input-nombre').value.trim();
             const l = card.querySelector('.input-lider').value.trim();
             const m = card.querySelector('.input-mesa').value.trim();
-            if(!n || !l || !m) { card.querySelector('.input-nombre').classList.add('border-red-500'); error = true; }
             
+            if(!n || !l || !m) { 
+                card.querySelector('.input-nombre').classList.add('border-red-500'); 
+                error = true; 
+            } else {
+                card.querySelector('.input-nombre').classList.remove('border-red-500');
+            }
+
             const defectos = [];
-            card.querySelectorAll('.defect-card').forEach(dc => {
-                const dn = dc.querySelector('.input-defecto').value.trim();
-                if(dn) {
-                    dc.querySelectorAll('.location-row').forEach(row => {
-                       const cav = row.querySelector('.input-cav').value;
-                       const circ = row.querySelector('.input-circ').value;
-                       const entrante = row.querySelector('.input-entrante')?.value || '';
-                       const saliente = row.querySelector('.input-saliente')?.value || '';
-                       const fijo = row.querySelector('.input-fijo').checked;
-                       const movil = row.querySelector('.input-movil').checked;
-                       if(!cav || !circ || (!fijo && !movil)) { error = true; row.classList.add('bg-red-900/20'); }
-                       else { row.classList.remove('bg-red-900/20'); defectos.push({ defecto: dn, cav, circ, fijo, movil, entrante, saliente }); }
-                    });
-                } else { error = true; dc.querySelector('.input-defecto').classList.add('border-red-500'); }
+            logText += `> TÉCNICO: ${n} (L: ${l}, M: ${m})\n`;
+
+            const defCards = card.querySelectorAll('.defect-card');
+            if(defCards.length === 0) { error = true; card.classList.add('border', 'border-red-500'); } 
+
+            defCards.forEach(dc => {
+                let dn = '';
+                const selectDef = dc.querySelector('.select-defecto');
+                const inputDef = dc.querySelector('.input-defecto');
+                if(selectDef) dn = selectDef.value; else if(inputDef) dn = inputDef.value.trim();
+
+                if(!dn) { error = true; return; }
+
+                const rows = dc.querySelectorAll('.location-row');
+                if(rows.length === 0) { error = true; return; } 
+
+                rows.forEach(row => {
+                    const type = row.dataset.type;
+                    const cav = row.querySelector('.input-cav')?.value || row.querySelector('.input-cavidad')?.value || '';
+                    const circ = row.querySelector('.input-circ')?.value || row.querySelector('.input-circuito')?.value || '';
+                    const fijo = row.querySelector('.input-fijo')?.checked || false;
+                    const movil = row.querySelector('.input-movil')?.checked || false;
+                    
+                    let ent = '', sal = '';
+                    let rowError = false;
+
+                    if(type === 'fechador') {
+                        ent = row.querySelector('.input-mes')?.value || ''; 
+                        sal = row.querySelector('.input-anio')?.value || '';
+                        if(!ent || !sal) rowError = true;
+                    } else {
+                        if(context === 'main') { 
+                            ent = row.querySelector('.input-entrante')?.value.trim() || '';
+                            sal = row.querySelector('.input-saliente')?.value.trim() || '';
+                            if(!ent || !sal) rowError = true;
+                        }
+                        if(!fijo && !movil) rowError = true;
+                    }
+
+                    if(rowError) { 
+                        error = true; 
+                        row.classList.add('bg-red-900/40', 'border', 'border-red-500'); 
+                    } else { 
+                        row.classList.remove('bg-red-900/40', 'border', 'border-red-500'); 
+                        defectos.push({ defecto: dn, tipo_detalle: type, entrante: ent, saliente: sal, cav, circ, fijo, movil });
+                        if(type === 'fechador') logText += `  - [Fechador] ${dn}: Mes ${ent} / Año ${sal}\n`;
+                        else if(context === 'main') logText += `  - [Cambio] ${dn}: Ent ${ent} / Sal ${sal} (Cav:${cav} Cir:${circ})\n`;
+                        else logText += `  - [Defecto] ${dn}: Cav:${cav} Cir:${circ} (${fijo?'F':''}${movil?'M':''})\n`;
+                    }
+                });
             });
-            if(defectos.length === 0) error = true;
+
             arr.push({ nombre: n, lider: l, mesa: m, detalles: defectos });
         });
-        if(error) { alert("Datos incompletos en técnicos/defectos"); return null; }
-        return arr;
+
+        if(error) { alert("Faltan datos obligatorios (resaltados en rojo)."); return null; }
+        return { data: arr, log: logText };
     }
 </script>
 {% endblock %}
