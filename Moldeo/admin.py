@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
 from .models import (
     Lideres, Moldmakers, Maquinas, Moldes, NumerosParte, Defectos,
-    OrdenMCM, OrdenCHO, OrdenTPM, OrdenPREP, OrdenSAP, AsignacionUniversal,SubZonaTPM,ActividadTPM,ZonaTPM,EstatusOrden
+    OrdenMCM, OrdenCHO, OrdenTPM, OrdenPREP, OrdenSAP, AsignacionUniversal,SubZonaTPM,ActividadTPM,ZonaTPM,EstatusOrden,ActividadPREP
 )
 
 # --- INLINE PARA ASIGNACIONES (TECNICOS) ---
@@ -130,3 +130,9 @@ class SubZonaTPMAdmin(admin.ModelAdmin):
     list_filter = ('zona', 'requiere_detalles', 'activo')
     list_editable = ('requiere_detalles', 'activo') # Para editar rápido desde la lista
     ordering = ('zona', 'nombre')
+@admin.register(ActividadPREP)
+class ActividadPREPAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'activo')
+    search_fields = ('nombre',)
+    list_filter = ('activo',)
+    ordering = ('nombre',)

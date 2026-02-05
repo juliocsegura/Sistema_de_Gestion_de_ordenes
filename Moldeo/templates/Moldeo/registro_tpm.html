@@ -167,25 +167,11 @@
 <div id="modal-warning-hydra" class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-90 hidden backdrop-blur-sm transition-opacity duration-300">
     <div class="bg-gray-800 border-2 border-yellow-500 rounded-xl shadow-2xl w-full max-w-md transform scale-100 p-6 relative">
         <div class="text-center">
-            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-900/50 mb-4 border border-yellow-500 animate-pulse">
-                <svg class="h-10 w-10 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-            </div>
-            
             <h3 class="text-2xl font-bold text-white mb-2">¡Atención!</h3>
-            <p class="text-gray-300 text-base mb-6">
-                Antes de continuar, asegúrate de haber realizado el movimiento correspondiente en:
-                <br><span class="text-yellow-400 font-bold text-xl block mt-2"> HYDRA</span>
-            </p>
-
+            <p class="text-gray-300 text-base mb-6">Asegúrate de haber realizado el movimiento en: <br><span class="text-yellow-400 font-bold text-xl block mt-2">HYDRA</span></p>
             <div class="flex justify-center gap-4">
-                <button type="button" onclick="cerrarWarningHydra()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-semibold transition">
-                    Cancelar
-                </button>
-                <button type="button" id="btn-confirmar-hydra" class="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg font-bold shadow-lg shadow-yellow-600/30 transition transform hover:-translate-y-1">
-                    Ya lo hice, Continuar
-                </button>
+                <button type="button" onclick="cerrarWarningHydra()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-semibold transition">Cancelar</button>
+                <button type="button" id="btn-confirmar-hydra" class="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg font-bold shadow-lg shadow-yellow-600/30 transition transform hover:-translate-y-1">Ya lo hice, Continuar</button>
             </div>
         </div>
     </div>
@@ -248,7 +234,7 @@
             <div class="combo-list-actividad hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 z-50 max-h-40 overflow-y-auto shadow-xl rounded-b"></div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3 mb-2">
+        <div class="zone-panel grid grid-cols-2 gap-3 mb-2 animate-fade-in">
             <div class="relative">
                 <label class="block text-[9px] text-emerald-400 uppercase font-bold mb-1">Zona</label>
                 <select class="select-zona w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:border-emerald-500 outline-none cursor-pointer">
@@ -263,6 +249,21 @@
             </div>
         </div>
 
+        <div class="fechador-panel hidden grid grid-cols-2 gap-3 mb-2 bg-blue-900/10 p-2 rounded border border-blue-600/30 animate-fade-in">
+             <div>
+                 <label class="block text-[9px] text-blue-400 font-bold mb-1">Mes</label>
+                 <select class="input-mes w-full bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-white focus:border-blue-500 outline-none">
+                     <option value="">-</option><option value="Enero">Enero</option><option value="Febrero">Febrero</option><option value="Marzo">Marzo</option><option value="Abril">Abril</option><option value="Mayo">Mayo</option><option value="Junio">Junio</option><option value="Julio">Julio</option><option value="Agosto">Agosto</option><option value="Septiembre">Septiembre</option><option value="Octubre">Octubre</option><option value="Noviembre">Noviembre</option><option value="Diciembre">Diciembre</option>
+                 </select>
+             </div>
+             <div>
+                 <label class="block text-[9px] text-blue-400 font-bold mb-1">Año</label>
+                 <select class="input-anio w-full bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-white focus:border-blue-500 outline-none">
+                     <option value="">-</option><option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option>
+                 </select>
+             </div>
+        </div>
+
         <div class="details-panel hidden mt-2 pt-2 border-t border-gray-700/50 bg-gray-800/30 p-2 rounded">
             <div class="flex items-center gap-2 mb-2">
                 <svg class="w-3 h-3 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -270,26 +271,10 @@
             </div>
             
             <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <div>
-                    <label class="block text-[8px] text-gray-400 uppercase mb-0.5">Módulo</label>
-                    <input type="text" class="input-modulo w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 outline-none" placeholder="-">
-                </div>
-                <div>
-                    <label class="block text-[8px] text-gray-400 uppercase mb-0.5">Cavidad</label>
-                    <input type="text" class="input-cavidad w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 outline-none" placeholder="Cav">
-                </div>
-                <div>
-                    <label class="block text-[8px] text-gray-400 uppercase mb-0.5">Circuito</label>
-                    <input type="text" class="input-circuito w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 outline-none" placeholder="Cir">
-                </div>
-                <div>
-                     <label class="block text-[8px] text-gray-400 uppercase mb-0.5">Lado</label>
-                     <select class="input-lado w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 outline-none cursor-pointer">
-                        <option value="">...</option>
-                        <option value="Fijo">Fijo</option>
-                        <option value="Movil">Móvil</option>
-                     </select>
-                </div>
+                <div><label class="block text-[8px] text-gray-400 uppercase mb-0.5">Módulo</label><input type="text" class="input-modulo w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 outline-none" placeholder="-"></div>
+                <div><label class="block text-[8px] text-gray-400 uppercase mb-0.5">Cavidad</label><input type="text" class="input-cavidad w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 outline-none" placeholder="Cav"></div>
+                <div><label class="block text-[8px] text-gray-400 uppercase mb-0.5">Circuito</label><input type="text" class="input-circuito w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 outline-none" placeholder="Cir"></div>
+                <div><label class="block text-[8px] text-gray-400 uppercase mb-0.5">Lado</label><select class="input-lado w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 outline-none cursor-pointer"><option value="">...</option><option value="Fijo">Fijo</option><option value="Movil">Móvil</option></select></div>
             </div>
         </div>
     </div>
@@ -331,18 +316,10 @@
             </div>
         </div>
         <div class="col-span-4 flex items-center justify-center gap-3">
-            <label class="inline-flex items-center cursor-pointer group">
-                <input type="checkbox" class="input-fijo form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded focus:ring-emerald-500">
-                <span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Fijo</span>
-            </label>
-            <label class="inline-flex items-center cursor-pointer group">
-                <input type="checkbox" class="input-movil form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded focus:ring-emerald-500">
-                <span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Móvil</span>
-            </label>
+            <label class="inline-flex items-center cursor-pointer group"><input type="checkbox" class="input-fijo form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded focus:ring-emerald-500"><span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Fijo</span></label>
+            <label class="inline-flex items-center cursor-pointer group"><input type="checkbox" class="input-movil form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded focus:ring-emerald-500"><span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Móvil</span></label>
         </div>
-        <div class="col-span-2 text-center">
-            <button type="button" class="btn-remove-loc text-gray-600 hover:text-red-500 font-bold px-2 text-xl">&times;</button>
-        </div>
+        <div class="col-span-2 text-center"><button type="button" class="btn-remove-loc text-gray-600 hover:text-red-500 font-bold px-2 text-xl">&times;</button></div>
     </div>
 </template>
 
@@ -352,45 +329,36 @@
 <script>
     // --- 1. DEFINICIONES GLOBALES ---
     const contexts = {
-        main: { 
-            tabs: 'tech-tabs-bar-main', 
-            content: 'tech-cards-content-main', 
-            empty: '#tech-cards-content-main .empty-state',
-            type: 'tpm'
-        },
-        vinc: { 
-            tabs: 'tech-tabs-bar-vinc', 
-            content: 'tech-cards-content-vinc', 
-            empty: '#tech-cards-content-vinc .empty-state',
-            type: 'red_card' 
-        }
+        main: { tabs: 'tech-tabs-bar-main', content: 'tech-cards-content-main', empty: '#tech-cards-content-main .empty-state', type: 'tpm' },
+        vinc: { tabs: 'tech-tabs-bar-vinc', content: 'tech-cards-content-vinc', empty: '#tech-cards-content-vinc .empty-state', type: 'red_card' }
     };
     let techGlobalCounter = 0;
     let activityCounters = {}; 
     let defectCounters = {}; 
     let ordenesPendientesCache = [];
 
-    // DATOS DJANGO - CARGADOS AL INICIO
+    // DATOS DJANGO
     const catalogoActividades = {{ actividades_json|default:"[]"|safe }};
     const catalogoZonas = {{ zonas_json|default:"[]"|safe }};
     const tecnicosData = {{ tecnicos_json|default:"[]"|safe }};
     const lideresData = {{ lideres_json|default:"[]"|safe }};
     const defectList = [{% if lista_defectos %}{% for d in lista_defectos %}{ nombre: "{{ d.nombre_defecto|escapejs }}" },{% endfor %}{% else %}{ nombre: "Falla General" }{% endif %}];
 
-    // --- 2. SETUP ---
     document.addEventListener('DOMContentLoaded', () => {
+        // Asegurarse de que FECHADORES exista en el catálogo para el autocompletado
+        if(!catalogoActividades.some(a => a.nombre === "FECHADORES")) catalogoActividades.push({nombre: "FECHADORES"});
+        
         setupPendingSearch();
         window.addEventListener('click', closeAllMenus);
-        createNewTechCard('main'); // Crear primera tarjeta
+        createNewTechCard('main'); 
     });
 
-    // --- 3. LÓGICA TABS ---
+    // --- TABS & TOGGLES ---
     function switchTab(tabName) {
         const viewGeneral = document.getElementById('view-general');
         const viewVinculada = document.getElementById('view-vinculada');
         const btnGeneral = document.getElementById('tab-btn-general');
         const btnVinculada = document.getElementById('tab-btn-vinculada');
-
         if(tabName === 'general') {
             viewGeneral.classList.remove('hidden'); viewVinculada.classList.add('hidden');
             btnGeneral.classList.replace('border-transparent', 'border-yellow-500'); btnGeneral.classList.replace('text-gray-400', 'text-yellow-500');
@@ -401,17 +369,15 @@
             btnGeneral.classList.replace('border-yellow-500', 'border-transparent'); btnGeneral.classList.replace('text-yellow-500', 'text-gray-400');
         }
     }
-
     window.toggleCardType = function(type) {
         const btnTabVinculada = document.getElementById('tab-btn-vinculada');
-        const txtHelp = document.getElementById('txt-help-tarjeta');
         if (type === 'roja') {
             btnTabVinculada.classList.remove('hidden');
-            if(txtHelp) txtHelp.innerText = "Tarjeta Roja: Vincular orden TPM pendiente.";
+            document.getElementById('txt-help-tarjeta').innerText = "Tarjeta Roja: Vincular orden TPM pendiente.";
             cargarOrdenesPendientes(); 
         } else {
             btnTabVinculada.classList.add('hidden');
-            if(txtHelp) txtHelp.innerText = "Tarjeta Verde: Mantenimiento TPM estándar.";
+            document.getElementById('txt-help-tarjeta').innerText = "Tarjeta Verde: Mantenimiento TPM estándar.";
             switchTab('general');
             document.getElementById('input-orden-vinculada').value = '';
             document.getElementById('orden-vinculada-id').value = '';
@@ -419,7 +385,7 @@
         }
     }
 
-    // --- 4. GESTIÓN TÉCNICOS ---
+    // --- CARDS ---
     function createNewTechCard(contextKey) {
         const cfg = contexts[contextKey];
         if(!cfg) return;
@@ -430,7 +396,6 @@
         
         techGlobalCounter++;
         const currentId = `card-${contextKey}-${techGlobalCounter}`; 
-        
         const tabBtn = document.createElement('div');
         tabBtn.className = "tech-tab-btn flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-t-lg border-t-2 border-transparent cursor-pointer bg-gray-800 text-gray-400 shrink-0 select-none";
         tabBtn.innerHTML = `<span>Nuevo Técnico</span> <button type="button" class="ml-2 hover:text-red-400">&times;</button>`;
@@ -462,12 +427,10 @@
     function initCardLogic(card, techId, contextKey) {
         setupCombobox(card.querySelector('.input-nombre'), card.querySelector('.combo-list'), tecnicosData);
         setupCombobox(card.querySelector('.input-lider'), card.querySelector('.combo-list-lider'), lideresData);
-        
         const mesaInp = card.querySelector('.input-mesa'); const mesaMenu = card.querySelector('.select-menu');
         mesaInp.onclick = (e) => { e.stopPropagation(); closeAllMenus(); mesaMenu.classList.remove('hidden'); };
         mesaMenu.onclick = (e) => { if(e.target.classList.contains('select-option')){ mesaInp.value = e.target.dataset.value; mesaMenu.classList.add('hidden'); } };
 
-        // === 4.1 ACTIVIDADES (TPM MAIN) ===
         if(contextKey === 'main') {
             const activityTabsContainer = card.querySelector('.activity-tabs-container');
             const activityCardsContent = card.querySelector('.activity-cards-content');
@@ -480,7 +443,6 @@
                     activityCounters[techId]++;
                     const actCount = activityCounters[techId];
                     const activityId = `${techId}-act-${actCount}`; 
-                    
                     if(emptyActivitiesMsg) emptyActivitiesMsg.classList.add('hidden');
 
                     const actTabBtn = document.createElement('button');
@@ -500,9 +462,29 @@
                     const selZona = actCard.querySelector('.select-zona');
                     const selSub = actCard.querySelector('.select-subzona');
                     const detailsPanel = actCard.querySelector('.details-panel');
+                    const zonePanel = actCard.querySelector('.zone-panel');
+                    const fechadorPanel = actCard.querySelector('.fechador-panel');
+
+                    // Lógica para alternar entre Zona/Subzona y Fechadores
+                    const handleActivityChange = (val) => {
+                        const v = val.trim().toUpperCase();
+                        actTabBtn.querySelector('.tab-lbl').innerText = val.substring(0, 12) + '...';
+                        
+                        if (v === 'FECHADORES') {
+                            zonePanel.classList.add('hidden');
+                            detailsPanel.classList.add('hidden');
+                            fechadorPanel.classList.remove('hidden');
+                        } else {
+                            zonePanel.classList.remove('hidden');
+                            fechadorPanel.classList.add('hidden');
+                            // Re-evaluar si mostrar detalles basado en la zona seleccionada
+                            toggleDetails();
+                        }
+                    };
 
                     actCard.querySelector('.btn-remove-activity').onclick = (e) => removeActivityTab(activityId, techId, e);
-                    setupCombobox(inpAct, listAct, catalogoActividades, (val) => { actTabBtn.querySelector('.tab-lbl').innerText = val.substring(0, 12) + '...'; });
+                    setupCombobox(inpAct, listAct, catalogoActividades, handleActivityChange);
+                    inpAct.addEventListener('input', (e) => handleActivityChange(e.target.value));
 
                     catalogoZonas.forEach(z => { const opt = document.createElement('option'); opt.value = z.nombre; opt.innerText = z.nombre; selZona.appendChild(opt); });
 
@@ -511,15 +493,35 @@
                         const subTxt = selSub.value;
                         const reqDb = selSub.options[selSub.selectedIndex]?.dataset.req === 'true';
                         const esModulos = (zonaTxt === 'MODULOS' && subTxt === 'Uno solo');
+                        
+                        // Si está oculto el panel de zona (modo Fechador), no mostrar detalles
+                        if(zonePanel.classList.contains('hidden')) {
+                            detailsPanel.classList.add('hidden');
+                            return;
+                        }
+
                         if(reqDb || esModulos) detailsPanel.classList.remove('hidden'); else detailsPanel.classList.add('hidden');
                     };
 
                     selZona.addEventListener('change', () => {
-                        selSub.innerHTML = '<option value="">-- Seleccionar --</option>'; selSub.disabled = true; detailsPanel.classList.add('hidden');
+                        selSub.innerHTML = '<option value="">-- Seleccionar --</option>'; 
+                        selSub.disabled = true; 
+                        detailsPanel.classList.add('hidden');
+                        
                         const zonaObj = catalogoZonas.find(z => z.nombre === selZona.value);
                         if(zonaObj && zonaObj.subzonas.length > 0) {
                             selSub.disabled = false;
-                            zonaObj.subzonas.forEach(s => { const opt = document.createElement('option'); opt.value = s.nombre; opt.innerText = s.nombre; opt.dataset.req = s.req; selSub.appendChild(opt); });
+                            zonaObj.subzonas.forEach(s => { 
+                                const opt = document.createElement('option'); 
+                                opt.value = s.nombre; 
+                                opt.innerText = s.nombre; 
+                                opt.dataset.req = s.req; 
+                                selSub.appendChild(opt); 
+                            });
+                        } else {
+                            // Si no hay subzonas, habilitamos guardar sin subzona (simplemente no la pedimos)
+                            selSub.innerHTML = '<option value="">(N/A)</option>';
+                            selSub.disabled = true;
                         }
                     });
                     selSub.addEventListener('change', toggleDetails);
@@ -532,7 +534,6 @@
             card.querySelector('.extra-module-container').classList.add('hidden');
         }
 
-        // === 4.2 DEFECTOS (T_ROJA) ===
         if(contextKey === 'vinc') {
             card.querySelector('.main-activity-module').classList.add('hidden');
             const extraModule = card.querySelector('.extra-module-container');
@@ -579,7 +580,7 @@
         }
     }
 
-    // --- 5. HELPERS ---
+    // --- HELPERS ---
     window.switchActivityTab = function(techCard, activityId) {
         techCard.querySelectorAll('.activity-tab-btn').forEach(b => b.classList.replace('bg-blue-600', 'bg-gray-800'));
         techCard.querySelectorAll('.activity-card').forEach(c => c.classList.add('hidden'));
@@ -591,7 +592,6 @@
         e.stopPropagation(); document.getElementById(`tab-btn-${id}`)?.remove(); document.getElementById(`content-${id}`)?.remove();
         const card = document.getElementById(techId); if(card.querySelectorAll('.activity-tab-btn').length === 0) card.querySelector('.empty-activities-state').classList.remove('hidden');
     };
-    
     window.switchDefectTab = function(techCard, defectId) {
         techCard.querySelectorAll('.defect-tab-btn').forEach(b => b.classList.replace('bg-purple-600', 'bg-gray-800'));
         techCard.querySelectorAll('.defect-card').forEach(c => c.classList.add('hidden'));
@@ -603,13 +603,11 @@
         e.stopPropagation(); document.getElementById(`tab-btn-${id}`)?.remove(); document.getElementById(`content-${id}`)?.remove();
         const card = document.getElementById(techId); if(card.querySelectorAll('.defect-tab-btn').length === 0) card.querySelector('.empty-defects-state').classList.remove('hidden');
     };
-
     function createNewLocationRow(container) {
         const tmpl = document.getElementById('location-row-template-T_roja');
         const clone = tmpl.content.cloneNode(true);
         const row = clone.querySelector('.location-row');
         row.querySelector('.btn-remove-loc').onclick = () => row.remove();
-        
         const inpCav = row.querySelector('.input-cav'); const menuCav = row.querySelector('.select-menu');
         if(inpCav) {
             inpCav.onclick = (e) => { e.stopPropagation(); closeAllMenus(); menuCav.classList.remove('hidden'); };
@@ -618,10 +616,7 @@
         setupCircuitoMultiselect(row);
         container.appendChild(row);
     }
-    
-    // --- 6. COMUNES ---
     function closeAllMenus() { document.querySelectorAll('.combo-list, .combo-list-lider, .select-menu, .combo-list-actividad, .combo-list-def, .circuito-menu, [id^="list-"]').forEach(m => m.classList.add('hidden')); }
-    
     function setupCombobox(inp, lst, data, cb) {
         if(!inp) return;
         const render = (q='') => {
@@ -634,10 +629,9 @@
             });
         };
         inp.oninput = (e) => render(e.target.value); 
-        inp.onfocus = () => render(inp.value); // FIX: Mostrar lista al hacer clic
+        inp.onfocus = () => render(inp.value); 
         inp.onclick = (e) => { e.stopPropagation(); closeAllMenus(); render(inp.value); };
     }
-
     function setupCircuitoMultiselect(row) {
         const inp = row.querySelector('.input-circ'); const menu = row.querySelector('.circuito-menu');
         if(!inp || !menu) return;
@@ -648,8 +642,6 @@
         all.addEventListener('change', () => { if(all.checked) nums.forEach(c=>c.checked=false); upd(); });
         nums.forEach(c => c.addEventListener('change', () => { if(c.checked) all.checked=false; upd(); }));
     }
-
-    // --- 7. BUSQUEDA VINCULADA ---
     function setupPendingSearch() {
         const input = document.getElementById('input-orden-vinculada');
         const list = document.getElementById('list-ordenes-pendientes');
@@ -670,7 +662,6 @@
         };
         input.oninput=(e)=>render(e.target.value); input.onfocus=()=>render(input.value);
     }
-
     async function cargarOrdenesPendientes() {
         const mid = document.getElementById('input-molde-id').value; if(!mid) return;
         try { const r=await fetch(`/moldeo/api/ordenes-pendientes/?molde_id=${mid}`); const d=await r.json(); ordenesPendientesCache=d.ordenes||[]; } catch(e){}
@@ -678,30 +669,19 @@
     const modalHydra = document.getElementById('modal-warning-hydra');
     const btnConfirmHydra = document.getElementById('btn-confirmar-hydra');
     let formToSubmit = null; 
+    window.cerrarWarningHydra = function() { modalHydra.classList.add('hidden'); formToSubmit = null; }
+    btnConfirmHydra.addEventListener('click', () => { if (formToSubmit) formToSubmit.submit(); });
 
-    window.cerrarWarningHydra = function() {
-        modalHydra.classList.add('hidden');
-        formToSubmit = null;
-    }
-
-    btnConfirmHydra.addEventListener('click', () => {
-        if (formToSubmit) {
-            formToSubmit.submit(); 
-        }
-    });
-
-    // --- 8. SUBMIT CON VALIDACIONES ---
+    // --- SUBMIT ---
     const form = document.getElementById('form-registro');
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         
-        // 1. MAIN (TPM)
         const mainCards = document.querySelectorAll('#tech-cards-content-main .tech-card-wrapper');
         if(mainCards.length === 0) { alert("Falta técnico en Orden Principal"); return; }
         const resultMain = extractData(mainCards, 'main');
         if(!resultMain) return;
 
-        // 2. VINC (ROJA)
         let asignacionesVinc = [];
         let resultVinc = { data: [] };
         
@@ -718,15 +698,12 @@
                 asignacionesVinc = resultVinc.data;
             } else {
                 asignacionesVinc = JSON.parse(JSON.stringify(resultMain.data));
-                asignacionesVinc.forEach(av => { av.actividades = []; av.detalles = []; }); // Copiar solo técnicos
+                asignacionesVinc.forEach(av => { av.actividades = []; av.detalles = []; });
             }
         }
 
-        // 3. GENERAR LOG
         let logText = "--- REPORTE TPM ---\n" + resultMain.log;
-        if(resultVinc.log) {
-             logText += "\n--- ORDEN VINCULADA ---\n" + resultVinc.log;
-        }
+        if(resultVinc.log) logText += "\n--- ORDEN VINCULADA ---\n" + resultVinc.log;
 
         document.getElementById('asignaciones-json').value = JSON.stringify(resultMain.data);
         if(asignacionesVinc.length > 0) document.getElementById('asignaciones-vinc-json').value = JSON.stringify(asignacionesVinc);
@@ -737,101 +714,90 @@
     });
 
     function extractData(cardsNodeList, contextType) {
-        const arr = []; 
-        let logText = "";
-        let error = false;
-
+        const arr = []; let logText = ""; let error = false;
         cardsNodeList.forEach(card => {
             const n = card.querySelector('.input-nombre').value.trim();
             const l = card.querySelector('.input-lider').value.trim();
             const m = card.querySelector('.input-mesa').value.trim();
-            if(!n || !l || !m) { 
-                card.querySelector('.input-nombre').classList.add('border-red-500'); 
-                error = true; 
-            } else {
-                card.querySelector('.input-nombre').classList.remove('border-red-500');
-            }
+            if(!n || !l || !m) { card.querySelector('.input-nombre').classList.add('border-red-500'); error = true; }
+            else card.querySelector('.input-nombre').classList.remove('border-red-500');
             
             logText += `> TÉCNICO: ${n} (L:${l})\n`;
             const actividades = [];
             
             if(contextType === 'main') {
-                // TPM: Extraer actividades
                 const activityCards = card.querySelectorAll('.activity-card');
                 if(activityCards.length === 0) { error = true; card.classList.add('border', 'border-red-500'); }
-
                 activityCards.forEach(ac => {
                     const act = ac.querySelector('.input-actividad').value.trim();
-                    const zon = ac.querySelector('.select-zona').value;
-                    const sub = ac.querySelector('.select-subzona').value;
-                    
-                    if(!act || !zon || !sub) { 
-                        error=true; 
-                        ac.classList.add('border', 'border-red-500'); 
+                    if(!act) { error=true; ac.classList.add('border', 'border-red-500'); return; }
+                    ac.classList.remove('border', 'border-red-500');
+
+                    if (act === 'FECHADORES') {
+                         const mes = ac.querySelector('.input-mes').value;
+                         const anio = ac.querySelector('.input-anio').value;
+                         if(!mes || !anio) { 
+                             error=true; ac.querySelector('.fechador-panel').classList.add('border-red-500');
+                         } else {
+                             ac.querySelector('.fechador-panel').classList.remove('border-red-500');
+                             actividades.push({ actividad: act, mes: mes, anio: anio });
+                             logText += `  - [Fechador]: ${mes} / ${anio}\n`;
+                         }
                     } else {
-                        ac.classList.remove('border', 'border-red-500'); 
+                        const zon = ac.querySelector('.select-zona').value;
+                        const sub = ac.querySelector('.select-subzona').value;
                         
-                        // Detalles opcionales
-                        const modVal = ac.querySelector('.input-modulo').value.trim();
-                        const cavVal = ac.querySelector('.input-cavidad').value.trim();
-                        const cirVal = ac.querySelector('.input-circuito').value.trim();
-                        const ladVal = ac.querySelector('.input-lado').value;
+                        // Validar subzona SOLO si la zona tiene subzonas definidas en catalogo
+                        const zonaObj = catalogoZonas.find(z => z.nombre === zon);
+                        const requiresSub = zonaObj && zonaObj.subzonas && zonaObj.subzonas.length > 0;
 
-                        // VALIDACIÓN ESPECÍFICA: MODULOS - UNO SOLO
-                        if (zon === 'MODULOS' && sub === 'Uno solo') {
-                            let missing = false;
-                            if(!modVal) { ac.querySelector('.input-modulo').classList.add('border-red-500'); missing = true; }
-                            if(!cavVal) { ac.querySelector('.input-cavidad').classList.add('border-red-500'); missing = true; }
-                            if(!cirVal) { ac.querySelector('.input-circuito').classList.add('border-red-500'); missing = true; }
-                            if(!ladVal) { ac.querySelector('.input-lado').classList.add('border-red-500'); missing = true; }
-                            
-                            if(missing) error = true;
+                        if(!zon || (requiresSub && !sub)) { 
+                            error=true; ac.classList.add('border', 'border-red-500'); 
+                        } else {
+                            // Extraer detalles adicionales si existen
+                            const modVal = ac.querySelector('.input-modulo').value.trim();
+                            const cavVal = ac.querySelector('.input-cavidad').value.trim();
+                            const cirVal = ac.querySelector('.input-circuito').value.trim();
+                            const ladVal = ac.querySelector('.input-lado').value;
+
+                            // Validar Módulo "Uno solo"
+                            if (zon === 'MODULOS' && sub === 'Uno solo') {
+                                let missing = false;
+                                if(!modVal) { ac.querySelector('.input-modulo').classList.add('border-red-500'); missing=true; }
+                                if(!cavVal) { ac.querySelector('.input-cavidad').classList.add('border-red-500'); missing=true; }
+                                if(!cirVal) { ac.querySelector('.input-circuito').classList.add('border-red-500'); missing=true; }
+                                if(!ladVal) { ac.querySelector('.input-lado').classList.add('border-red-500'); missing=true; }
+                                if(missing) error=true;
+                            }
+
+                            actividades.push({ actividad: act, zona: zon, subzona: sub || null, modulo: modVal, cavidad: cavVal, circuito: cirVal, lado: ladVal });
+                            logText += `  - Actividad: ${act} [${zon}${sub ? '/'+sub : ''}]\n`;
                         }
-
-                        actividades.push({ actividad: act, zona: zon, subzona: sub, modulo: modVal, cavidad: cavVal, circuito: cirVal, lado: ladVal });
-                        
-                        logText += `  - Actividad: ${act} [${zon}/${sub}]\n`;
-                        let dets = [];
-                        if(modVal) dets.push(`Mod:${modVal}`);
-                        if(cavVal) dets.push(`Cav:${cavVal}`);
-                        if(cirVal) dets.push(`Cir:${cirVal}`);
-                        if(ladVal) dets.push(`Lado:${ladVal}`);
-                        if(dets.length > 0) logText += `    (${dets.join(' ')})\n`;
                     }
                 });
             } else {
-                // VINC (MCM): Extraer defectos T_ROJA
                 const defectCards = card.querySelectorAll('.defect-card');
                 if(defectCards.length === 0) { error = true; card.classList.add('border', 'border-red-500'); }
-
                 defectCards.forEach(dc => {
                     const dn = dc.querySelector('.input-defecto').value.trim();
                     if(dn) {
                         const rows = dc.querySelectorAll('.location-row');
                         if (rows.length === 0) { error = true; }
-
                         rows.forEach(row => {
                             const cav = row.querySelector('.input-cav')?.value || '';
                             const circ = row.querySelector('.input-circ')?.value || '';
                             const fijo = row.querySelector('.input-fijo')?.checked;
                             const movil = row.querySelector('.input-movil')?.checked;
-                            
-                            if(!cav || !circ || (!fijo && !movil)) { 
-                                error = true; row.classList.add('bg-red-900/40', 'border', 'border-red-500'); 
-                            } else { 
+                            if(!cav || !circ || (!fijo && !movil)) { error = true; row.classList.add('bg-red-900/40', 'border', 'border-red-500'); } 
+                            else { 
                                 row.classList.remove('bg-red-900/40', 'border', 'border-red-500'); 
                                 actividades.push({ defecto: dn, cav, circ, fijo, movil }); 
-                                
-                                let ladoStr = "";
-                                if(fijo) ladoStr += "(F)";
-                                if(movil) ladoStr += "(M)";
-                                logText += `  - Defecto: ${dn} (Cav:${cav} Cir:${circ} ${ladoStr})\n`;
+                                logText += `  - Defecto: ${dn} (Cav:${cav} Cir:${circ})\n`;
                             }
                         });
                     } else { error=true; dc.querySelector('.input-defecto').classList.add('border-red-500'); }
                 });
             }
-            
             arr.push({ nombre: n, lider: l, mesa: m, actividades: (contextType === 'main' ? actividades : []), detalles: (contextType === 'vinc' ? actividades : []) });
         });
         if(error) { alert("Faltan datos obligatorios (resaltados en rojo)."); return null; }
