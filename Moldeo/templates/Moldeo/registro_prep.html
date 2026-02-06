@@ -83,12 +83,9 @@
                             <div id="list-ordenes-pendientes" class="hidden absolute top-full left-0 w-full bg-gray-800 border border-red-500 z-50 max-h-48 overflow-y-auto shadow-xl rounded-b-lg"></div>
                         </div>
                     </div>
+                    
                     <div id="wrapper-inputs-vinculada" class="opacity-50 pointer-events-none transition-opacity">
-                        <div class="bg-gray-800 p-4 rounded border border-gray-600 flex items-center mb-6">
-                            <input type="checkbox" name="copiar_tecnicos" id="check-copiar-tecnicos" value="true" checked class="w-5 h-5 text-red-600 bg-gray-700 border-gray-500 rounded focus:ring-red-500 cursor-pointer">
-                            <label for="check-copiar-tecnicos" class="ml-3 text-sm text-gray-300 cursor-pointer select-none">Asignar mismos técnicos de la orden principal.</label>
-                        </div>
-                        <div class="space-y-4 border-t border-red-800/50 pt-4">
+                         <div class="space-y-4 border-t border-red-800/50 pt-4">
                             <div class="flex justify-between items-center bg-red-900/30 p-2 rounded-t-lg border-b border-red-800">
                                 <h3 class="text-lg font-bold text-red-300 pl-2">Técnicos (Orden Vinculada)</h3>
                                 <button type="button" onclick="createNewTechCard('vinc')" class="bg-red-700 hover:bg-red-600 text-white text-xs font-bold py-2 px-4 rounded shadow flex items-center gap-1"><span class="text-lg leading-none">+</span> Nuevo Técnico</button>
@@ -265,8 +262,6 @@
         if (currentPrepMode === 'cambio') {
             catalogoActividades.push({nombre: "CAMBIO DE CONFIGURACION"});
         }
-        // Fechadores siempre disponible
-        
 
         createNewTechCard('main'); 
         togglePrepMode(currentPrepMode);
@@ -313,6 +308,8 @@
             document.getElementById('input-orden-vinculada').value = '';
             document.getElementById('orden-vinculada-id').value = '';
             document.getElementById('wrapper-inputs-vinculada').classList.add('opacity-50', 'pointer-events-none');
+            // Limpiar errores del input vinculado
+            document.getElementById('input-orden-vinculada').classList.remove('border-red-500');
         }
     }
 
@@ -356,15 +353,16 @@
     }
 
     function initCardLogic(card, techId, contextKey) {
+        // COMBOS CON VALIDACION
         setupCombobox(card.querySelector('.input-nombre'), card.querySelector('.combo-list'), tecnicosData);
         setupCombobox(card.querySelector('.input-lider'), card.querySelector('.combo-list-lider'), lideresData);
         
         const mesaInp = card.querySelector('.input-mesa'); const mesaMenu = card.querySelector('.select-menu');
         mesaInp.onclick = (e) => { e.stopPropagation(); closeAllMenus(); mesaMenu.classList.remove('hidden'); };
-        mesaMenu.onclick = (e) => { if(e.target.classList.contains('select-option')){ mesaInp.value = e.target.dataset.value; mesaMenu.classList.add('hidden'); } };
+        mesaMenu.onclick = (e) => { if(e.target.classList.contains('select-option')){ mesaInp.value = e.target.dataset.value; mesaMenu.classList.add('hidden'); mesaInp.classList.remove('border-red-500'); } };
 
         if(contextKey === 'main') {
-            // MAIN PREP: Activar módulo actividades y ocultar el rojo
+            // MAIN PREP
             const actModule = card.querySelector('.main-activity-module');
             actModule.classList.remove('hidden');
             
@@ -415,8 +413,9 @@
                     };
 
                     actCard.querySelector('.btn-remove-activity').onclick = (e) => removeActivityTab(activityId, techId, e);
+                    
+                    // SETUP COMBO ACTIVIDAD CON VALIDACION
                     setupCombobox(inpAct, listAct, catalogoActividades, handleActivityChange);
-                    inpAct.addEventListener('input', (e) => handleActivityChange(e.target.value));
                     
                     const btnAddRow = actCard.querySelector('.btn-add-config-row');
                     const rowsCont = actCard.querySelector('.config-rows-container');
@@ -428,7 +427,7 @@
                 btnAddActivity.click();
             }
         } else if(contextKey === 'vinc') {
-             // VINCULADA: Activar módulo rojo y ocultar actividades
+             // VINCULADA: Activar módulo rojo
              card.querySelector('.main-activity-module').classList.add('hidden');
              const rojaModule = card.querySelector('.module-roja');
              rojaModule.classList.remove('hidden');
@@ -445,7 +444,7 @@
         const inpCav = row.querySelector('.input-cav'); const menuCav = row.querySelector('.select-menu');
         if(inpCav) {
             inpCav.onclick = (e) => { e.stopPropagation(); closeAllMenus(); menuCav.classList.remove('hidden'); };
-            menuCav.onclick = (e) => { if(e.target.classList.contains('select-option')) { inpCav.value = e.target.dataset.value; menuCav.classList.add('hidden'); } };
+            menuCav.onclick = (e) => { if(e.target.classList.contains('select-option')) { inpCav.value = e.target.dataset.value; menuCav.classList.add('hidden'); inpCav.classList.remove('border-red-500'); } };
         }
         setupCircuitoMultiselect(row);
         container.appendChild(row);
@@ -478,8 +477,8 @@
                 defCard.id = `content-${defectId}`; defCard.classList.add('hidden');
                 
                 const inputDefecto = defCard.querySelector('.input-defecto');
+                // COMBO DEFECTO CON VALIDACION
                 setupCombobox(inputDefecto, defCard.querySelector('.combo-list-def'), defectList, (val)=>{ tabButton.querySelector('.tab-lbl').innerText = val.substring(0,10)+'...'; });
-                inputDefecto.addEventListener('input', (e)=>{ tabButton.querySelector('.tab-lbl').innerText = e.target.value.substring(0,10)+'...'; });
                 
                 defCard.querySelector('.btn-remove-defect-card').onclick = (e) => removeDefectTab(defectId, techId, e);
                 
@@ -505,7 +504,7 @@
         const card = document.getElementById(techId); if(card.querySelectorAll('.activity-tab-btn').length === 0) card.querySelector('.empty-activities-state').classList.remove('hidden');
     };
     
-    window.switchDefectTab = function(card, id) { // Para VINC (Roja Module)
+    window.switchDefectTab = function(card, id) { 
          const wrapper = card.querySelector('.module-roja') || card; 
          wrapper.querySelectorAll('.defect-tab-btn').forEach(b => b.classList.replace('bg-purple-600', 'bg-gray-800'));
          wrapper.querySelectorAll('.defect-card').forEach(c => c.classList.add('hidden'));
@@ -518,16 +517,16 @@
          if(wrapper.querySelectorAll('.defect-tab-btn').length === 0) wrapper.querySelector('.empty-defects-state').classList.remove('hidden');
     };
 
-    function createNewLocationRow(container) { // T_ROJA
+    function createNewLocationRow(container) { 
         const tmpl = document.getElementById('location-row-template-T_roja');
         const clone = tmpl.content.cloneNode(true);
         const row = clone.querySelector('.location-row');
         row.querySelector('.btn-remove-loc').onclick = () => row.remove();
-        // Setup events T_ROJA row
+        
         const inpCav = row.querySelector('.input-cav'); const menuCav = row.querySelector('.select-menu');
         if(inpCav) {
             inpCav.onclick = (e) => { e.stopPropagation(); closeAllMenus(); menuCav.classList.remove('hidden'); };
-            menuCav.onclick = (e) => { if(e.target.classList.contains('select-option')) { inpCav.value = e.target.dataset.value; menuCav.classList.add('hidden'); } };
+            menuCav.onclick = (e) => { if(e.target.classList.contains('select-option')) { inpCav.value = e.target.dataset.value; menuCav.classList.add('hidden'); inpCav.classList.remove('border-red-500'); } };
         }
         setupCircuitoMultiselect(row);
         container.appendChild(row);
@@ -535,8 +534,10 @@
     
     function closeAllMenus() { document.querySelectorAll('.combo-list, .combo-list-lider, .select-menu, .combo-list-actividad, .combo-list-def, [id^="list-"], .circuito-menu').forEach(m => m.classList.add('hidden')); }
     
+    // --- FUNCIÓN COMBOBOX REFORZADA CON STRICT MODE ---
     function setupCombobox(inp, lst, data, cb) {
         if(!inp) return;
+        
         const render = (q='') => {
             lst.innerHTML = ''; 
             const f = data.filter(d => {
@@ -547,12 +548,53 @@
             lst.classList.remove('hidden');
             f.forEach(x => {
                 const d = document.createElement('div'); d.className = 'p-2 hover:bg-gray-600 cursor-pointer text-white text-xs border-b border-gray-600'; d.innerText = x.nombre; 
-                d.onmousedown = (e) => { e.preventDefault(); inp.value = x.nombre; lst.classList.add('hidden'); if(cb) cb(x.nombre); }; lst.appendChild(d);
+                d.onmousedown = (e) => { 
+                    e.preventDefault(); 
+                    inp.value = x.nombre; 
+                    inp.classList.remove('border-red-500', 'placeholder-red-400');
+                    lst.classList.add('hidden'); 
+                    if(cb) cb(x.nombre); 
+                }; 
+                lst.appendChild(d);
             });
         };
-        inp.oninput = (e) => render(e.target.value); 
+
+        inp.oninput = (e) => {
+            inp.classList.remove('border-red-500');
+            render(e.target.value);
+        }; 
         inp.onfocus = () => render(inp.value); 
         inp.onclick = (e) => { e.stopPropagation(); closeAllMenus(); render(inp.value); };
+
+        // Validación estricta al perder foco (Blur)
+        inp.addEventListener('blur', function() {
+            setTimeout(() => { 
+                const val = this.value.trim();
+                if(val === "") return; 
+                
+                // Filtro especial para Cambio de config
+                let dataset = data;
+                if (currentPrepMode !== 'cambio') {
+                    dataset = data.filter(d => d.nombre !== "CAMBIO DE CONFIGURACION");
+                }
+
+                const exists = dataset.some(d => d.nombre.toLowerCase() === val.toLowerCase());
+                
+                if(!exists) {
+                    this.value = ""; 
+                    this.placeholder = "Seleccione de la lista...";
+                    this.classList.add('border-red-500', 'placeholder-red-400');
+                    if(cb) cb(""); 
+                } else {
+                    const correctOption = dataset.find(d => d.nombre.toLowerCase() === val.toLowerCase());
+                    if(correctOption) {
+                        this.value = correctOption.nombre;
+                        this.classList.remove('border-red-500');
+                    }
+                }
+                lst.classList.add('hidden');
+            }, 200);
+        });
     }
 
     function setupCircuitoMultiselect(row) {
@@ -561,17 +603,29 @@
         const all = menu.querySelector('.chk-todas'); const nums = menu.querySelectorAll('.chk-num');
         inp.addEventListener('click', (e) => { e.stopPropagation(); closeAllMenus(); menu.classList.remove('hidden'); });
         menu.addEventListener('click', (e) => e.stopPropagation());
-        const upd = () => { if(all.checked) { inp.value = "Todas"; nums.forEach(c => c.checked=false); } else { inp.value = Array.from(nums).filter(c=>c.checked).map(c=>c.value).join(', '); } };
+        
+        const upd = () => { 
+            let val = "";
+            if(all.checked) { 
+                val = "Todas"; nums.forEach(c => c.checked=false); 
+            } else { 
+                val = Array.from(nums).filter(c=>c.checked).map(c=>c.value).join(', '); 
+            }
+            inp.value = val;
+            if(val) inp.classList.remove('border-red-500');
+        };
+
         all.addEventListener('change', () => { if(all.checked) nums.forEach(c=>c.checked=false); upd(); });
         nums.forEach(c => c.addEventListener('change', () => { if(c.checked) all.checked=false; upd(); }));
     }
 
-    // --- PENDING SEARCH ---
+    // --- PENDING SEARCH CON VALIDACION ---
     function setupPendingSearch() {
         const input = document.getElementById('input-orden-vinculada');
         const list = document.getElementById('list-ordenes-pendientes');
         const hidden = document.getElementById('orden-vinculada-id');
         if(!input) return;
+        
         const render = (q) => {
             if(!ordenesPendientesCache.length) return;
             list.innerHTML='';
@@ -580,13 +634,46 @@
             else f.forEach(o=>{
                 const d=document.createElement('div'); d.className="p-3 hover:bg-red-800 cursor-pointer text-sm text-white border-b border-red-700/30";
                 d.innerHTML=`<div class="font-bold">${o.numero}</div><div class="text-[10px]">${o.descripcion||'-'}</div>`;
-                d.onmousedown=(e)=>{ e.stopPropagation(); input.value=o.numero; hidden.value=o.numero; list.classList.add('hidden'); document.getElementById('wrapper-inputs-vinculada').classList.remove('opacity-50','pointer-events-none'); };
+                d.onmousedown=(e)=>{ 
+                    e.stopPropagation(); 
+                    input.value=o.numero; 
+                    hidden.value=o.numero; 
+                    input.classList.remove('border-red-500'); input.classList.add('border-green-500');
+                    list.classList.add('hidden'); 
+                    document.getElementById('wrapper-inputs-vinculada').classList.remove('opacity-50','pointer-events-none'); 
+                };
                 list.appendChild(d);
             });
             list.classList.remove('hidden');
         };
-        input.oninput=(e)=>render(e.target.value); input.onfocus=()=>render(input.value);
+        
+        input.oninput=(e)=> {
+             hidden.value = ""; 
+             input.classList.remove('border-green-500');
+             render(e.target.value);
+        };
+        input.onfocus=()=>render(input.value);
+
+        input.addEventListener('blur', function() {
+            setTimeout(() => {
+                const val = this.value.trim();
+                const exists = ordenesPendientesCache.some(o => o.numero.toString() === val);
+                
+                if(!exists && val !== "") {
+                    this.value = "";
+                    hidden.value = "";
+                    this.placeholder = "Debe seleccionar de la lista";
+                    this.classList.add('border-red-500');
+                    document.getElementById('wrapper-inputs-vinculada').classList.add('opacity-50','pointer-events-none'); 
+                } else if (exists) {
+                     this.classList.remove('border-red-500');
+                     this.classList.add('border-green-500');
+                }
+                list.classList.add('hidden');
+            }, 200);
+        });
     }
+
     async function cargarOrdenesPendientes() {
         const mid = document.getElementById('input-molde-id').value; if(!mid) return;
         try { const r=await fetch(`/moldeo/api/ordenes-pendientes/?molde_id=${mid}`); const d=await r.json(); ordenesPendientesCache=d.ordenes||[]; } catch(e){}
@@ -606,28 +693,39 @@
         const mainCards = document.querySelectorAll('#tech-cards-content-main .tech-card-wrapper');
         if(mainCards.length === 0) { alert("Falta técnico en Orden Principal"); return; }
         const resMain = extractData(mainCards, 'main');
-        if(!resMain) return;
+        if(!resMain) {
+            alert("Hay campos vacíos o inválidos en la Orden Principal.");
+            return;
+        }
 
         // 2. VALIDAR VINC
         let resVinc = { data: [], log: "" };
         const tipo = document.querySelector('input[name="tipo_tarjeta"]:checked').value;
+        
         if(tipo === 'roja') {
             const vincId = document.getElementById('orden-vinculada-id').value;
-            if(!vincId) { alert("Selecciona orden vinculada"); switchTab('vinculada'); return; }
-            const copiar = document.getElementById('check-copiar-tecnicos').checked;
-            if(!copiar) {
-                const vincCards = document.querySelectorAll('#tech-cards-content-vinc .tech-card-wrapper');
-                if(vincCards.length === 0) { alert("Falta técnico en Orden Vinculada"); switchTab('vinculada'); return; }
-                resVinc = extractData(vincCards, 'vinc');
-                if(!resVinc) { switchTab('vinculada'); return; }
-                asignacionesVinc = resVinc.data;
-                logVinc = resVinc.log;
-            } else {
-                resVinc.data = JSON.parse(JSON.stringify(resMain.data));
-                resVinc.data.forEach(x => { x.actividades=[]; x.detalles=[]; });
-                resVinc.log = "(Técnicos copiados sin defectos)";
-                asignacionesVinc = resVinc.data;
+            if(!vincId) { 
+                alert("Selecciona una orden vinculada válida"); 
+                document.getElementById('input-orden-vinculada').classList.add('border-red-500');
+                switchTab('vinculada'); 
+                return; 
             }
+            
+            // ELIMINADO: Chequeo de "Copiar Técnicos", ahora es obligatorio agregar
+            const vincCards = document.querySelectorAll('#tech-cards-content-vinc .tech-card-wrapper');
+            if(vincCards.length === 0) { 
+                alert("Debes agregar técnicos manualmente a la Orden Vinculada."); 
+                switchTab('vinculada'); 
+                return; 
+            }
+            
+            resVinc = extractData(vincCards, 'vinc');
+            if(!resVinc) { 
+                switchTab('vinculada'); 
+                alert("Hay campos vacíos o inválidos en la Orden Vinculada.");
+                return; 
+            }
+            asignacionesVinc = resVinc.data;
         }
 
         // 3. LOG FINAL
@@ -635,7 +733,13 @@
         if(tipo === 'roja') logFinal += "\n\n--- ORDEN VINCULADA ---\n" + resVinc.log;
 
         document.getElementById('asignaciones-json').value = JSON.stringify(resMain.data);
-        if(asignacionesVinc.length > 0) document.getElementById('asignaciones-vinc-json').value = JSON.stringify(asignacionesVinc);
+        // Limpiar o asignar JSON vinculada
+        if(asignacionesVinc.length > 0) {
+            document.getElementById('asignaciones-vinc-json').value = JSON.stringify(asignacionesVinc);
+        } else {
+            document.getElementById('asignaciones-vinc-json').value = "";
+        }
+        
         document.getElementById('comentarios-generados').value = logFinal;
 
         formToSubmit = form; 
@@ -646,47 +750,73 @@
         const arr = []; let logText = ""; let error = false;
 
         cardsNodeList.forEach(card => {
-            const n = card.querySelector('.input-nombre').value.trim();
-            const l = card.querySelector('.input-lider').value.trim();
-            const m = card.querySelector('.input-mesa').value.trim();
-            if(!n || !l || !m) { card.querySelector('.input-nombre').classList.add('border-red-500'); error = true; }
-            else card.querySelector('.input-nombre').classList.remove('border-red-500');
+            const inpNombre = card.querySelector('.input-nombre');
+            const inpLider = card.querySelector('.input-lider');
+            const inpMesa = card.querySelector('.input-mesa');
             
-            logText += `> TÉCNICO: ${n} (L:${l})\n`;
+            const n = inpNombre.value.trim();
+            const l = inpLider.value.trim();
+            const m = inpMesa.value.trim();
+            
+            if(!n) { inpNombre.classList.add('border-red-500'); error = true; } else inpNombre.classList.remove('border-red-500');
+            if(!l) { inpLider.classList.add('border-red-500'); error = true; } else inpLider.classList.remove('border-red-500');
+            if(!m) { inpMesa.classList.add('border-red-500'); error = true; } else inpMesa.classList.remove('border-red-500');
+            
+            if(n && l && m) logText += `> TÉCNICO: ${n} (L:${l})\n`;
+            
             const actividades = [];
             const defectos = [];
 
             if(context === 'main') {
                 const actCards = card.querySelectorAll('.activity-card');
-                if(currentPrepMode === 'simple' && actCards.length === 0) { error=true; card.classList.add('border-red-500'); }
+                if(currentPrepMode === 'simple' && actCards.length === 0) { error=true; card.classList.add('border', 'border-red-500'); }
+                else card.classList.remove('border', 'border-red-500');
                 
                 actCards.forEach(ac => {
-                    const act = ac.querySelector('.input-actividad').value.trim();
-                    if(!act) { error=true; ac.classList.add('border-red-500'); }
+                    const inpAct = ac.querySelector('.input-actividad');
+                    const act = inpAct.value.trim();
+                    if(!act) { error=true; inpAct.classList.add('border-red-500'); }
                     else {
-                        ac.classList.remove('border-red-500');
+                        inpAct.classList.remove('border-red-500');
                         // CHECAR SI ES CHO / FECHADOR
                         if(currentPrepMode === 'cambio' && act === 'CAMBIO DE CONFIGURACION') {
                              const panel = ac.querySelector('.config-panel');
-                             const ent = panel.querySelector('.input-entrante').value;
-                             const sal = panel.querySelector('.input-saliente').value;
+                             const inpEnt = panel.querySelector('.input-entrante');
+                             const inpSal = panel.querySelector('.input-saliente');
+                             const ent = inpEnt.value.trim();
+                             const sal = inpSal.value.trim();
                              
-                             if(!ent || !sal) { error=true; panel.classList.add('border-red-500'); } 
-                             else panel.classList.remove('border-red-500');
+                             if(!ent) inpEnt.classList.add('border-red-500'); else inpEnt.classList.remove('border-red-500');
+                             if(!sal) inpSal.classList.add('border-red-500'); else inpSal.classList.remove('border-red-500');
+                             
+                             if(!ent || !sal) error=true;
 
                              const rows = panel.querySelectorAll('.config-row');
-                             if(rows.length === 0) { error = true; panel.classList.add('border-red-500'); }
+                             if(rows.length === 0) { error = true; panel.classList.add('border', 'border-red-500'); }
+                             else panel.classList.remove('border', 'border-red-500');
                              
                              const configDetalles = [];
                              rows.forEach(r => {
-                                 const de = r.querySelector('.input-det-ent').value;
-                                 const ds = r.querySelector('.input-det-sal').value;
-                                 const cav = r.querySelector('.input-cav').value;
-                                 const cir = r.querySelector('.input-circ').value;
+                                 const inpDE = r.querySelector('.input-det-ent');
+                                 const inpDS = r.querySelector('.input-det-sal');
+                                 const inpC = r.querySelector('.input-cav');
+                                 const inpCr = r.querySelector('.input-circ');
+                                 
+                                 const de = inpDE.value.trim();
+                                 const ds = inpDS.value.trim();
+                                 const cav = inpC.value.trim();
+                                 const cir = inpCr.value.trim();
                                  const fijo = r.querySelector('.input-fijo').checked;
                                  const mov = r.querySelector('.input-movil').checked;
                                  
-                                 if(!de || !ds || !cav || !cir || (!fijo && !mov)) { error=true; r.classList.add('bg-red-900/40'); }
+                                 let rowErr = false;
+                                 if(!de) { inpDE.classList.add('border-red-500'); rowErr=true; } else inpDE.classList.remove('border-red-500');
+                                 if(!ds) { inpDS.classList.add('border-red-500'); rowErr=true; } else inpDS.classList.remove('border-red-500');
+                                 if(!cav) { inpC.classList.add('border-red-500'); rowErr=true; } else inpC.classList.remove('border-red-500');
+                                 if(!cir) { inpCr.classList.add('border-red-500'); rowErr=true; } else inpCr.classList.remove('border-red-500');
+                                 if(!fijo && !mov) rowErr=true;
+                                 
+                                 if(rowErr) { error=true; r.classList.add('bg-red-900/40'); }
                                  else {
                                      r.classList.remove('bg-red-900/40');
                                      configDetalles.push({ de, ds, cav, cir, fijo, mov });
@@ -699,11 +829,16 @@
                              }
                         } else if (act === 'FECHADORES') {
                              const panel = ac.querySelector('.fechador-panel');
-                             const mes = panel.querySelector('.input-mes').value;
-                             const anio = panel.querySelector('.input-anio').value;
-                             if(!mes || !anio) { error=true; panel.classList.add('border-red-500'); }
+                             const inpM = panel.querySelector('.input-mes');
+                             const inpA = panel.querySelector('.input-anio');
+                             const mes = inpM.value;
+                             const anio = inpA.value;
+                             
+                             if(!mes) inpM.classList.add('border', 'border-red-500'); else inpM.classList.remove('border', 'border-red-500');
+                             if(!anio) inpA.classList.add('border', 'border-red-500'); else inpA.classList.remove('border', 'border-red-500');
+                             
+                             if(!mes || !anio) { error=true; }
                              else {
-                                 panel.classList.remove('border-red-500');
                                  actividades.push({ actividad: act, mes, anio });
                                  logText += `  - [Fechador]: ${mes}/${anio}\n`;
                              }
@@ -714,22 +849,34 @@
                     }
                 });
             } else {
-                // VINC ROJA (Estilo CHO)
+                // VINC ROJA (Estilo CHO/MCM - Defectos)
                 const defCards = card.querySelectorAll('.defect-card');
-                if(defCards.length===0) { error=true; card.classList.add('border-red-500'); }
+                if(defCards.length===0) { error=true; card.classList.add('border', 'border-red-500'); }
+                else card.classList.remove('border', 'border-red-500');
+                
                 defCards.forEach(dc => {
-                    const dn = dc.querySelector('.input-defecto').value.trim();
-                    if(!dn) { error=true; dc.querySelector('.input-defecto').classList.add('border-red-500'); }
+                    const inpDef = dc.querySelector('.input-defecto');
+                    const dn = inpDef.value.trim();
+                    if(!dn) { error=true; inpDef.classList.add('border-red-500'); }
                     else {
-                        dc.querySelector('.input-defecto').classList.remove('border-red-500');
+                        inpDef.classList.remove('border-red-500');
                         const rows = dc.querySelectorAll('.location-row');
                         if(rows.length===0) error=true;
+                        
                         rows.forEach(row => {
-                            const cav = row.querySelector('.input-cav').value;
-                            const cir = row.querySelector('.input-circ').value;
+                            const inpCav = row.querySelector('.input-cav');
+                            const inpCir = row.querySelector('.input-circ');
+                            const cav = inpCav.value;
+                            const cir = inpCir.value;
                             const fijo = row.querySelector('.input-fijo').checked;
                             const movil = row.querySelector('.input-movil').checked;
-                            if(!cav || !cir || (!fijo && !movil)) { error=true; row.classList.add('bg-red-900/40'); }
+                            
+                            let rErr=false;
+                            if(!cav) { inpCav.classList.add('border-red-500'); rErr=true; } else inpCav.classList.remove('border-red-500');
+                            if(!cir) { inpCir.classList.add('border-red-500'); rErr=true; } else inpCir.classList.remove('border-red-500');
+                            if(!fijo && !movil) rErr=true;
+                            
+                            if(rErr) { error=true; row.classList.add('bg-red-900/40'); }
                             else {
                                 row.classList.remove('bg-red-900/40');
                                 defectos.push({ defecto: dn, cav, cir, fijo, movil });
@@ -742,7 +889,7 @@
             arr.push({ nombre: n, lider: l, mesa: m, actividades: actividades, detalles: defectos });
         });
 
-        if(error) { alert("Faltan datos obligatorios."); return null; }
+        if(error) return null;
         return { data: arr, log: logText };
     }
 </script>

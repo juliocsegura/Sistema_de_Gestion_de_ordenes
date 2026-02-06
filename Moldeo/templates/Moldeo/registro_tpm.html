@@ -125,15 +125,7 @@
                         </div>
                     </div>
 
-                    <div id="wrapper-inputs-vinculada" class="opacity-50 pointer-events-none transition-opacity">
-                        <div class="bg-gray-800 p-4 rounded border border-gray-600 flex items-center mb-6">
-                            <input type="checkbox" name="copiar_tecnicos" id="check-copiar-tecnicos" value="true" checked 
-                                   class="w-5 h-5 text-red-600 bg-gray-700 border-gray-500 rounded focus:ring-red-500 cursor-pointer">
-                            <label for="check-copiar-tecnicos" class="ml-3 text-sm text-gray-300 cursor-pointer select-none">
-                                Asignar mismos técnicos de la orden principal.
-                            </label>
-                        </div>
-
+                   <div id="wrapper-inputs-vinculada" class="opacity-50 pointer-events-none transition-opacity">
                         <div class="space-y-4 border-t border-red-800/50 pt-4">
                             <div class="flex justify-between items-center bg-red-900/30 p-2 rounded-t-lg border-b border-red-800">
                                 <h3 class="text-lg font-bold text-red-300 pl-2">Técnicos (Orden Vinculada)</h3>
@@ -265,19 +257,63 @@
         </div>
 
         <div class="details-panel hidden mt-2 pt-2 border-t border-gray-700/50 bg-gray-800/30 p-2 rounded">
-            <div class="flex items-center gap-2 mb-2">
-                <svg class="w-3 h-3 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <label class="text-[10px] text-yellow-500 uppercase font-bold">Detalles de Ubicación</label>
-            </div>
+    <div class="flex items-center gap-2 mb-2">
+        <svg class="w-3 h-3 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <label class="text-[10px] text-yellow-500 uppercase font-bold">Detalles de Ubicación</label>
+    </div>
+    
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div>
+            <label class="block text-[8px] text-gray-400 uppercase mb-0.5">Módulo</label>
+            <input type="text" class="input-modulo w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 outline-none" placeholder="-">
+        </div>
+
+        <div class="relative custom-select-container">
+            <label class="block text-[8px] text-gray-400 uppercase mb-0.5">Cavidad</label>
+            <input type="text" class="input-cavidad input-select w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 cursor-pointer outline-none text-center" placeholder="Cav" readonly>
             
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <div><label class="block text-[8px] text-gray-400 uppercase mb-0.5">Módulo</label><input type="text" class="input-modulo w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 outline-none" placeholder="-"></div>
-                <div><label class="block text-[8px] text-gray-400 uppercase mb-0.5">Cavidad</label><input type="text" class="input-cavidad w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 outline-none" placeholder="Cav"></div>
-                <div><label class="block text-[8px] text-gray-400 uppercase mb-0.5">Circuito</label><input type="text" class="input-circuito w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 outline-none" placeholder="Cir"></div>
-                <div><label class="block text-[8px] text-gray-400 uppercase mb-0.5">Lado</label><select class="input-lado w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 outline-none cursor-pointer"><option value="">...</option><option value="Fijo">Fijo</option><option value="Movil">Móvil</option></select></div>
+            <div class="select-menu-cavidad hidden absolute top-full left-0 w-full bg-gray-800 border border-gray-600 shadow-2xl rounded max-h-48 overflow-y-auto z-[60]">
+                {% for i in "x"|rjust:"128" %}
+                <div class="select-option p-2 hover:bg-blue-600 text-white text-center text-xs cursor-pointer border-b border-gray-700 last:border-0" data-value="{{ forloop.counter }}">{{ forloop.counter }}</div>
+                {% endfor %}
             </div>
         </div>
+
+        <div class="relative group-circuito-container">
+            <label class="block text-[8px] text-gray-400 uppercase mb-0.5">Circuito</label>
+            <input type="text" class="input-circuito w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:border-yellow-500 cursor-pointer outline-none text-center" placeholder="Cir" readonly>
+            
+            <div class="circuito-menu hidden absolute top-full right-0 w-64 bg-gray-800 border border-gray-600 shadow-2xl rounded z-[100] p-2 max-h-60 overflow-y-auto">
+                <label class="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded cursor-pointer border-b border-gray-600 mb-2">
+                    <input type="checkbox" value="Todas" class="chk-todas form-checkbox h-4 w-4 text-yellow-600 bg-gray-900 border-gray-500 rounded">
+                    <span class="text-xs text-white font-bold">TODAS</span>
+                </label>
+                <div class="grid grid-cols-4 gap-2">
+                    {% for i in "x"|rjust:"126" %}
+                    <label class="flex items-center justify-center p-1 hover:bg-gray-700 rounded cursor-pointer">
+                        <input type="checkbox" value="{{ forloop.counter }}" class="chk-num form-checkbox h-3 w-3 text-yellow-500 bg-gray-900 border-gray-500 rounded mr-1">
+                        <span class="text-[10px] text-gray-300">{{ forloop.counter }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col">
+        <label class="block text-[8px] text-gray-400 uppercase mb-0.5 text-center">Lado</label>
+        <div class="flex items-center justify-center gap-3 h-[26px] bg-gray-900 border border-gray-600 rounded px-1 wrapper-lado">
+        <label class="flex items-center space-x-1 cursor-pointer group">
+            <input type="checkbox" class="input-fijo form-checkbox h-3 w-3 text-emerald-500 bg-gray-800 border-gray-500 rounded focus:ring-emerald-500">
+            <span class="text-[9px] text-gray-300 group-hover:text-emerald-400 font-bold">Fijo</span>
+        </label>
+        <label class="flex items-center space-x-1 cursor-pointer group">
+            <input type="checkbox" class="input-movil form-checkbox h-3 w-3 text-blue-500 bg-gray-800 border-gray-500 rounded focus:ring-blue-500">
+            <span class="text-[9px] text-gray-300 group-hover:text-blue-400 font-bold">Móvil</span>
+        </label>
     </div>
+</div>
+    </div>
+</div>
 </template>
 
 <template id="defect-card-template-T_roja">
@@ -316,8 +352,8 @@
             </div>
         </div>
         <div class="col-span-4 flex items-center justify-center gap-3">
-            <label class="inline-flex items-center cursor-pointer group"><input type="checkbox" class="input-fijo form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded focus:ring-emerald-500"><span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Fijo</span></label>
-            <label class="inline-flex items-center cursor-pointer group"><input type="checkbox" class="input-movil form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded focus:ring-emerald-500"><span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Móvil</span></label>
+            <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" class="input-fijo form-checkbox h-3 w-3 text-emerald-500 bg-gray-700 border-gray-500 rounded"><span class="text-[9px] text-gray-300 font-bold">Fijo</span></label>
+            <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" class="input-movil form-checkbox h-3 w-3 text-blue-500 bg-gray-700 border-gray-500 rounded"><span class="text-[9px] text-gray-300 font-bold">Movil</span></label>
         </div>
         <div class="col-span-2 text-center"><button type="button" class="btn-remove-loc text-gray-600 hover:text-red-500 font-bold px-2 text-xl">&times;</button></div>
     </div>
@@ -338,14 +374,17 @@
     let ordenesPendientesCache = [];
 
     // DATOS DJANGO
+    // Nota: Normalizamos los nombres a mayúsculas para comparación estricta
     const catalogoActividades = {{ actividades_json|default:"[]"|safe }};
     const catalogoZonas = {{ zonas_json|default:"[]"|safe }};
     const tecnicosData = {{ tecnicos_json|default:"[]"|safe }};
     const lideresData = {{ lideres_json|default:"[]"|safe }};
+    
+    // Lista de defectos
     const defectList = [{% if lista_defectos %}{% for d in lista_defectos %}{ nombre: "{{ d.nombre_defecto|escapejs }}" },{% endfor %}{% else %}{ nombre: "Falla General" }{% endif %}];
 
     document.addEventListener('DOMContentLoaded', () => {
-        // Asegurarse de que FECHADORES exista en el catálogo para el autocompletado
+        // Asegurarse de que FECHADORES exista en el catálogo
         if(!catalogoActividades.some(a => a.nombre === "FECHADORES")) catalogoActividades.push({nombre: "FECHADORES"});
         
         setupPendingSearch();
@@ -369,6 +408,7 @@
             btnGeneral.classList.replace('border-yellow-500', 'border-transparent'); btnGeneral.classList.replace('text-yellow-500', 'text-gray-400');
         }
     }
+
     window.toggleCardType = function(type) {
         const btnTabVinculada = document.getElementById('tab-btn-vinculada');
         if (type === 'roja') {
@@ -379,13 +419,16 @@
             btnTabVinculada.classList.add('hidden');
             document.getElementById('txt-help-tarjeta').innerText = "Tarjeta Verde: Mantenimiento TPM estándar.";
             switchTab('general');
-            document.getElementById('input-orden-vinculada').value = '';
+            // Limpiar datos vinculada
+            const inpVinc = document.getElementById('input-orden-vinculada');
+            inpVinc.value = '';
             document.getElementById('orden-vinculada-id').value = '';
             document.getElementById('wrapper-inputs-vinculada').classList.add('opacity-50', 'pointer-events-none');
+            inpVinc.classList.remove('border-green-500', 'border-red-500');
         }
     }
 
-    // --- CARDS ---
+    // --- CARDS CREATION ---
     function createNewTechCard(contextKey) {
         const cfg = contexts[contextKey];
         if(!cfg) return;
@@ -401,7 +444,12 @@
         tabBtn.innerHTML = `<span>Nuevo Técnico</span> <button type="button" class="ml-2 hover:text-red-400">&times;</button>`;
         tabBtn.onclick = (e) => {
             if(e.target.tagName === 'BUTTON') { 
-                if(confirm("¿Eliminar?")) { tabBtn.remove(); document.getElementById(currentId).remove(); if(containerTabs.children.length===0 && emptyMsg) emptyMsg.style.display='flex'; else if(containerTabs.children.length>0) containerTabs.firstElementChild.click(); }
+                if(confirm("¿Eliminar técnico?")) { 
+                    tabBtn.remove(); 
+                    document.getElementById(currentId).remove(); 
+                    if(containerTabs.children.length===0 && emptyMsg) emptyMsg.style.display='flex'; 
+                    else if(containerTabs.children.length>0) containerTabs.firstElementChild.click(); 
+                }
             } else { 
                 Array.from(containerTabs.children).forEach(t => { t.classList.remove('bg-gray-700','text-white','border-yellow-500','border-red-500'); t.classList.add('bg-gray-800','text-gray-400','border-transparent'); });
                 Array.from(containerCards.children).forEach(c => { if(!c.classList.contains('empty-state')) c.classList.add('hidden'); });
@@ -417,7 +465,11 @@
         const cardDiv = clone.querySelector('.tech-card');
         cardDiv.id = currentId;
         cardDiv.classList.add('tech-card-wrapper', 'hidden'); 
-        cardDiv.querySelector('.input-nombre').addEventListener('input', (e) => { tabBtn.querySelector('span').innerText = e.target.value.substring(0,10) || 'Nuevo'; });
+        
+        // Listener visual para el nombre en el tab
+        cardDiv.querySelector('.input-nombre').addEventListener('input', (e) => { 
+            tabBtn.querySelector('span').innerText = e.target.value.substring(0,10) || 'Nuevo'; 
+        });
 
         initCardLogic(cardDiv, currentId, contextKey);
         containerCards.appendChild(cardDiv);
@@ -425,11 +477,13 @@
     }
 
     function initCardLogic(card, techId, contextKey) {
+        // ACTIVAR COMBOS CON VALIDACIÓN ESTRICTA
         setupCombobox(card.querySelector('.input-nombre'), card.querySelector('.combo-list'), tecnicosData);
         setupCombobox(card.querySelector('.input-lider'), card.querySelector('.combo-list-lider'), lideresData);
+        
         const mesaInp = card.querySelector('.input-mesa'); const mesaMenu = card.querySelector('.select-menu');
         mesaInp.onclick = (e) => { e.stopPropagation(); closeAllMenus(); mesaMenu.classList.remove('hidden'); };
-        mesaMenu.onclick = (e) => { if(e.target.classList.contains('select-option')){ mesaInp.value = e.target.dataset.value; mesaMenu.classList.add('hidden'); } };
+        mesaMenu.onclick = (e) => { if(e.target.classList.contains('select-option')){ mesaInp.value = e.target.dataset.value; mesaMenu.classList.add('hidden'); mesaInp.classList.remove('border-red-500'); } };
 
         if(contextKey === 'main') {
             const activityTabsContainer = card.querySelector('.activity-tabs-container');
@@ -464,8 +518,9 @@
                     const detailsPanel = actCard.querySelector('.details-panel');
                     const zonePanel = actCard.querySelector('.zone-panel');
                     const fechadorPanel = actCard.querySelector('.fechador-panel');
-
-                    // Lógica para alternar entre Zona/Subzona y Fechadores
+                    const inpCavTPM = actCard.querySelector('.input-cavidad');
+                    const menuCavTPM = actCard.querySelector('.select-menu-cavidad');
+                    
                     const handleActivityChange = (val) => {
                         const v = val.trim().toUpperCase();
                         actTabBtn.querySelector('.tab-lbl').innerText = val.substring(0, 12) + '...';
@@ -477,14 +532,63 @@
                         } else {
                             zonePanel.classList.remove('hidden');
                             fechadorPanel.classList.add('hidden');
-                            // Re-evaluar si mostrar detalles basado en la zona seleccionada
                             toggleDetails();
                         }
                     };
+                      if(inpCavTPM && menuCavTPM) {
+                            inpCavTPM.onclick = (e) => {
+                                e.stopPropagation();
+                                closeAllMenus();
+                                menuCavTPM.classList.remove('hidden');
+                            };
+                            menuCavTPM.onclick = (e) => {
+                                if(e.target.classList.contains('select-option')) {
+                                    inpCavTPM.value = e.target.dataset.value;
+                                    inpCavTPM.classList.remove('border-red-500'); // Limpiar error si existe
+                                    menuCavTPM.classList.add('hidden');
+                                }
+                            };
+                        }
 
+                        // 2. Lógica Circuito (Multiselect Checkbox)
+                        // Reutilizamos tu función auxiliar, pero necesitamos pasarle el contenedor correcto
+                        const containerCircuito = actCard.querySelector('.group-circuito-container');
+                        if(containerCircuito) {
+                            // La función setupCircuitoMultiselect espera encontrar .input-circ y .circuito-menu dentro.
+                            // Como cambiamos los nombres de clase ligeramente para TPM (.input-circuito vs .input-circ),
+                            // vamos a adaptar la llamada manualmente aquí para mayor seguridad:
+                            
+                            const inpCirTPM = containerCircuito.querySelector('.input-circuito');
+                            const menuCirTPM = containerCircuito.querySelector('.circuito-menu');
+                            const allTPM = menuCirTPM.querySelector('.chk-todas');
+                            const numsTPM = menuCirTPM.querySelectorAll('.chk-num');
+
+                            inpCirTPM.onclick = (e) => {
+                                e.stopPropagation();
+                                closeAllMenus();
+                                menuCirTPM.classList.remove('hidden');
+                            };
+                            menuCirTPM.onclick = (e) => e.stopPropagation();
+
+                            const updTPM = () => {
+                                let val = "";
+                                if(allTPM.checked) {
+                                    val = "Todas";
+                                    numsTPM.forEach(c => c.checked = false);
+                                } else {
+                                    val = Array.from(numsTPM).filter(c => c.checked).map(c => c.value).join(', ');
+                                }
+                                inpCirTPM.value = val;
+                                if(val) inpCirTPM.classList.remove('border-red-500');
+                            };
+
+                            allTPM.onchange = () => { if(allTPM.checked) numsTPM.forEach(c => c.checked = false); updTPM(); };
+                            numsTPM.forEach(c => c.onchange = () => { if(c.checked) allTPM.checked = false; updTPM(); });
+                        }
                     actCard.querySelector('.btn-remove-activity').onclick = (e) => removeActivityTab(activityId, techId, e);
+                    
+                    // SETUP COMBO CON CALLBACK Y VALIDACIÓN
                     setupCombobox(inpAct, listAct, catalogoActividades, handleActivityChange);
-                    inpAct.addEventListener('input', (e) => handleActivityChange(e.target.value));
 
                     catalogoZonas.forEach(z => { const opt = document.createElement('option'); opt.value = z.nombre; opt.innerText = z.nombre; selZona.appendChild(opt); });
 
@@ -494,12 +598,10 @@
                         const reqDb = selSub.options[selSub.selectedIndex]?.dataset.req === 'true';
                         const esModulos = (zonaTxt === 'MODULOS' && subTxt === 'Uno solo');
                         
-                        // Si está oculto el panel de zona (modo Fechador), no mostrar detalles
                         if(zonePanel.classList.contains('hidden')) {
                             detailsPanel.classList.add('hidden');
                             return;
                         }
-
                         if(reqDb || esModulos) detailsPanel.classList.remove('hidden'); else detailsPanel.classList.add('hidden');
                     };
 
@@ -513,15 +615,11 @@
                             selSub.disabled = false;
                             zonaObj.subzonas.forEach(s => { 
                                 const opt = document.createElement('option'); 
-                                opt.value = s.nombre; 
-                                opt.innerText = s.nombre; 
-                                opt.dataset.req = s.req; 
+                                opt.value = s.nombre; opt.innerText = s.nombre; opt.dataset.req = s.req; 
                                 selSub.appendChild(opt); 
                             });
                         } else {
-                            // Si no hay subzonas, habilitamos guardar sin subzona (simplemente no la pedimos)
-                            selSub.innerHTML = '<option value="">(N/A)</option>';
-                            selSub.disabled = true;
+                            selSub.innerHTML = '<option value="">(N/A)</option>'; selSub.disabled = true;
                         }
                     });
                     selSub.addEventListener('change', toggleDetails);
@@ -565,7 +663,7 @@
                     
                     const inputDefecto = defCard.querySelector('.input-defecto');
                     setupCombobox(inputDefecto, defCard.querySelector('.combo-list-def'), defectList, (val) => { tabButton.querySelector('.tab-lbl').innerText = val.substring(0,10)+'...'; });
-                    inputDefecto.addEventListener('input', (e) => { tabButton.querySelector('.tab-lbl').innerText = e.target.value.substring(0,10)+'...'; });
+                    
                     defCard.querySelector('.btn-remove-defect-card').onclick = (e) => removeDefectTab(defectId, techId, e);
                     
                     const locContainer = defCard.querySelector('.location-rows-container');
@@ -611,42 +709,101 @@
         const inpCav = row.querySelector('.input-cav'); const menuCav = row.querySelector('.select-menu');
         if(inpCav) {
             inpCav.onclick = (e) => { e.stopPropagation(); closeAllMenus(); menuCav.classList.remove('hidden'); };
-            menuCav.onclick = (e) => { if(e.target.classList.contains('select-option')) { inpCav.value = e.target.dataset.value; menuCav.classList.add('hidden'); } };
+            menuCav.onclick = (e) => { if(e.target.classList.contains('select-option')) { inpCav.value = e.target.dataset.value; menuCav.classList.add('hidden'); inpCav.classList.remove('border-red-500'); } };
         }
         setupCircuitoMultiselect(row);
         container.appendChild(row);
     }
     function closeAllMenus() { document.querySelectorAll('.combo-list, .combo-list-lider, .select-menu, .combo-list-actividad, .combo-list-def, .circuito-menu, [id^="list-"]').forEach(m => m.classList.add('hidden')); }
+    
+    // --- FUNCIÓN COMBOBOX REFORZADA ---
     function setupCombobox(inp, lst, data, cb) {
         if(!inp) return;
+        
+        // 1. Renderizado de lista
         const render = (q='') => {
-            lst.innerHTML = ''; const f = data.filter(d => d.nombre.toLowerCase().includes(q.toLowerCase()));
+            lst.innerHTML = ''; 
+            const f = data.filter(d => d.nombre.toLowerCase().includes(q.toLowerCase()));
             if(f.length===0) { lst.classList.add('hidden'); return; }
             lst.classList.remove('hidden');
             f.forEach(x => {
-                const d = document.createElement('div'); d.className = 'p-2 hover:bg-gray-600 cursor-pointer text-white text-xs border-b border-gray-600'; d.innerText = x.nombre; 
-                d.onmousedown = (e) => { e.preventDefault(); inp.value = x.nombre; lst.classList.add('hidden'); if(cb) cb(x.nombre); }; lst.appendChild(d);
+                const d = document.createElement('div'); 
+                d.className = 'p-2 hover:bg-gray-600 cursor-pointer text-white text-xs border-b border-gray-600'; 
+                d.innerText = x.nombre; 
+                d.onmousedown = (e) => { 
+                    e.preventDefault(); 
+                    inp.value = x.nombre; 
+                    inp.classList.remove('border-red-500', 'placeholder-red-400'); // Limpiar error
+                    lst.classList.add('hidden'); 
+                    if(cb) cb(x.nombre); 
+                }; 
+                lst.appendChild(d);
             });
         };
-        inp.oninput = (e) => render(e.target.value); 
+
+        inp.oninput = (e) => {
+            inp.classList.remove('border-red-500'); // Quitar rojo mientras escribe
+            render(e.target.value);
+        }; 
         inp.onfocus = () => render(inp.value); 
         inp.onclick = (e) => { e.stopPropagation(); closeAllMenus(); render(inp.value); };
+        
+        // 2. Validación estricta al perder foco (Blur)
+        inp.addEventListener('blur', function() {
+            setTimeout(() => { // Timeout para permitir que el click en la lista ocurra primero
+                const val = this.value.trim();
+                if(val === "") return; // Dejamos que extractData maneje los vacíos, o lo limpiamos aquí
+                
+                // Buscar coincidencia exacta (Case insensitive)
+                const exists = data.some(d => d.nombre.toLowerCase() === val.toLowerCase());
+                
+                if(!exists) {
+                    this.value = ""; // Borrar entrada inválida
+                    this.placeholder = "Seleccione de la lista...";
+                    this.classList.add('border-red-500', 'placeholder-red-400');
+                    if(cb) cb(""); // Notificar que se borró
+                } else {
+                    // Si existe pero el casing es diferente, corregirlo (opcional, buena UX)
+                    const correctOption = data.find(d => d.nombre.toLowerCase() === val.toLowerCase());
+                    if(correctOption) {
+                        this.value = correctOption.nombre;
+                        this.classList.remove('border-red-500');
+                    }
+                }
+                lst.classList.add('hidden');
+            }, 200);
+        });
     }
+
     function setupCircuitoMultiselect(row) {
         const inp = row.querySelector('.input-circ'); const menu = row.querySelector('.circuito-menu');
         if(!inp || !menu) return;
         const all = menu.querySelector('.chk-todas'); const nums = menu.querySelectorAll('.chk-num');
         inp.addEventListener('click', (e) => { e.stopPropagation(); closeAllMenus(); menu.classList.remove('hidden'); });
         menu.addEventListener('click', (e) => e.stopPropagation());
-        const upd = () => { if(all.checked) { inp.value = "Todas"; nums.forEach(c => c.checked=false); } else { inp.value = Array.from(nums).filter(c=>c.checked).map(c=>c.value).join(', '); } };
+        
+        const upd = () => { 
+            let val = "";
+            if(all.checked) { 
+                val = "Todas"; nums.forEach(c => c.checked=false); 
+            } else { 
+                val = Array.from(nums).filter(c=>c.checked).map(c=>c.value).join(', '); 
+            }
+            inp.value = val;
+            if(val) inp.classList.remove('border-red-500');
+        };
+        
         all.addEventListener('change', () => { if(all.checked) nums.forEach(c=>c.checked=false); upd(); });
         nums.forEach(c => c.addEventListener('change', () => { if(c.checked) all.checked=false; upd(); }));
     }
+
+    // --- BÚSQUEDA DE ORDEN VINCULADA ---
     function setupPendingSearch() {
         const input = document.getElementById('input-orden-vinculada');
         const list = document.getElementById('list-ordenes-pendientes');
         const hidden = document.getElementById('orden-vinculada-id');
         if(!input) return;
+        
         const render = (q) => {
             if(!ordenesPendientesCache.length) return;
             list.innerHTML='';
@@ -655,58 +812,125 @@
             else f.forEach(o=>{
                 const d=document.createElement('div'); d.className="p-3 hover:bg-red-800 cursor-pointer text-sm text-white border-b border-red-700/30";
                 d.innerHTML=`<div class="font-bold">${o.numero}</div><div class="text-[10px]">${o.descripcion||'-'}</div>`;
-                d.onmousedown=(e)=>{ e.stopPropagation(); input.value=o.numero; hidden.value=o.numero; list.classList.add('hidden'); document.getElementById('wrapper-inputs-vinculada').classList.remove('opacity-50','pointer-events-none'); };
+                d.onmousedown=(e)=>{ 
+                    e.stopPropagation(); 
+                    input.value=o.numero; 
+                    hidden.value=o.numero; 
+                    input.classList.remove('border-red-500'); input.classList.add('border-green-500');
+                    list.classList.add('hidden'); 
+                    document.getElementById('wrapper-inputs-vinculada').classList.remove('opacity-50','pointer-events-none'); 
+                };
                 list.appendChild(d);
             });
             list.classList.remove('hidden');
         };
-        input.oninput=(e)=>render(e.target.value); input.onfocus=()=>render(input.value);
+        
+        input.oninput=(e)=> {
+            hidden.value = ""; // Resetear ID si escribe
+            input.classList.remove('border-green-500');
+            render(e.target.value);
+        };
+        input.onfocus=()=>render(input.value);
+
+        // Validación estricta para Orden Vinculada
+        input.addEventListener('blur', function() {
+            setTimeout(() => {
+                const val = this.value.trim();
+                const exists = ordenesPendientesCache.some(o => o.numero.toString() === val);
+                
+                if(!exists && val !== "") {
+                    this.value = "";
+                    hidden.value = "";
+                    this.placeholder = "Debe seleccionar de la lista";
+                    this.classList.add('border-red-500');
+                    document.getElementById('wrapper-inputs-vinculada').classList.add('opacity-50','pointer-events-none'); 
+                } else if (exists) {
+                     this.classList.remove('border-red-500');
+                     this.classList.add('border-green-500');
+                }
+                list.classList.add('hidden');
+            }, 200);
+        });
     }
+
     async function cargarOrdenesPendientes() {
         const mid = document.getElementById('input-molde-id').value; if(!mid) return;
         try { const r=await fetch(`/moldeo/api/ordenes-pendientes/?molde_id=${mid}`); const d=await r.json(); ordenesPendientesCache=d.ordenes||[]; } catch(e){}
     }
+
     const modalHydra = document.getElementById('modal-warning-hydra');
     const btnConfirmHydra = document.getElementById('btn-confirmar-hydra');
     let formToSubmit = null; 
     window.cerrarWarningHydra = function() { modalHydra.classList.add('hidden'); formToSubmit = null; }
     btnConfirmHydra.addEventListener('click', () => { if (formToSubmit) formToSubmit.submit(); });
-
+    function closeAllMenus() { 
+    document.querySelectorAll(
+        '.combo-list, .combo-list-lider, .select-menu, .combo-list-actividad, .combo-list-def, .circuito-menu, [id^="list-"], .select-menu-cavidad'
+    ).forEach(m => m.classList.add('hidden')); 
+    }
     // --- SUBMIT ---
-    const form = document.getElementById('form-registro');
+   const form = document.getElementById('form-registro');
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         
+        // 1. Validar Orden Principal
         const mainCards = document.querySelectorAll('#tech-cards-content-main .tech-card-wrapper');
         if(mainCards.length === 0) { alert("Falta técnico en Orden Principal"); return; }
-        const resultMain = extractData(mainCards, 'main');
-        if(!resultMain) return;
-
-        let asignacionesVinc = [];
-        let resultVinc = { data: [] };
         
-        const tipo = document.querySelector('input[name="tipo_tarjeta"]:checked').value;
-        if(tipo === 'roja') {
-            const vincId = document.getElementById('orden-vinculada-id').value;
-            if(!vincId) { alert("Selecciona orden vinculada"); switchTab('vinculada'); return; }
-            const copiar = document.getElementById('check-copiar-tecnicos').checked;
-            if(!copiar) {
-                const vincCards = document.querySelectorAll('#tech-cards-content-vinc .tech-card-wrapper');
-                if(vincCards.length === 0) { alert("Falta técnico en Orden Vinculada"); switchTab('vinculada'); return; }
-                resultVinc = extractData(vincCards, 'vinc');
-                if(!resultVinc) { switchTab('vinculada'); return; }
-                asignacionesVinc = resultVinc.data;
-            } else {
-                asignacionesVinc = JSON.parse(JSON.stringify(resultMain.data));
-                asignacionesVinc.forEach(av => { av.actividades = []; av.detalles = []; });
-            }
+        const resultMain = extractData(mainCards, 'main');
+        if(!resultMain) {
+            alert("Hay campos obligatorios vacíos o inválidos en la Orden Principal.");
+            return;
         }
 
+        let asignacionesVinc = [];
+        let resultVinc = { data: [], log: "" };
+        
+        // 2. Validar Orden Vinculada (Si es Tarjeta Roja)
+        const tipo = document.querySelector('input[name="tipo_tarjeta"]:checked').value;
+        
+        if(tipo === 'roja') {
+            const vincId = document.getElementById('orden-vinculada-id').value;
+            
+            // Validación: ¿Se seleccionó una orden de la lista?
+            if(!vincId) { 
+                alert("Debes seleccionar una Orden Vinculada válida de la lista."); 
+                document.getElementById('input-orden-vinculada').classList.add('border-red-500');
+                switchTab('vinculada'); 
+                return; 
+            }
+
+            // Validación: ¿Hay técnicos agregados manualmente en vinculada?
+            const vincCards = document.querySelectorAll('#tech-cards-content-vinc .tech-card-wrapper');
+            if(vincCards.length === 0) { 
+                alert("Debes agregar al menos un técnico a la Orden Vinculada."); 
+                switchTab('vinculada'); 
+                return; 
+            }
+
+            // Extraer datos vinculada
+            resultVinc = extractData(vincCards, 'vinc');
+            if(!resultVinc) { 
+                switchTab('vinculada'); 
+                alert("Hay campos incompletos en la Orden Vinculada.");
+                return; 
+            }
+            asignacionesVinc = resultVinc.data;
+        }
+
+        // 3. Preparar datos para el envío
         let logText = "--- REPORTE TPM ---\n" + resultMain.log;
         if(resultVinc.log) logText += "\n--- ORDEN VINCULADA ---\n" + resultVinc.log;
 
         document.getElementById('asignaciones-json').value = JSON.stringify(resultMain.data);
-        if(asignacionesVinc.length > 0) document.getElementById('asignaciones-vinc-json').value = JSON.stringify(asignacionesVinc);
+        
+        // Limpiamos el JSON de vinculada si es verde, o lo llenamos si es roja
+        if(asignacionesVinc.length > 0) {
+            document.getElementById('asignaciones-vinc-json').value = JSON.stringify(asignacionesVinc);
+        } else {
+            document.getElementById('asignaciones-vinc-json').value = "";
+        }
+        
         document.getElementById('comentarios-generados').value = logText;
 
         formToSubmit = form; 
@@ -715,92 +939,191 @@
 
     function extractData(cardsNodeList, contextType) {
         const arr = []; let logText = ""; let error = false;
+        
         cardsNodeList.forEach(card => {
-            const n = card.querySelector('.input-nombre').value.trim();
-            const l = card.querySelector('.input-lider').value.trim();
-            const m = card.querySelector('.input-mesa').value.trim();
-            if(!n || !l || !m) { card.querySelector('.input-nombre').classList.add('border-red-500'); error = true; }
-            else card.querySelector('.input-nombre').classList.remove('border-red-500');
+            // Validar Inputs de Técnico
+            const inpNombre = card.querySelector('.input-nombre');
+            const inpLider = card.querySelector('.input-lider');
+            const inpMesa = card.querySelector('.input-mesa');
             
-            logText += `> TÉCNICO: ${n} (L:${l})\n`;
+            const n = inpNombre.value.trim();
+            const l = inpLider.value.trim();
+            const m = inpMesa.value.trim();
+            
+            if(!n) { inpNombre.classList.add('border-red-500'); error = true; }
+            else inpNombre.classList.remove('border-red-500');
+            
+            if(!l) { inpLider.classList.add('border-red-500'); error = true; }
+            else inpLider.classList.remove('border-red-500');
+
+            if(!m) { inpMesa.classList.add('border-red-500'); error = true; }
+            else inpMesa.classList.remove('border-red-500');
+            
+            if(n && l && m) logText += `> TÉCNICO: ${n} (L:${l})\n`;
+
             const actividades = [];
             
             if(contextType === 'main') {
                 const activityCards = card.querySelectorAll('.activity-card');
-                if(activityCards.length === 0) { error = true; card.classList.add('border', 'border-red-500'); }
+                if(activityCards.length === 0) { 
+                    error = true; card.classList.add('border', 'border-red-500'); 
+                } else {
+                    card.classList.remove('border', 'border-red-500');
+                }
+
                 activityCards.forEach(ac => {
-                    const act = ac.querySelector('.input-actividad').value.trim();
-                    if(!act) { error=true; ac.classList.add('border', 'border-red-500'); return; }
-                    ac.classList.remove('border', 'border-red-500');
+                    const inpAct = ac.querySelector('.input-actividad');
+                    const act = inpAct.value.trim();
+                    if(!act) { error=true; inpAct.classList.add('border-red-500'); return; }
+                    else inpAct.classList.remove('border-red-500');
 
                     if (act === 'FECHADORES') {
-                         const mes = ac.querySelector('.input-mes').value;
-                         const anio = ac.querySelector('.input-anio').value;
+                         const inpMes = ac.querySelector('.input-mes');
+                         const inpAnio = ac.querySelector('.input-anio');
+                         const mes = inpMes.value;
+                         const anio = inpAnio.value;
+                         
+                         if(!mes) inpMes.classList.add('border', 'border-red-500'); else inpMes.classList.remove('border', 'border-red-500');
+                         if(!anio) inpAnio.classList.add('border', 'border-red-500'); else inpAnio.classList.remove('border', 'border-red-500');
+
                          if(!mes || !anio) { 
-                             error=true; ac.querySelector('.fechador-panel').classList.add('border-red-500');
+                             error=true; 
                          } else {
-                             ac.querySelector('.fechador-panel').classList.remove('border-red-500');
                              actividades.push({ actividad: act, mes: mes, anio: anio });
                              logText += `  - [Fechador]: ${mes} / ${anio}\n`;
                          }
                     } else {
-                        const zon = ac.querySelector('.select-zona').value;
-                        const sub = ac.querySelector('.select-subzona').value;
+                        const selZona = ac.querySelector('.select-zona');
+                        const selSub = ac.querySelector('.select-subzona');
+                        const zon = selZona.value;
+                        const sub = selSub.value;
                         
-                        // Validar subzona SOLO si la zona tiene subzonas definidas en catalogo
+                        if(!zon) { selZona.classList.add('border-red-500'); error=true; }
+                        else selZona.classList.remove('border-red-500');
+
                         const zonaObj = catalogoZonas.find(z => z.nombre === zon);
                         const requiresSub = zonaObj && zonaObj.subzonas && zonaObj.subzonas.length > 0;
+                        
+                        if(requiresSub && !sub) { selSub.classList.add('border-red-500'); error=true; }
+                        else selSub.classList.remove('border-red-500');
 
-                        if(!zon || (requiresSub && !sub)) { 
-                            error=true; ac.classList.add('border', 'border-red-500'); 
-                        } else {
-                            // Extraer detalles adicionales si existen
-                            const modVal = ac.querySelector('.input-modulo').value.trim();
-                            const cavVal = ac.querySelector('.input-cavidad').value.trim();
-                            const cirVal = ac.querySelector('.input-circuito').value.trim();
-                            const ladVal = ac.querySelector('.input-lado').value;
+                        if(zon && (!requiresSub || sub)) {
+                            // 1. Obtener referencias a los inputs
+                            const inpMod = ac.querySelector('.input-modulo');
+                            const inpCav = ac.querySelector('.input-cavidad');
+                            const inpCir = ac.querySelector('.input-circuito');
+                            const chkFijo = ac.querySelector('.input-fijo');
+                            const chkMovil = ac.querySelector('.input-movil');
+                            const wrapperLado = ac.querySelector('.wrapper-lado');
 
-                            // Validar Módulo "Uno solo"
-                            if (zon === 'MODULOS' && sub === 'Uno solo') {
+                            // 2. Extraer valores crudos
+                            const modVal = inpMod.value.trim();
+                            const cavVal = inpCav.value.trim();
+                            const cirVal = inpCir.value.trim();
+                            const isFijo = chkFijo.checked;
+                            const isMovil = chkMovil.checked;
+
+                            // 3. Verificar si el panel de detalles está visible
+                            const detailsVisible = !ac.querySelector('.details-panel').classList.contains('hidden');
+                            
+                            // 4. Validar solo si es visible
+                            if (detailsVisible) {
                                 let missing = false;
-                                if(!modVal) { ac.querySelector('.input-modulo').classList.add('border-red-500'); missing=true; }
-                                if(!cavVal) { ac.querySelector('.input-cavidad').classList.add('border-red-500'); missing=true; }
-                                if(!cirVal) { ac.querySelector('.input-circuito').classList.add('border-red-500'); missing=true; }
-                                if(!ladVal) { ac.querySelector('.input-lado').classList.add('border-red-500'); missing=true; }
+                                if(!modVal) { inpMod.classList.add('border-red-500'); missing=true; } else inpMod.classList.remove('border-red-500');
+                                if(!cavVal) { inpCav.classList.add('border-red-500'); missing=true; } else inpCav.classList.remove('border-red-500');
+                                if(!cirVal) { inpCir.classList.add('border-red-500'); missing=true; } else inpCir.classList.remove('border-red-500');
+                                
+                                if(!isFijo && !isMovil) { 
+                                    wrapperLado.classList.add('border-red-500'); missing=true; 
+                                } else { 
+                                    wrapperLado.classList.remove('border-red-500'); 
+                                }
+
                                 if(missing) error=true;
                             }
 
-                            actividades.push({ actividad: act, zona: zon, subzona: sub || null, modulo: modVal, cavidad: cavVal, circuito: cirVal, lado: ladVal });
-                            logText += `  - Actividad: ${act} [${zon}${sub ? '/'+sub : ''}]\n`;
+                            if (!error) {
+                                // Objeto base de la actividad
+                                let entry = { 
+                                    actividad: act, 
+                                    zona: zon, 
+                                    subzona: sub || null,
+                                    // Valores por defecto vacíos para detalles
+                                    modulo: null, 
+                                    cavidad: null, 
+                                    circuito: null, 
+                                    fijo: false, 
+                                    movil: false, 
+                                    lado: null 
+                                };
+
+                                let textoDetalles = "";
+
+                                // 5. SOLO si es visible, guardamos los datos y generamos texto extra
+                                if (detailsVisible) {
+                                    entry.modulo = modVal;
+                                    entry.cavidad = cavVal;
+                                    entry.circuito = cirVal;
+                                    entry.fijo = isFijo;
+                                    entry.movil = isMovil;
+                                    
+                                    let ladoArr = [];
+                                    if(isFijo) ladoArr.push("Fijo");
+                                    if(isMovil) ladoArr.push("Móvil");
+                                    entry.lado = ladoArr.join('/');
+
+                                    textoDetalles = ` (Mod:${modVal} Cav:${cavVal} Cir:${cirVal} Lado:${entry.lado})`;
+                                }
+
+                                actividades.push(entry);
+                                
+                                // El logText solo llevará detalles si textoDetalles tiene contenido
+                                logText += `  - Actividad: ${act} [${zon}${sub ? '/'+sub : ''}]${textoDetalles}\n`;
+                            }
                         }
                     }
                 });
             } else {
+                // Validación para tarjeta roja (Defectos)
                 const defectCards = card.querySelectorAll('.defect-card');
                 if(defectCards.length === 0) { error = true; card.classList.add('border', 'border-red-500'); }
+                else card.classList.remove('border', 'border-red-500');
+
                 defectCards.forEach(dc => {
-                    const dn = dc.querySelector('.input-defecto').value.trim();
-                    if(dn) {
+                    const inpDef = dc.querySelector('.input-defecto');
+                    const dn = inpDef.value.trim();
+                    if(!dn) { error=true; inpDef.classList.add('border-red-500'); }
+                    else {
+                        inpDef.classList.remove('border-red-500');
                         const rows = dc.querySelectorAll('.location-row');
-                        if (rows.length === 0) { error = true; }
+                        if (rows.length === 0) { error = true; } // Debe haber al menos una ubicación
                         rows.forEach(row => {
-                            const cav = row.querySelector('.input-cav')?.value || '';
-                            const circ = row.querySelector('.input-circ')?.value || '';
+                            const inpCav = row.querySelector('.input-cav');
+                            const inpCirc = row.querySelector('.input-circ');
+                            const cav = inpCav?.value || '';
+                            const circ = inpCirc?.value || '';
                             const fijo = row.querySelector('.input-fijo')?.checked;
                             const movil = row.querySelector('.input-movil')?.checked;
-                            if(!cav || !circ || (!fijo && !movil)) { error = true; row.classList.add('bg-red-900/40', 'border', 'border-red-500'); } 
+                            
+                            let rowError = false;
+                            if(!cav) { inpCav.classList.add('border-red-500'); rowError=true; } else inpCav.classList.remove('border-red-500');
+                            if(!circ) { inpCirc.classList.add('border-red-500'); rowError=true; } else inpCirc.classList.remove('border-red-500');
+                            if(!fijo && !movil) rowError = true;
+
+                            if(rowError) { error = true; row.classList.add('bg-red-900/40', 'border', 'border-red-500'); } 
                             else { 
                                 row.classList.remove('bg-red-900/40', 'border', 'border-red-500'); 
                                 actividades.push({ defecto: dn, cav, circ, fijo, movil }); 
                                 logText += `  - Defecto: ${dn} (Cav:${cav} Cir:${circ})\n`;
                             }
                         });
-                    } else { error=true; dc.querySelector('.input-defecto').classList.add('border-red-500'); }
+                    }
                 });
             }
             arr.push({ nombre: n, lider: l, mesa: m, actividades: (contextType === 'main' ? actividades : []), detalles: (contextType === 'vinc' ? actividades : []) });
         });
-        if(error) { alert("Faltan datos obligatorios (resaltados en rojo)."); return null; }
+        
+        if(error) return null;
         return { data: arr, log: logText };
     }
 </script>

@@ -18,6 +18,8 @@
         <input type="hidden" name="asignaciones_json" id="asignaciones-json">
         <input type="hidden" name="orden_retorno_ref" id="input-orden-ref-final">
         <input type="hidden" name="comentarios_generados" id="comentarios-generados">
+        <input type="hidden" name="motivo_retorno" id="input-motivo-val">
+        <input type="hidden" name="observaciones_retorno" id="final-observaciones">
         
         <div class="bg-gray-900/50 border-b border-gray-700 px-8 pt-4">
             <nav class="-mb-px flex space-x-8" aria-label="Tabs">
@@ -51,7 +53,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-400 mb-1">Molde</label>
                         <input type="text" value="{{ pre_molde_nombre }}" readonly class="block w-full bg-gray-700 border-gray-600 text-gray-300 rounded-md font-bold px-3 py-2">
-                        <input type="hidden" name="molde" value="{{ pre_molde_pk|default:'' }}">
+                        <input type="hidden" name="molde" id="input-molde-id" value="{{ pre_molde_pk|default:'' }}">
                     </div>
                     <div>
                         <label class="block text-gray-400 font-bold mb-1">Máquina</label>
@@ -86,42 +88,6 @@
                 </div>
             </div>
 
-            <template id="tech-card-template">
-                <div class="tech-card animate-fade-in relative">
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 pr-2">
-                        <div class="md:col-span-5 relative group-combo">
-                            <label class="block text-[10px] text-gray-400 uppercase font-bold mb-1 tracking-wider">Nombre Técnico</label>
-                            <input type="text" class="input-nombre sync-name w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500 placeholder-gray-500 validate-required" placeholder="Buscar..." autocomplete="off">
-                            <div class="combo-list hidden absolute top-full left-0 w-full bg-gray-600 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg"></div>
-                        </div>
-                        <div class="md:col-span-4 relative group-combo-lider">
-                            <label class="block text-[10px] text-yellow-500 uppercase font-bold mb-1 tracking-wider">Líder Responsable</label>
-                            <input type="text" class="input-lider w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white focus:ring-2 focus:ring-yellow-500 placeholder-gray-500 validate-required" placeholder="Seleccionar..." autocomplete="off">
-                            <div class="combo-list-lider hidden absolute top-full left-0 w-full bg-gray-600 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg"></div>
-                        </div>
-                        <div class="md:col-span-3 relative custom-select-container">
-                            <label class="block text-[10px] text-gray-400 uppercase font-bold mb-1 tracking-wider">Mesa</label>
-                            <input type="text" class="input-mesa input-select w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white text-center focus:ring-2 focus:ring-blue-500 cursor-pointer outline-none validate-required" value="" placeholder="-" readonly>
-                            <div class="select-menu hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 shadow-2xl rounded max-h-48 overflow-y-auto z-50">
-                                {% for i in "x"|rjust:"20" %}<div class="select-option p-2 hover:bg-blue-600 text-white text-center text-sm cursor-pointer border-b border-gray-600 last:border-0" data-value="{{ forloop.counter }}">{{ forloop.counter }}</div>{% endfor %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-gray-900/40 border border-gray-600 rounded-lg p-3">
-                        <div class="flex items-center gap-2 border-b border-gray-600 pb-2 mb-3 overflow-x-auto custom-scrollbar">
-                            <div class="defect-tabs-container flex gap-1"></div>
-                            <button type="button" class="btn-add-defect-tab shrink-0 bg-blue-600 hover:bg-blue-500 text-white w-8 h-8 rounded flex items-center justify-center font-bold shadow transition" title="Agregar otro defecto">+</button>
-                        </div>
-                        <div class="defect-cards-content relative min-h-[180px]">
-                            <div class="empty-defects-state absolute inset-0 flex items-center justify-center text-gray-500 text-xs italic">
-                                Sin defectos registrados. Pulsa "+" para agregar.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </template>
-
             <div id="view-retorno" class="hidden animate-fade-in">
                 <div class="bg-yellow-900/10 border border-yellow-700/50 rounded-lg p-6">
                     <h3 class="text-xl font-bold text-yellow-500 mb-6 flex items-center gap-2 border-b border-yellow-800 pb-2">Detalles del Retorno</h3>
@@ -138,6 +104,7 @@
                             </div>
                             <div id="lista-resultados-orden" class="hidden absolute top-full left-0 w-full bg-gray-800 border border-gray-600 max-h-60 overflow-y-auto z-50 rounded-b-lg shadow-2xl mt-1"></div>
                         </div>
+                        
                         <div id="resultado-busqueda" class="hidden mt-3 p-3 bg-gray-700/50 rounded border border-gray-600 text-sm animate-fade-in">
                             <div class="flex justify-between items-center">
                                 <div>
@@ -151,7 +118,7 @@
 
                     <div id="contenedor-resumen-visual" class="hidden mb-6">
                         <div class="flex justify-between items-center mb-2">
-                            <h4 class="text-sm font-bold text-gray-300 uppercase">Selecciona lo que falló (Máx 2 Técnicos): <span id="contador-seleccion" class="text-yellow-400 text-lg">0</span>/2</h4>
+                            <h4 class="text-sm font-bold text-gray-300 uppercase">Selecciona lo que falló: <span id="contador-seleccion" class="text-yellow-400 text-lg">0</span>/2</h4>
                             <button type="button" onclick="cerrarResumen()" class="text-xs text-red-400 hover:text-red-300 underline">Limpiar</button>
                         </div>
                         <div id="grid-tarjetas-retorno" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto custom-scrollbar p-1"></div>
@@ -162,20 +129,18 @@
                             <label class="block text-sm font-bold text-gray-300 mb-2">Defectos de retorno </label>
                             <div class="relative" id="container-motivo-multiselect">
                                 <input type="text" id="input-motivo-display" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-yellow-500 cursor-pointer caret-transparent" placeholder="-- Seleccionar Defectos --" readonly>
-                                <input type="hidden" name="motivo_retorno" id="input-motivo-val">
                                 <div id="dropdown-motivo-list" class="hidden absolute top-full left-0 w-full bg-gray-800 border border-gray-600 max-h-60 overflow-y-auto z-50 rounded-b-lg shadow-2xl mt-1 p-1"></div>
                             </div>
                         </div>
                         <div class="grid grid-cols-1 gap-4">
                             <div>
-                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Generado Automáticamente (Solo Lectura)</label>
-                                <textarea id="txt-observaciones-auto" rows="4" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-400 text-xs font-mono focus:outline-none" readonly placeholder="Selecciona tarjetas arriba para generar este texto..."></textarea>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Generado Automáticamente</label>
+                                <textarea id="txt-observaciones-auto" rows="4" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-400 text-xs font-mono focus:outline-none" readonly></textarea>
                             </div>
                             <div>
                                 <label class="block text-sm font-bold text-gray-300 mb-2">Información Adicional</label>
                                 <textarea id="txt-observaciones-manual" rows="3" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-yellow-500" placeholder="Escribe aquí cualquier comentario extra..."></textarea>
                             </div>
-                            <input type="hidden" name="observaciones_retorno" id="final-observaciones">
                         </div>
                     </div>
                 </div>
@@ -190,6 +155,7 @@
         </div>
     </form>
 </div>
+
 <div id="modal-warning-hydra" class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-90 hidden backdrop-blur-sm transition-opacity duration-300">
     <div class="bg-gray-800 border-2 border-yellow-500 rounded-xl shadow-2xl w-full max-w-md transform scale-100 p-6 relative">
         <div class="text-center">
@@ -198,24 +164,51 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
             </div>
-            
             <h3 class="text-2xl font-bold text-white mb-2">¡Atención!</h3>
-            <p class="text-gray-300 text-base mb-6">
-                Antes de continuar, asegúrate de haber realizado el movimiento correspondiente en:
-                <br><span class="text-yellow-400 font-bold text-xl block mt-2"> HYDRA</span>
-            </p>
-
+            <p class="text-gray-300 text-base mb-6">Asegúrate de haber realizado el movimiento en: <br><span class="text-yellow-400 font-bold text-xl block mt-2">HYDRA</span></p>
             <div class="flex justify-center gap-4">
-                <button type="button" onclick="cerrarWarningHydra()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-semibold transition">
-                    Cancelar
-                </button>
-                <button type="button" id="btn-confirmar-hydra" class="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg font-bold shadow-lg shadow-yellow-600/30 transition transform hover:-translate-y-1">
-                    Ya lo hice, Continuar
-                </button>
+                <button type="button" onclick="cerrarWarningHydra()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-semibold transition">Cancelar</button>
+                <button type="button" id="btn-confirmar-hydra" class="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg font-bold shadow-lg shadow-yellow-600/30 transition transform hover:-translate-y-1">Ya lo hice, Continuar</button>
             </div>
         </div>
     </div>
 </div>
+
+<template id="tech-card-template">
+    <div class="tech-card animate-fade-in relative">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 pr-2">
+            <div class="md:col-span-5 relative group-combo">
+                <label class="block text-[10px] text-gray-400 uppercase font-bold mb-1 tracking-wider">Nombre Técnico</label>
+                <input type="text" class="input-nombre sync-name w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500 placeholder-gray-500 validate-required" placeholder="Buscar..." autocomplete="off">
+                <div class="combo-list hidden absolute top-full left-0 w-full bg-gray-600 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg"></div>
+            </div>
+            <div class="md:col-span-4 relative group-combo-lider">
+                <label class="block text-[10px] text-yellow-500 uppercase font-bold mb-1 tracking-wider">Líder Responsable</label>
+                <input type="text" class="input-lider w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white focus:ring-2 focus:ring-yellow-500 placeholder-gray-500 validate-required" placeholder="Seleccionar..." autocomplete="off">
+                <div class="combo-list-lider hidden absolute top-full left-0 w-full bg-gray-600 border border-gray-500 z-50 max-h-48 overflow-y-auto shadow-2xl rounded-b-lg"></div>
+            </div>
+            <div class="md:col-span-3 relative custom-select-container">
+                <label class="block text-[10px] text-gray-400 uppercase font-bold mb-1 tracking-wider">Mesa</label>
+                <input type="text" class="input-mesa input-select w-full bg-gray-800 border border-gray-500 rounded px-3 py-2 text-sm text-white text-center focus:ring-2 focus:ring-blue-500 cursor-pointer outline-none validate-required" value="" placeholder="-" readonly>
+                <div class="select-menu hidden absolute top-full left-0 w-full bg-gray-700 border border-gray-500 shadow-2xl rounded max-h-48 overflow-y-auto z-50">
+                    {% for i in "x"|rjust:"20" %}<div class="select-option p-2 hover:bg-blue-600 text-white text-center text-sm cursor-pointer border-b border-gray-600 last:border-0" data-value="{{ forloop.counter }}">{{ forloop.counter }}</div>{% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="bg-gray-900/40 border border-gray-600 rounded-lg p-3">
+            <div class="flex items-center gap-2 border-b border-gray-600 pb-2 mb-3 overflow-x-auto custom-scrollbar">
+                <div class="defect-tabs-container flex gap-1"></div>
+                <button type="button" class="btn-add-defect-tab shrink-0 bg-blue-600 hover:bg-blue-500 text-white w-8 h-8 rounded flex items-center justify-center font-bold shadow transition" title="Agregar otro defecto">+</button>
+            </div>
+            <div class="defect-cards-content relative min-h-[180px]">
+                <div class="empty-defects-state absolute inset-0 flex items-center justify-center text-gray-500 text-xs italic">
+                    Sin defectos registrados. Pulsa "+" para agregar.
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
 <template id="defect-card-template">
     <div class="defect-card bg-gray-800/80 border border-gray-600 rounded p-3 relative animate-fade-in mb-3">
         <button type="button" class="btn-remove-defect-card absolute top-2 right-2 text-gray-600 hover:text-red-400 p-1 text-xl font-bold">&times;</button>
@@ -247,7 +240,8 @@
         <div class="col-span-3 relative group-circuito">
             <input type="text" class="input-circ w-full bg-transparent border-b border-gray-600 focus:border-yellow-500 text-center text-xs text-white placeholder-gray-600 focus:outline-none py-1 cursor-pointer validate-required" placeholder="-" readonly>
             <div class="circuito-menu hidden absolute top-full left-0 w-64 bg-gray-800 border border-gray-600 shadow-2xl rounded z-[100] p-2 max-h-60 overflow-y-auto">
-                <label class="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded cursor-pointer border-b border-gray-600 mb-2"><input type="checkbox" value="Todas" class="chk-todas form-checkbox h-4 w-4 text-yellow-600 bg-gray-900 border-gray-500 rounded"><span class="text-xs text-white font-bold">TODAS</span></label>
+                <label class="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded cursor-pointer border-b border-gray-600 mb-2"><input type="checkbox" value="Todas" class="chk-todas form-checkbox h-4 w-4 text-yellow-600 bg-gray-900 border-gray-500 rounded"><span class="text-xs text-white font-bold">TODAS</span>
+                <input type="checkbox" value="Otros" class="chk-otros form-checkbox h-4 w-4 text-yellow-600 bg-gray-900 border-gray-500 rounded"><span class="text-xs text-white font-bold">OTROS</span></label>
                 <div class="grid grid-cols-4 gap-2">{% for i in "x"|rjust:"126" %}<label class="flex items-center justify-center p-1 hover:bg-gray-700 rounded cursor-pointer"><input type="checkbox" value="{{ forloop.counter }}" class="chk-num form-checkbox h-3 w-3 text-yellow-500 bg-gray-900 border-gray-500 rounded mr-1"><span class="text-[10px] text-gray-300">{{ forloop.counter }}</span></label>{% endfor %}</div>
             </div>
         </div>
@@ -271,7 +265,18 @@
 
 {% block scripts %}
 <script>
-    // --- 1. UTILIDADES VISUALES (TABS) ---
+    // ==========================================
+    // 1. VARIABLES Y FUNCIONES GLOBALES (ACCESIBLES DESDE HTML)
+    // ==========================================
+    
+    // Variables para cachear elementos del DOM
+    let ordenesPendientesCache = [];
+    let techGlobalCounter = 0;
+    let defectCounters = {}; 
+    let dataOrdenEncontrada = null;
+    let ordenRetornoValida = false;
+
+    // --- FUNCIONES VISUALES (TABS) ---
     function switchTab(tabName) {
         const btnGeneral = document.getElementById('tab-btn-general');
         const btnRetorno = document.getElementById('tab-btn-retorno');
@@ -279,18 +284,29 @@
         const viewRetorno = document.getElementById('view-retorno');
 
         if(tabName === 'general') {
-            viewGeneral.classList.remove('hidden'); viewRetorno.classList.add('hidden');
-            btnGeneral.classList.replace('border-transparent', 'border-emerald-500'); btnGeneral.classList.replace('text-gray-400', 'text-emerald-500');
-            btnRetorno.classList.replace('border-yellow-500', 'border-transparent'); btnRetorno.classList.replace('text-yellow-500', 'text-gray-400');
+            viewGeneral.classList.remove('hidden'); 
+            viewRetorno.classList.add('hidden');
+            
+            btnGeneral.classList.replace('border-transparent', 'border-emerald-500'); 
+            btnGeneral.classList.replace('text-gray-400', 'text-emerald-500');
+            
+            btnRetorno.classList.replace('border-yellow-500', 'border-transparent'); 
+            btnRetorno.classList.replace('text-yellow-500', 'text-gray-400');
         } else {
-            viewGeneral.classList.add('hidden'); viewRetorno.classList.remove('hidden');
-            btnRetorno.classList.replace('border-transparent', 'border-yellow-500'); btnRetorno.classList.replace('text-gray-400', 'text-yellow-500');
-            btnGeneral.classList.replace('border-emerald-500', 'border-transparent'); btnGeneral.classList.replace('text-emerald-500', 'text-gray-400');
+            viewGeneral.classList.add('hidden'); 
+            viewRetorno.classList.remove('hidden');
+            
+            btnRetorno.classList.replace('border-transparent', 'border-yellow-500'); 
+            btnRetorno.classList.replace('text-gray-400', 'text-yellow-500');
+            
+            btnGeneral.classList.replace('border-emerald-500', 'border-transparent'); 
+            btnGeneral.classList.replace('text-emerald-500', 'text-gray-400');
+            
             if(!window.dataOrdenEncontrada) updateReturnLeadersOptions(); 
         }
     }
 
-    window.cerrarResumen = function() {
+    function cerrarResumen() {
         document.getElementById('contenedor-resumen-visual').classList.add('hidden');
         document.getElementById('txt-observaciones-auto').value = '';
         document.getElementById('contador-seleccion').innerText = '0';
@@ -299,35 +315,113 @@
         document.querySelectorAll('.chk-motivo').forEach(c => c.checked = false);
     }
 
+    function updateReturnLeadersOptions() {
+        const dropdown = document.getElementById('dropdown-lideres');
+        if(dropdown) dropdown.innerHTML = '<div class="p-2 text-gray-500 text-xs text-center italic">Busca una orden para ver líderes.</div>';
+    }
+
+    // --- MODALES ---
+    let formToSubmit = null;
+    function cerrarWarningHydra() {
+        document.getElementById('modal-warning-hydra').classList.add('hidden');
+        formToSubmit = null;
+    }
+
+    // --- FUNCIONES DE TARJETAS (GLOBALES) ---
+    function activateTechTab(techId) {
+        document.querySelectorAll('.tech-card-wrapper').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.tech-tab-btn').forEach(btn => {
+            btn.classList.remove('bg-gray-700', 'text-white', 'border-blue-500');
+            btn.classList.add('bg-gray-800', 'text-gray-400', 'border-transparent', 'hover:bg-gray-700');
+        });
+        document.getElementById('card-' + techId)?.classList.remove('hidden');
+        const btn = document.getElementById('btn-' + techId);
+        if(btn) {
+            btn.classList.replace('bg-gray-800', 'bg-gray-700');
+            btn.classList.replace('text-gray-400', 'text-white');
+            btn.classList.replace('border-transparent', 'border-blue-500');
+        }
+    }
+
+    function removeTech(techId, e) {
+        e.stopPropagation();
+        if(!confirm("¿Eliminar técnico?")) return;
+        document.getElementById('btn-' + techId)?.remove();
+        document.getElementById('card-' + techId)?.remove();
+        const tabsBar = document.getElementById('tech-tabs-bar');
+        if(tabsBar.children.length === 0) document.getElementById('empty-state').style.display = 'flex';
+        else activateTechTab(tabsBar.querySelector('.tech-tab-btn').id.replace('btn-', ''));
+    }
+
+    function switchDefectTab(techCard, defectId) {
+        const allTabs = techCard.querySelectorAll('.defect-tab-btn');
+        const allContents = techCard.querySelectorAll('.defect-card');
+
+        allTabs.forEach(btn => {
+            btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-500');
+            btn.classList.add('bg-gray-800', 'text-gray-400', 'border-gray-600');
+        });
+        allContents.forEach(content => content.classList.add('hidden'));
+
+        const activeTab = techCard.querySelector(`#tab-btn-${defectId}`);
+        const activeContent = techCard.querySelector(`#content-${defectId}`);
+
+        if(activeTab && activeContent) {
+            activeTab.classList.remove('bg-gray-800', 'text-gray-400', 'border-gray-600');
+            activeTab.classList.add('bg-blue-600', 'text-white', 'border-blue-500');
+            activeContent.classList.remove('hidden');
+        }
+    }
+
+    function removeDefectTab(defectId, techId, e) {
+        if(e) e.stopPropagation();
+        if(!confirm("¿Eliminar este defecto?")) return;
+
+        const techCard = document.getElementById(`card-${techId}`);
+        const tabBtn = document.getElementById(`tab-btn-${defectId}`);
+        const content = document.getElementById(`content-${defectId}`);
+
+        if(tabBtn) tabBtn.remove();
+        if(content) content.remove();
+
+        const remainingTabs = techCard.querySelectorAll('.defect-tab-btn');
+        if(remainingTabs.length === 0) {
+            techCard.querySelector('.empty-defects-state').classList.remove('hidden');
+        } else {
+            const firstId = remainingTabs[0].id.replace('tab-btn-', '');
+            switchDefectTab(techCard, firstId);
+        }
+    }
+
+    // ==========================================
+    // 2. INICIALIZACIÓN (DOM LOADED)
+    // ==========================================
     document.addEventListener('DOMContentLoaded', () => {
-        // DATOS MAESTROS
+        // DATOS MAESTROS (Django Context)
         const tecnicosData = [{% for t in moldmakers %}{ nombre: "{{ t.nombre|escapejs }}" },{% endfor %}];
         const lideresData = [{% for l in lideres_all %}{ nombre: "{{ l.nombre|escapejs }}" },{% endfor %}]; 
         const defectosData = [{% if lista_defectos %}{% for d in lista_defectos %}{ nombre: "{{ d.nombre_defecto|escapejs }}" },{% endfor %}{% else %}{ nombre: "Rebaba" }{% endif %}];
-        const partesData = {{ partes_json|default:"[]"|safe }};
 
-        // SETUP COMBOS NP
-        setupCombobox(document.getElementById('input-saliente'), document.getElementById('list-saliente'), partesData);
-        setupCombobox(document.getElementById('input-entrante'), document.getElementById('list-entrante'), partesData);
-
-        // VARIABLES GLOBALES
+        // ELEMENTOS DOM
         const tabsBar = document.getElementById('tech-tabs-bar');
         const contentArea = document.getElementById('tech-cards-content');
         const emptyState = document.getElementById('empty-state');
         const statusInput = document.getElementById('input-status');
         const btnRetorno = document.getElementById('tab-btn-retorno');
         const badge = document.getElementById('badge-retorno');
-        
-        let techCounter = 0;
-        let defectCounters = {}; 
-        window.dataOrdenEncontrada = null; 
+        const modalHydra = document.getElementById('modal-warning-hydra');
+        const btnConfirmHydra = document.getElementById('btn-confirmar-hydra');
 
+        // Check Status Inicial
         function checkStatus() {
             const val = statusInput.value.trim();
             if (val === '203' || val === '204') {
-                btnRetorno.classList.remove('hidden'); badge.classList.remove('hidden');
+                btnRetorno.classList.remove('hidden'); 
+                badge.classList.remove('hidden');
             } else {
-                btnRetorno.classList.add('hidden'); badge.classList.add('hidden'); switchTab('general');
+                btnRetorno.classList.add('hidden'); 
+                badge.classList.add('hidden'); 
+                switchTab('general');
             }
         }
         checkStatus();
@@ -343,12 +437,22 @@
                 const div = document.createElement('div');
                 div.className = "flex items-center p-2 hover:bg-gray-700 cursor-pointer border-b border-gray-700 last:border-0";
                 div.innerHTML = `<input type="checkbox" id="motivo-${idx}" value="${def.nombre}" class="chk-motivo form-checkbox h-4 w-4 text-yellow-500 bg-gray-900 border-gray-500 rounded mr-2"><label for="motivo-${idx}" class="text-sm text-gray-300 w-full cursor-pointer select-none">${def.nombre}</label>`;
-                div.addEventListener('click', (e) => { if (e.target.tagName !== 'INPUT') { const chk = div.querySelector('input'); chk.checked = !chk.checked; updateMotivoDisplay(); } });
+                div.addEventListener('click', (e) => { 
+                    if (e.target.tagName !== 'INPUT') { 
+                        const chk = div.querySelector('input'); 
+                        chk.checked = !chk.checked; 
+                        updateMotivoDisplay(); 
+                    } 
+                });
                 div.querySelector('input').addEventListener('change', updateMotivoDisplay);
                 dropdownMotivoList.appendChild(div);
             });
             inputMotivoDisplay.addEventListener('click', (e) => { e.stopPropagation(); dropdownMotivoList.classList.toggle('hidden'); });
-            window.addEventListener('click', (e) => { if(!inputMotivoDisplay.contains(e.target) && !dropdownMotivoList.contains(e.target)) { dropdownMotivoList.classList.add('hidden'); } });
+            window.addEventListener('click', (e) => { 
+                if(!inputMotivoDisplay.contains(e.target) && !dropdownMotivoList.contains(e.target)) { 
+                    dropdownMotivoList.classList.add('hidden'); 
+                } 
+            });
         }
 
         function updateMotivoDisplay() {
@@ -372,9 +476,11 @@
         if (inputBuscar) {
             inputBuscar.addEventListener('input', (e) => {
                 const term = e.target.value.trim();
+                window.ordenRetornoValida = false;
                 clearTimeout(debounceTimer);
                 if(inputBuscar.value) inputBuscar.classList.remove('border-red-500'); 
                 if (term.length < 1) { listaResultados.classList.add('hidden'); return; }
+                
                 spinner.classList.remove('hidden');
                 debounceTimer = setTimeout(async () => {
                     try {
@@ -397,7 +503,10 @@
                     } catch (err) { console.error("Error búsqueda", err); } finally { spinner.classList.add('hidden'); }
                 }, 300);
             });
-            window.addEventListener('click', (e) => { if (!inputBuscar.contains(e.target) && !listaResultados.contains(e.target)) listaResultados.classList.add('hidden'); });
+            window.addEventListener('click', (e) => { 
+                if (!inputBuscar.contains(e.target) && !listaResultados.contains(e.target)) 
+                    listaResultados.classList.add('hidden'); 
+            });
         }
 
         async function buscarInfoOrden(numeroOrden) {
@@ -413,12 +522,14 @@
                     resMolde.textContent = data.molde;
                     resDefecto.textContent = data.defecto || 'N/A';
                     window.dataOrdenEncontrada = data; 
+                    window.ordenRetornoValida = true;
                 } else { 
                     alert("Error al cargar orden: " + data.message); 
                     resContainer.classList.add('hidden'); 
                     window.dataOrdenEncontrada = null; 
+                    window.ordenRetornoValida = false;
                 }
-            } catch(e) { console.error(e); alert("Error de conexión."); }
+            } catch(e) { console.error(e); alert("Error de conexión."); window.ordenRetornoValida = false; }
         }
 
         // --- TARJETAS RETORNO (Resumen visual) ---
@@ -427,32 +538,6 @@
         const contadorSeleccion = document.getElementById('contador-seleccion');
         const txtObservacionesAuto = document.getElementById('txt-observaciones-auto');
         const txtObservacionesManual = document.getElementById('txt-observaciones-manual');
-
-        function crearChipsDesglose(textoRaw, tipo, parentId) {
-            if (!textoRaw) return "";
-            const str = String(textoRaw);
-            const partes = str.split(/[,/\s-]+/).map(s => s.trim()).filter(s => s !== "");
-            if (partes.length <= 1) return ""; 
-
-            let html = `<div class="mt-2 flex flex-wrap gap-2 ml-1 border-t border-gray-700 pt-1">`;
-            partes.forEach(parte => {
-                const cleanVal = parte.replace(/[^a-zA-Z0-9]/g, '');
-                if(!cleanVal) return;
-                const subId = `${parentId}-${tipo}-${cleanVal}`;
-                html += `
-                    <div class="relative">
-                        <input type="checkbox" id="${subId}" class="peer sr-only chk-sub-item" 
-                               data-parent-id="${parentId}" data-tipo="${tipo}" data-valor="${parte}">
-                        <label for="${subId}" class="cursor-pointer select-none rounded px-2 py-1 text-[10px] font-bold transition-all
-                            bg-gray-700 text-gray-400 border border-gray-600 
-                            peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-400 hover:bg-gray-600 opacity-50 peer-checked:opacity-100">
-                            ${parte}
-                        </label>
-                    </div>
-                `;
-            });
-            return html + `</div>`;
-        }
 
         if(btnVerDetalles) {
             btnVerDetalles.addEventListener('click', () => {
@@ -524,6 +609,7 @@
                             gridTarjetas.appendChild(cardDiv);
                         });
 
+                        // Eventos para el resumen visual
                         document.querySelectorAll('.chk-defecto').forEach(chk => {
                             chk.addEventListener('change', (e) => {
                                 const isChecked = e.target.checked;
@@ -548,6 +634,32 @@
                 } catch(error) { console.error(error); gridTarjetas.innerHTML = `<p class="text-red-400 text-center p-4">Error visualizando datos.</p>`; }
                 generarTextoRetorno(); 
             });
+        }
+
+        function crearChipsDesglose(textoRaw, tipo, parentId) {
+            if (!textoRaw) return "";
+            const str = String(textoRaw);
+            const partes = str.split(/[,/\s-]+/).map(s => s.trim()).filter(s => s !== "");
+            if (partes.length <= 1) return ""; 
+
+            let html = `<div class="mt-2 flex flex-wrap gap-2 ml-1 border-t border-gray-700 pt-1">`;
+            partes.forEach(parte => {
+                const cleanVal = parte.replace(/[^a-zA-Z0-9]/g, '');
+                if(!cleanVal) return;
+                const subId = `${parentId}-${tipo}-${cleanVal}`;
+                html += `
+                    <div class="relative">
+                        <input type="checkbox" id="${subId}" class="peer sr-only chk-sub-item" 
+                               data-parent-id="${parentId}" data-tipo="${tipo}" data-valor="${parte}">
+                        <label for="${subId}" class="cursor-pointer select-none rounded px-2 py-1 text-[10px] font-bold transition-all
+                            bg-gray-700 text-gray-400 border border-gray-600 
+                            peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-400 hover:bg-gray-600 opacity-50 peer-checked:opacity-100">
+                            ${parte}
+                        </label>
+                    </div>
+                `;
+            });
+            return html + `</div>`;
         }
 
         function validarLimiteTecnicos(checkboxCambiado) {
@@ -609,25 +721,17 @@
             if (checksPadres.length === 0) textoFinal += "Sin selección de fallas.\n";
 
             Object.values(resumen).forEach(obj => {
-                textoFinal += `\n>> TÉCNICO: ${obj.nombre}\n   LÍDER: ${obj.lider}\n   FALLAS RECURRENTES:\n`;
-                obj.defectos.forEach(d => textoFinal += `   - ${d}\n`);
+                textoFinal += `\n>> TÉCNICO: ${obj.nombre}\n   LÍDER: ${obj.lider}\n   FALLAS RECURRENTES:\n`;
+                obj.defectos.forEach(d => textoFinal += `   - ${d}\n`);
             });
             txtObservacionesAuto.value = textoFinal;
         }
 
-        window.updateReturnLeadersOptions = function() {
-            const dropdown = document.getElementById('dropdown-lideres');
-            if(dropdown) dropdown.innerHTML = '<div class="p-2 text-gray-500 text-xs text-center italic">Busca una orden para ver líderes.</div>';
-        };
-
-        // ==========================================
-        // 5. GESTIÓN DE TARJETAS Y TABS (TÉCNICO)
-        // ==========================================
-        
+        // --- GESTIÓN DE TARJETAS TÉCNICAS (CREACIÓN) ---
         function createNewTechCard() {
             emptyState.style.display = 'none';
-            techCounter++;
-            const currentTechId = 'tech-' + techCounter;
+            techGlobalCounter++;
+            const currentTechId = 'tech-' + techGlobalCounter;
             
             const tabBtn = document.createElement('div');
             tabBtn.id = 'btn-' + currentTechId;
@@ -649,6 +753,7 @@
 
             initCardLogic(cardContainer, currentTechId);
             contentArea.appendChild(cardContainer);
+            activateTechTab(currentTechId); // Activar la nueva tarjeta
             return cardContainer;
         }
 
@@ -659,13 +764,11 @@
             setupCombobox(card.querySelector('.input-nombre'), card.querySelector('.combo-list'), tecnicosData);
             setupCombobox(card.querySelector('.input-lider'), card.querySelector('.combo-list-lider'), lideresData);
 
-            // TABS DE DEFECTOS
             const defectTabsContainer = card.querySelector('.defect-tabs-container');
             const defectContentArea = card.querySelector('.defect-cards-content');
             const emptyDefects = card.querySelector('.empty-defects-state');
             const btnAddDefect = card.querySelector('.btn-add-defect-tab');
             
-            // Inicializar contador en el objeto global
             defectCounters[techId] = 0;
 
             btnAddDefect.onclick = () => {
@@ -674,7 +777,6 @@
                 const defectId = `${techId}-def-${count}`;
                 if(emptyDefects) emptyDefects.classList.add('hidden');
 
-                // 1. Botón Tab
                 const tabButton = document.createElement('button');
                 tabButton.type = 'button';
                 tabButton.id = `tab-btn-${defectId}`;
@@ -687,7 +789,6 @@
                 });
                 defectTabsContainer.appendChild(tabButton);
 
-                // 2. Contenido
                 const defTemplate = document.getElementById('defect-card-template');
                 const defClone = defTemplate.content.cloneNode(true);
                 const defCard = defClone.querySelector('.defect-card');
@@ -720,98 +821,10 @@
                 switchDefectTab(card, defectId);
             };
 
-            // Iniciar con un defecto
             btnAddDefect.click(); 
         }
 
-        window.switchDefectTab = function(techCard, defectId) {
-            const allTabs = techCard.querySelectorAll('.defect-tab-btn');
-            const allContents = techCard.querySelectorAll('.defect-card');
-
-            allTabs.forEach(btn => {
-                btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-500');
-                btn.classList.add('bg-gray-800', 'text-gray-400', 'border-gray-600');
-            });
-            allContents.forEach(content => content.classList.add('hidden'));
-
-            const activeTab = techCard.querySelector(`#tab-btn-${defectId}`);
-            const activeContent = techCard.querySelector(`#content-${defectId}`);
-
-            if(activeTab && activeContent) {
-                activeTab.classList.remove('bg-gray-800', 'text-gray-400', 'border-gray-600');
-                activeTab.classList.add('bg-blue-600', 'text-white', 'border-blue-500');
-                activeContent.classList.remove('hidden');
-            }
-        };
-
-        window.removeDefectTab = function(defectId, techId, e) {
-            if(e) e.stopPropagation();
-            if(!confirm("¿Eliminar este defecto?")) return;
-
-            const techCard = document.getElementById(`card-${techId}`);
-            const tabBtn = document.getElementById(`tab-btn-${defectId}`);
-            const content = document.getElementById(`content-${defectId}`);
-
-            if(tabBtn) tabBtn.remove();
-            if(content) content.remove();
-
-            const remainingTabs = techCard.querySelectorAll('.defect-tab-btn');
-            if(remainingTabs.length === 0) {
-                techCard.querySelector('.empty-defects-state').classList.remove('hidden');
-            } else {
-                const firstId = remainingTabs[0].id.replace('tab-btn-', '');
-                switchDefectTab(techCard, firstId);
-            }
-        };
-
-        function createNewLocationRow(container) {
-            const locTempl = document.getElementById('location-row-template');
-            const locClone = locTempl.content.cloneNode(true);
-            const locRow = locClone.querySelector('.location-row');
-            
-            locRow.querySelector('.btn-remove-loc').onclick = () => locRow.remove();
-            
-            const cavContainer = locRow.querySelector('.custom-select-container');
-            if(cavContainer) setupSimpleDropdown(cavContainer);
-            setupCircuitoMultiselect(locRow);
-            
-            container.appendChild(locRow);
-        }
-
-        // --- HELPERS UI ---
-        function updateLabels(defCard, defectName) {
-            const lblCav = defCard.querySelector('.label-cav');
-            const lblCirc = defCard.querySelector('.label-circ');
-            const term = defectName ? defectName.toLowerCase() : "";
-            if (term.includes('hot runner') || term.includes('colada caliente')) { lblCav.textContent = 'Drop'; lblCirc.textContent = 'Zona'; } 
-            else if (term.includes('falla de sensores') || term.includes('sensor')) { lblCav.textContent = 'PG'; lblCirc.textContent = 'EO'; } 
-            else { lblCav.textContent = 'Cavidad'; lblCirc.textContent = 'Circuito'; }
-        }
-
-        window.activateTechTab = function(techId) {
-            document.querySelectorAll('.tech-card-wrapper').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tech-tab-btn').forEach(btn => {
-                btn.classList.remove('bg-gray-700', 'text-white', 'border-blue-500');
-                btn.classList.add('bg-gray-800', 'text-gray-400', 'border-transparent', 'hover:bg-gray-700');
-            });
-            document.getElementById('card-' + techId)?.classList.remove('hidden');
-            const btn = document.getElementById('btn-' + techId);
-            if(btn) {
-                btn.classList.replace('bg-gray-800', 'bg-gray-700');
-                btn.classList.replace('text-gray-400', 'text-white');
-                btn.classList.replace('border-transparent', 'border-blue-500');
-            }
-        };
-
-        window.removeTech = function(techId, e) {
-            e.stopPropagation();
-            if(!confirm("¿Eliminar técnico?")) return;
-            document.getElementById('btn-' + techId)?.remove();
-            document.getElementById('card-' + techId)?.remove();
-            if(tabsBar.children.length === 0) emptyState.style.display = 'flex';
-            else activateTechTab(tabsBar.querySelector('.tech-tab-btn').id.replace('btn-', ''));
-        };
-
+        // --- FUNCIONES INTERNAS DE UI (Dropdowns, Multiselect, Etiquetas) ---
         function closeAllMenus() { document.querySelectorAll('.circuito-menu, .select-menu, .combo-list, .combo-list-def, .combo-list-lider').forEach(m => m.classList.add('hidden')); }
         window.addEventListener('click', () => closeAllMenus());
 
@@ -832,16 +845,41 @@
             const input = row.querySelector('.input-circ');
             const menu = row.querySelector('.circuito-menu');
             const chkTodas = menu.querySelector('.chk-todas');
+            const chkOtros = menu.querySelector('.chk-otros');
             const chkNums = menu.querySelectorAll('.chk-num');
             input.addEventListener('click', (e) => { e.stopPropagation(); closeAllMenus(); menu.classList.remove('hidden'); });
             menu.addEventListener('click', (e) => e.stopPropagation());
             const update = () => {
                 if (chkTodas.checked) { input.value = "Todas"; chkNums.forEach(c => c.checked = false); } 
+                else if (chkOtros.checked) { input.value = "Otros"; chkNums.forEach(c => c.checked = false); } 
                 else { const v = Array.from(chkNums).filter(c => c.checked).map(c => c.value); input.value = v.join(', '); }
                 if(input.value) input.classList.remove('border-red-500');
             };
             chkTodas.addEventListener('change', () => { if(chkTodas.checked) chkNums.forEach(c => c.checked = false); update(); });
             chkNums.forEach(c => { c.addEventListener('change', () => { if(c.checked) chkTodas.checked = false; update(); }); });
+        }
+
+        function createNewLocationRow(container) {
+            const locTempl = document.getElementById('location-row-template');
+            const locClone = locTempl.content.cloneNode(true);
+            const locRow = locClone.querySelector('.location-row');
+            
+            locRow.querySelector('.btn-remove-loc').onclick = () => locRow.remove();
+            
+            const cavContainer = locRow.querySelector('.custom-select-container');
+            if(cavContainer) setupSimpleDropdown(cavContainer);
+            setupCircuitoMultiselect(locRow);
+            
+            container.appendChild(locRow);
+        }
+
+        function updateLabels(defCard, defectName) {
+            const lblCav = defCard.querySelector('.label-cav');
+            const lblCirc = defCard.querySelector('.label-circ');
+            const term = defectName ? defectName.toLowerCase() : "";
+            if (term.includes('hot runner') || term.includes('colada caliente')) { lblCav.textContent = 'Drop'; lblCirc.textContent = 'Zona'; } 
+            else if (term.includes('falla de sensores') || term.includes('sensor')) { lblCav.textContent = 'PG'; lblCirc.textContent = 'EO'; } 
+            else { lblCav.textContent = 'Cavidad'; lblCirc.textContent = 'Circuito'; }
         }
 
         function setupCombobox(input, list, data, onSelectCallback = null) {
@@ -852,33 +890,53 @@
                 list.classList.remove('hidden');
                 f.forEach(item => {
                     const div = document.createElement('div'); div.className = 'p-2 hover:bg-blue-600 cursor-pointer text-xs text-white border-b border-gray-500 bg-gray-700'; div.textContent = item.nombre;
-                    div.onmousedown = (e) => { e.preventDefault(); input.value = item.nombre; input.dispatchEvent(new Event('input')); if(input.value) input.classList.remove('border-red-500'); list.classList.add('hidden'); if (onSelectCallback) onSelectCallback(item.nombre); };
+                    div.onmousedown = (e) => { 
+                        e.preventDefault(); 
+                        input.value = item.nombre; 
+                        input.classList.remove('border-red-500', 'placeholder-red-400');
+                        list.classList.add('hidden'); 
+                        if (onSelectCallback) onSelectCallback(item.nombre); 
+                    };
                     list.appendChild(div);
                 });
             };
-            input.addEventListener('input', (e) => { render(e.target.value); if(input.value) input.classList.remove('border-red-500'); });
+            input.addEventListener('input', (e) => { render(e.target.value); input.classList.remove('border-red-500'); });
             input.addEventListener('focus', () => render(input.value));
             input.addEventListener('click', (e) => { e.stopPropagation(); closeAllMenus(); render(input.value); });
-        }
-        const modalHydra = document.getElementById('modal-warning-hydra');
-        const btnConfirmHydra = document.getElementById('btn-confirmar-hydra');
-        let formToSubmit = null; // Variable para guardar el formulario pendiente
 
-        window.cerrarWarningHydra = function() {
-            modalHydra.classList.add('hidden');
-            formToSubmit = null;
+            // Validación Estricta
+            input.addEventListener('blur', function() {
+                setTimeout(() => {
+                    const val = this.value.trim();
+                    if(val === "") return;
+                    const exists = data.some(d => d.nombre.toLowerCase() === val.toLowerCase());
+                    if(!exists) {
+                        this.value = ""; 
+                        this.placeholder = "Seleccione de la lista...";
+                        this.classList.add('border-red-500', 'placeholder-red-400');
+                    } else {
+                        const correct = data.find(d => d.nombre.toLowerCase() === val.toLowerCase());
+                        if(correct) this.value = correct.nombre;
+                        this.classList.remove('border-red-500');
+                    }
+                    list.classList.add('hidden');
+                }, 200);
+            });
         }
 
         // Acción al confirmar en el modal
         btnConfirmHydra.addEventListener('click', () => {
-            if (formToSubmit) {
-                // Desactivar validación HTML5 para evitar loops y enviar
-                formToSubmit.submit(); 
-            }
+            if (formToSubmit) formToSubmit.submit(); 
         });
 
+        // Evento Botón Agregar Técnico Inicial
+        document.getElementById('btn-add-tech').addEventListener('click', () => createNewTechCard());
+        
+        // Crear primera tarjeta
+        createNewTechCard();
+
         // ==========================================
-        // 6. SUBMIT (CON TODAS LAS VALIDACIONES)
+        // 6. SUBMIT (CON VALIDACIONES)
         // ==========================================
         const form = document.getElementById('form-registro');
         form.addEventListener('submit', (e) => {
@@ -890,11 +948,10 @@
             
             if ((statusVal === '203' || statusVal === '204')) {
                 // 1.1 Orden anterior obligatoria
-                if (!ordenRetornoInput.value.trim()) {
-                    alert("⚠️ Para estatus de Retorno (203/204), debes buscar y seleccionar la orden anterior en la pestaña 'Información de Retorno'.");
+                if (!window.ordenRetornoValida) {
+                    alert("⚠️ Para estatus de Retorno, debes BUSCAR y SELECCIONAR una orden válida en la pestaña 'Información de Retorno'.");
                     switchTab('retorno'); 
                     ordenRetornoInput.classList.add('border-red-500');
-                    ordenRetornoInput.focus();
                     return; 
                 }
 
@@ -903,51 +960,24 @@
                 const motivoRetornoDisplay = document.getElementById('input-motivo-display');
 
                 if (!motivoRetornoVal.value.trim()) {
-                    alert("⚠️ Para estatus de Retorno, debes seleccionar al menos un 'Defecto de retorno' en la pestaña 'Información de Retorno'.");
+                    alert("⚠️ Selecciona 'Defectos de retorno'.");
                     switchTab('retorno');
                     motivoRetornoDisplay.classList.add('border-red-500');
-                    motivoRetornoDisplay.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     return;
                 } else {
                      motivoRetornoDisplay.classList.remove('border-red-500');
                 }
 
-                // 1.3 Validación de SELECCIÓN VISUAL OBLIGATORIA (NUEVO)
-                // Deben haber marcado al menos un checkbox en el grid de tarjetas
+                // 1.3 Selección visual obligatoria
                 const defectosRetornoSeleccionados = document.querySelectorAll('#grid-tarjetas-retorno .chk-defecto:checked');
-                
                 if (defectosRetornoSeleccionados.length === 0) {
-                     alert("⚠️ Para estatus de Retorno, debes seleccionar al menos un defecto de la orden anterior en el 'Resumen Visual' (chips/tarjetas).");
+                     alert("⚠️ Selecciona qué falló en el resumen visual.");
                      switchTab('retorno');
-                     document.getElementById('grid-tarjetas-retorno').scrollIntoView({ behavior: 'smooth', block: 'center' });
                      return;
-                }
-
-                // 1.4 Validación de CHIPS HIJOS (Detalle)
-                // Si el defecto seleccionado tiene "desglose", al menos un hijo debe estar marcado.
-                for (let i = 0; i < defectosRetornoSeleccionados.length; i++) {
-                    const chk = defectosRetornoSeleccionados[i];
-                    const parentId = chk.id;
-                    const nombreDefecto = chk.dataset.defecto;
-                    const tieneDesglose = chk.dataset.tieneDesglose === "true"; 
-
-                    if (tieneDesglose) {
-                        const subItemsChecked = document.querySelectorAll(`#grid-tarjetas-retorno .chk-sub-item[data-parent-id="${parentId}"]:checked`);
-                        
-                        if (subItemsChecked.length === 0) {
-                            alert(`⚠️ En el defecto de retorno "${nombreDefecto}", debes seleccionar al menos una Cavidad o Circuito específico (opciones detalladas).`);
-                            switchTab('retorno');
-                            chk.closest('.bg-gray-900\\/50').classList.add('border-red-500', 'border-2');
-                            chk.closest('.bg-gray-900\\/50').scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            return; 
-                        } else {
-                             chk.closest('.bg-gray-900\\/50').classList.remove('border-red-500', 'border-2');
-                        }
-                    }
                 }
             }
             
-            // --- VALIDACIÓN GENERAL ---
+            // --- VALIDACIÓN 2: CAMPOS DE LA ORDEN ---
             const autoObs = document.getElementById('txt-observaciones-auto').value;
             const manualObs = document.getElementById('txt-observaciones-manual').value;
             let combinedObs = autoObs;
@@ -959,7 +989,7 @@
             }
 
             const cards = contentArea.querySelectorAll('.tech-card-wrapper');
-            if(cards.length === 0) { alert("Agrega un técnico."); switchTab('general'); return; }
+            if(cards.length === 0) { alert("Agrega al menos un técnico."); switchTab('general'); return; }
 
             let isValid = true;
             let firstErrorTab = null;
@@ -973,6 +1003,7 @@
                 const card = wrapper.querySelector('.tech-card');
                 let cardError = false;
                 
+                // Validar inputs requeridos (Nombre, Lider, Mesa)
                 card.querySelectorAll('.validate-required').forEach(inp => {
                     if(!inp.value.trim()) { inp.classList.add('border-red-500'); isValid = false; cardError = true; } 
                     else inp.classList.remove('border-red-500');
@@ -983,7 +1014,7 @@
                 const mesa = card.querySelector('.input-mesa').value.trim();
                 const detalles = [];
                 const defCards = card.querySelectorAll('.defect-card');
-                let textoDefectos = ""; // FIX: Variable declarada aquí
+                let textoDefectos = "";
 
                 if(defCards.length === 0) { 
                     alert("Faltan defectos para " + (nombre||"un técnico")); isValid = false; cardError = true; 
@@ -1006,25 +1037,14 @@
                             const esFijo = r.querySelector('.input-fijo').checked;
                             const esMovil = r.querySelector('.input-movil').checked;
 
-                            if(!cav || !circ) { 
-                                if(!cav) r.querySelector('.input-cav').classList.add('border-red-500');
-                                if(!circ) r.querySelector('.input-circ').classList.add('border-red-500');
-                                isValid = false; cardError = true; 
-                            } else {
-                                r.querySelector('.input-cav').classList.remove('border-red-500');
-                                r.querySelector('.input-circ').classList.remove('border-red-500');
-                            }
+                            if(!cav) r.querySelector('.input-cav').classList.add('border-red-500'); else r.querySelector('.input-cav').classList.remove('border-red-500');
+                            if(!circ) r.querySelector('.input-circ').classList.add('border-red-500'); else r.querySelector('.input-circ').classList.remove('border-red-500');
+                            
+                            if(!cav || !circ) { isValid = false; cardError = true; }
 
-                            // --- VALIDACIÓN 2: CHECKBOX LADO ---
                             if (!esFijo && !esMovil) {
                                 alert(`⚠️ En el defecto "${nomDef}", debes seleccionar al menos un lado (Fijo o Móvil).`);
-                                r.querySelector('.input-fijo').parentElement.classList.add('text-red-500');
-                                r.querySelector('.input-movil').parentElement.classList.add('text-red-500');
-                                isValid = false; 
-                                cardError = true;
-                            } else {
-                                r.querySelector('.input-fijo').parentElement.classList.remove('text-red-500');
-                                r.querySelector('.input-movil').parentElement.classList.remove('text-red-500');
+                                isValid = false; cardError = true;
                             }
 
                             if (nomDef && cav && circ && (esFijo || esMovil)) { 
@@ -1037,8 +1057,12 @@
                 }
 
                 const tabBtn = document.getElementById('btn-' + wrapper.id.replace('card-',''));
-                if(cardError) { tabBtn.classList.add('text-red-400'); if(!firstErrorTab) firstErrorTab = wrapper.id.replace('card-',''); }
-                else { tabBtn.classList.remove('text-red-400'); }
+                if(cardError) { 
+                    tabBtn.classList.add('text-red-400'); 
+                    if(!firstErrorTab) firstErrorTab = wrapper.id.replace('card-',''); 
+                } else { 
+                    tabBtn.classList.remove('text-red-400'); 
+                }
 
                 if(!cardError && nombre && mesa && lider && detalles.length > 0) {
                     asignaciones.push({ nombre, lider, mesa, detalles });
@@ -1049,40 +1073,17 @@
             });
 
             if(!isValid) { 
-                alert("⚠️ Faltan campos obligatorios marcados en rojo."); 
+                alert("⚠️ Hay campos obligatorios vacíos o inválidos."); 
                 if(firstErrorTab) activateTechTab(firstErrorTab); 
-                return; // Detener aquí si hay errores
+                return; 
             }
-            if(totalDefectos === 0) { alert("Registra defectos válidos."); return; }
-            if(asignaciones.length === 0) { alert("Error datos."); return; }
+            if(totalDefectos === 0) { alert("Registra al menos un defecto."); return; }
 
             document.getElementById('asignaciones-json').value = JSON.stringify(asignaciones);
             document.getElementById('comentarios-generados').value = resumenTexto;
             formToSubmit = form;
             modalHydra.classList.remove('hidden');
         });
-
-        // Evento Botón Agregar Técnico
-        document.getElementById('btn-add-tech').addEventListener('click', () => {
-            const card = createNewTechCard();
-            activateTechTab(card.id.replace('card-',''));
-        });
-
-        const modal = document.getElementById('orden-modal');
-        const btnCerrar = document.getElementById('modal-close-btn');
-
-        if (btnCerrar) {
-            btnCerrar.addEventListener('click', (e) => {
-                e.preventDefault();
-                if(modal) modal.classList.add('hidden');
-            });
-        }
-        if (modal) {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) modal.classList.add('hidden');
-            });
-        }
-
     });
 </script>
 {% endblock %}

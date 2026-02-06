@@ -124,11 +124,6 @@
                     </div>
 
                     <div id="wrapper-inputs-vinculada" class="opacity-50 pointer-events-none transition-opacity">
-                        <div class="bg-gray-800 p-4 rounded border border-gray-600 flex items-center mb-6">
-                            <input type="checkbox" name="copiar_tecnicos" id="check-copiar-tecnicos" value="true" checked class="w-5 h-5 text-red-600 bg-gray-700 border-gray-500 rounded cursor-pointer">
-                            <label for="check-copiar-tecnicos" class="ml-3 text-sm text-gray-300 cursor-pointer select-none">Asignar mismos técnicos de la orden principal.</label>
-                        </div>
-
                         <div class="space-y-4 border-t border-red-800/50 pt-4">
                             <div class="flex justify-between items-center bg-red-900/30 p-2 rounded-t-lg border-b border-red-800">
                                 <h3 class="text-lg font-bold text-red-300 pl-2">Técnicos (Orden Vinculada)</h3>
@@ -155,25 +150,11 @@
 <div id="modal-warning-hydra" class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-90 hidden backdrop-blur-sm transition-opacity duration-300">
     <div class="bg-gray-800 border-2 border-yellow-500 rounded-xl shadow-2xl w-full max-w-md transform scale-100 p-6 relative">
         <div class="text-center">
-            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-900/50 mb-4 border border-yellow-500 animate-pulse">
-                <svg class="h-10 w-10 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-            </div>
-            
             <h3 class="text-2xl font-bold text-white mb-2">¡Atención!</h3>
-            <p class="text-gray-300 text-base mb-6">
-                Antes de continuar, asegúrate de haber realizado el movimiento correspondiente en:
-                <br><span class="text-yellow-400 font-bold text-xl block mt-2"> HYDRA</span>
-            </p>
-
+            <p class="text-gray-300 text-base mb-6">Asegúrate de haber realizado el movimiento en: <br><span class="text-yellow-400 font-bold text-xl block mt-2">HYDRA</span></p>
             <div class="flex justify-center gap-4">
-                <button type="button" onclick="cerrarWarningHydra()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-semibold transition">
-                    Cancelar
-                </button>
-                <button type="button" id="btn-confirmar-hydra" class="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg font-bold shadow-lg shadow-yellow-600/30 transition transform hover:-translate-y-1">
-                    Ya lo hice, Continuar
-                </button>
+                <button type="button" onclick="cerrarWarningHydra()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-semibold transition">Cancelar</button>
+                <button type="button" id="btn-confirmar-hydra" class="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg font-bold shadow-lg shadow-yellow-600/30 transition transform hover:-translate-y-1">Ya lo hice, Continuar</button>
             </div>
         </div>
     </div>
@@ -214,7 +195,6 @@
 <template id="defect-card-template">
     <div class="defect-card bg-gray-800/80 border border-gray-600 rounded p-3 relative animate-fade-in mb-3">
         <button type="button" class="btn-remove-defect-card absolute top-2 right-2 text-gray-600 hover:text-red-400 p-1 text-xl font-bold" title="Eliminar">&times;</button>
-        
         <div class="mb-3 relative pr-6">
             <label class="block text-[9px] text-blue-400 uppercase font-bold mb-1">Tipo de Evento</label>
             <select class="select-defecto w-full bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white font-bold outline-none focus:border-blue-500 cursor-pointer">
@@ -222,16 +202,10 @@
                 <option value="FECHADORES">FECHADORES</option>
             </select>
         </div>
-
         <div class="bg-gray-900/50 rounded border border-gray-700/50 overflow-visible">
-            <div class="header-row grid grid-cols-12 bg-gray-700/50 px-2 py-1 text-[9px] text-gray-400 uppercase font-bold text-center gap-1">
-                </div>
-            
+            <div class="header-row grid grid-cols-12 bg-gray-700/50 px-2 py-1 text-[9px] text-gray-400 uppercase font-bold text-center gap-1"></div>
             <div class="location-rows-container p-1 space-y-1"></div>
-            
-            <button type="button" class="btn-add-location-row w-full bg-gray-800 hover:bg-gray-700 text-blue-400 hover:text-blue-300 text-[10px] font-bold py-1.5 border-t border-gray-700 transition flex items-center justify-center gap-1">
-                <span>+ Agregar Fila</span>
-            </button>
+            <button type="button" class="btn-add-location-row w-full bg-gray-800 hover:bg-gray-700 text-blue-400 hover:text-blue-300 text-[10px] font-bold py-1.5 border-t border-gray-700 transition flex items-center justify-center gap-1"><span>+ Agregar Fila</span></button>
         </div>
     </div>
 </template>
@@ -240,68 +214,17 @@
     <div class="location-row grid grid-cols-12 gap-1 items-center animate-fade-in" data-type="config">
         <div class="col-span-2"><input type="text" class="input-entrante w-full bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-center text-white focus:border-blue-500 outline-none" placeholder="-"></div>
         <div class="col-span-2"><input type="text" class="input-saliente w-full bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-center text-white focus:border-blue-500 outline-none" placeholder="-"></div>
-        <div class="col-span-2 relative custom-select-container">
-            <input type="text" class="input-cav input-select w-full bg-transparent border-b border-gray-600 focus:border-blue-500 text-center text-xs text-white placeholder-gray-600 focus:outline-none py-1 cursor-pointer validate-required" placeholder="-" readonly>
-            <div class="select-menu hidden absolute top-full left-0 w-full bg-gray-800 border border-gray-600 shadow-2xl rounded max-h-60 overflow-y-auto z-50">
-                {% for i in "x"|rjust:"128" %}<div class="select-option p-2 hover:bg-blue-600 text-white text-center text-xs cursor-pointer border-b border-gray-700 last:border-0" data-value="{{ forloop.counter }}">{{ forloop.counter }}</div>{% endfor %}
-            </div>
-        </div>
-        <div class="col-span-2 relative group-circuito">
-            <input type="text" class="input-circ w-full bg-transparent border-b border-gray-600 focus:border-yellow-500 text-center text-xs text-white placeholder-gray-600 focus:outline-none py-1 cursor-pointer validate-required" placeholder="-" readonly>
-            <div class="circuito-menu hidden absolute top-full left-0 w-64 bg-gray-800 border border-gray-600 shadow-2xl rounded z-[100] p-2 max-h-60 overflow-y-auto">
-                <label class="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded cursor-pointer border-b border-gray-600 mb-2">
-                    <input type="checkbox" value="Todas" class="chk-todas form-checkbox h-4 w-4 text-yellow-600 bg-gray-900 border-gray-500 rounded">
-                    <span class="text-xs text-white font-bold">TODAS</span>
-                </label>
-                <div class="grid grid-cols-4 gap-2">
-                    {% for i in "x"|rjust:"126" %}
-                    <label class="flex items-center justify-center p-1 hover:bg-gray-700 rounded cursor-pointer">
-                        <input type="checkbox" value="{{ forloop.counter }}" class="chk-num form-checkbox h-3 w-3 text-yellow-500 bg-gray-900 border-gray-500 rounded mr-1">
-                        <span class="text-[10px] text-gray-300">{{ forloop.counter }}</span>
-                    </label>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-        <div class="col-span-3 flex justify-center gap-2">
-             <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" class="input-fijo form-checkbox h-3 w-3 text-emerald-500 bg-gray-700 border-gray-500 rounded"><span class="text-[9px] text-gray-300 font-bold">Fijo</span></label>
-             <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" class="input-movil form-checkbox h-3 w-3 text-blue-500 bg-gray-700 border-gray-500 rounded"><span class="text-[9px] text-gray-300 font-bold">Movil</span></label>
-        </div>
-        <div class="col-span-1 flex justify-center"><button type="button" class="btn-remove-row text-gray-500 hover:text-red-500 font-bold text-lg leading-none">&times;</button></div>
+        <div class="col-span-2 relative custom-select-container"><input type="text" class="input-cav input-select w-full bg-transparent border-b border-gray-600 focus:border-blue-500 text-center text-xs text-white placeholder-gray-600 focus:outline-none py-1 cursor-pointer validate-required" placeholder="-" readonly><div class="select-menu hidden absolute top-full left-0 w-full bg-gray-800 border border-gray-600 shadow-2xl rounded max-h-40 overflow-y-auto z-50">{% for i in "x"|rjust:"128" %}<div class="select-option p-2 hover:bg-purple-600 text-white text-center text-xs cursor-pointer border-b border-gray-700 last:border-0" data-value="{{ forloop.counter }}">{{ forloop.counter }}</div>{% endfor %}</div></div>
+        <div class="col-span-2 relative group-circuito"><input type="text" class="input-circ w-full bg-transparent border-b border-gray-600 focus:border-purple-500 text-center text-xs text-white placeholder-gray-600 focus:outline-none py-1 cursor-pointer" placeholder="-" readonly><div class="circuito-menu hidden absolute top-full left-0 w-48 bg-gray-800 border border-gray-600 shadow-2xl rounded z-[100] p-2 max-h-40 overflow-y-auto"><label class="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded cursor-pointer border-b border-gray-600 mb-2"><input type="checkbox" value="Todas" class="chk-todas form-checkbox h-3 w-3 text-purple-500 bg-gray-900 border-gray-500 rounded"><span class="text-xs text-white font-bold">TODAS</span></label><div class="grid grid-cols-4 gap-2">{% for i in "x"|rjust:"126" %}<label class="flex items-center justify-center p-1 hover:bg-gray-700 rounded cursor-pointer"><input type="checkbox" value="{{ forloop.counter }}" class="chk-num form-checkbox h-3 w-3 text-purple-500 bg-gray-900 border-gray-500 rounded mr-1"><span class="text-[10px] text-gray-300">{{ forloop.counter }}</span></label>{% endfor %}</div></div></div>
+        <div class="col-span-3 flex justify-center gap-1"><label class="flex items-center cursor-pointer"><input type="checkbox" class="input-fijo form-checkbox h-3 w-3 text-emerald-500 rounded bg-gray-700 border-gray-500"><span class="ml-0.5 text-[8px] text-gray-300">F</span></label><label class="flex items-center cursor-pointer"><input type="checkbox" class="input-movil form-checkbox h-3 w-3 text-blue-500 rounded bg-gray-700 border-gray-500"><span class="ml-0.5 text-[8px] text-gray-300">M</span></label></div>
+        <div class="col-span-1 text-center"><button type="button" class="btn-remove-row text-gray-500 hover:text-red-500 font-bold text-lg">&times;</button></div>
     </div>
 </template>
 
 <template id="row-fechador-template">
     <div class="location-row grid grid-cols-12 gap-1 items-center animate-fade-in" data-type="fechador">
-        <div class="col-span-5">
-            <select class="input-mes w-full bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-center text-white focus:border-blue-500 outline-none cursor-pointer">
-                <option value="" disabled selected>Mes</option>
-                <option value="Enero">Enero</option>
-                <option value="Febrero">Febrero</option>
-                <option value="Marzo">Marzo</option>
-                <option value="Abril">Abril</option>
-                <option value="Mayo">Mayo</option>
-                <option value="Junio">Junio</option>
-                <option value="Julio">Julio</option>
-                <option value="Agosto">Agosto</option>
-                <option value="Septiembre">Septiembre</option>
-                <option value="Octubre">Octubre</option>
-                <option value="Noviembre">Noviembre</option>
-                <option value="Diciembre">Diciembre</option>
-            </select>
-        </div>
-        <div class="col-span-5">
-             <select class="input-anio w-full bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-center text-white focus:border-blue-500 outline-none cursor-pointer">
-                <option value="" disabled selected>Año</option>
-                <option value="2024">2024</option>
-                <option value="2025">2025</option>
-                <option value="2026">2026</option>
-                <option value="2027">2027</option>
-                <option value="2028">2028</option>
-                <option value="2029">2029</option>
-                <option value="2030">2030</option>
-            </select>
-        </div>
+        <div class="col-span-5"><select class="input-mes w-full bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-center text-white focus:border-blue-500 outline-none cursor-pointer"><option value="" disabled selected>Mes</option><option value="Enero">Enero</option><option value="Febrero">Febrero</option><option value="Marzo">Marzo</option><option value="Abril">Abril</option><option value="Mayo">Mayo</option><option value="Junio">Junio</option><option value="Julio">Julio</option><option value="Agosto">Agosto</option><option value="Septiembre">Septiembre</option><option value="Octubre">Octubre</option><option value="Noviembre">Noviembre</option><option value="Diciembre">Diciembre</option></select></div>
+        <div class="col-span-5"><select class="input-anio w-full bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-center text-white focus:border-blue-500 outline-none cursor-pointer"><option value="" disabled selected>Año</option><option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option></select></div>
         <div class="col-span-2 flex justify-center"><button type="button" class="btn-remove-row text-gray-500 hover:text-red-500 font-bold text-lg leading-none">&times;</button></div>
     </div>
 </template>
@@ -342,18 +265,10 @@
             </div>
         </div>
         <div class="col-span-4 flex items-center justify-center gap-3">
-            <label class="inline-flex items-center cursor-pointer group">
-                <input type="checkbox" class="input-fijo form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded focus:ring-emerald-500">
-                <span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Fijo</span>
-            </label>
-            <label class="inline-flex items-center cursor-pointer group">
-                <input type="checkbox" class="input-movil form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded focus:ring-emerald-500">
-                <span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Móvil</span>
-            </label>
+            <label class="inline-flex items-center cursor-pointer group"><input type="checkbox" class="input-fijo form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded focus:ring-emerald-500"><span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Fijo</span></label>
+            <label class="inline-flex items-center cursor-pointer group"><input type="checkbox" class="input-movil form-checkbox h-3 w-3 text-emerald-500 bg-gray-900 border-gray-500 rounded focus:ring-emerald-500"><span class="ml-1 text-[10px] text-gray-400 group-hover:text-emerald-400 font-bold">Móvil</span></label>
         </div>
-        <div class="col-span-2 text-center">
-            <button type="button" class="btn-remove-loc text-gray-600 hover:text-red-500 font-bold px-2 text-xl">&times;</button>
-        </div>
+        <div class="col-span-2 text-center"><button type="button" class="btn-remove-loc text-gray-600 hover:text-red-500 font-bold px-2 text-xl">&times;</button></div>
     </div>
 </template>
 
@@ -443,14 +358,14 @@
             const inpCav = row.querySelector('.input-cav'); const menuCav = row.querySelector('.select-menu');
             if(inpCav) {
                 inpCav.onclick = (e) => { e.stopPropagation(); closeAllMenus(); menuCav.classList.remove('hidden'); };
-                menuCav.onclick = (e) => { if(e.target.classList.contains('select-option')) { inpCav.value = e.target.dataset.value; menuCav.classList.add('hidden'); } };
+                menuCav.onclick = (e) => { if(e.target.classList.contains('select-option')) { inpCav.value = e.target.dataset.value; menuCav.classList.add('hidden'); inpCav.classList.remove('border-red-500'); } };
             }
             setupCircuitoMultiselect(row);
         }
         container.appendChild(row);
     }
 
-    // --- 4. BÚSQUEDA ORDEN VINCULADA ---
+    // --- 4. BÚSQUEDA ORDEN VINCULADA (VALIDACIÓN ESTRICTA) ---
     function setupPendingSearch() {
         const input = document.getElementById('input-orden-vinculada');
         const list = document.getElementById('list-ordenes-pendientes');
@@ -474,6 +389,7 @@
                         e.stopPropagation();
                         input.value = o.numero;
                         hiddenInput.value = o.numero;
+                        input.classList.remove('border-red-500'); input.classList.add('border-green-500');
                         list.classList.add('hidden');
                         document.getElementById('wrapper-inputs-vinculada').classList.remove('opacity-50', 'pointer-events-none');
                     };
@@ -483,8 +399,29 @@
             list.classList.remove('hidden');
         };
 
-        input.addEventListener('input', (e) => render(e.target.value));
+        input.addEventListener('input', (e) => { 
+            hiddenInput.value = ""; // Resetear ID al escribir
+            input.classList.remove('border-green-500');
+            render(e.target.value); 
+        });
         input.addEventListener('focus', () => render(input.value));
+
+        // Validación estricta orden vinculada
+        input.addEventListener('blur', function() {
+            setTimeout(() => {
+                const val = this.value.trim();
+                const exists = ordenesPendientesCache.some(o => o.numero.toString() === val);
+                
+                if(!exists && val !== "") {
+                    this.value = "";
+                    hiddenInput.value = "";
+                    this.placeholder = "Debe seleccionar de la lista";
+                    this.classList.add('border-red-500');
+                    document.getElementById('wrapper-inputs-vinculada').classList.add('opacity-50', 'pointer-events-none');
+                }
+                list.classList.add('hidden');
+            }, 200);
+        });
     }
 
     async function cargarOrdenesPendientes() {
@@ -526,6 +463,7 @@
             document.getElementById('input-orden-vinculada').value = '';
             document.getElementById('orden-vinculada-id').value = '';
             document.getElementById('wrapper-inputs-vinculada').classList.add('opacity-50', 'pointer-events-none');
+            document.getElementById('input-orden-vinculada').classList.remove('border-red-500', 'border-green-500');
         }
     }
 
@@ -535,7 +473,7 @@
         if(!cfg) return;
         const containerTabs = document.getElementById(cfg.tabs);
         const containerCards = document.getElementById(cfg.content);
-        const emptyMsg = containerCards.querySelector('.empty-state');
+        const emptyMsg = document.querySelector(cfg.empty);
         if(emptyMsg) emptyMsg.style.display = 'none';
         
         techGlobalCounter++;
@@ -580,7 +518,7 @@
         
         const mesaInp = card.querySelector('.input-mesa'); const mesaMenu = card.querySelector('.select-menu');
         mesaInp.onclick = (e) => { e.stopPropagation(); closeAllMenus(); mesaMenu.classList.remove('hidden'); };
-        mesaMenu.onclick = (e) => { if(e.target.classList.contains('select-option')){ mesaInp.value = e.target.dataset.value; mesaMenu.classList.add('hidden'); } };
+        mesaMenu.onclick = (e) => { if(e.target.classList.contains('select-option')){ mesaInp.value = e.target.dataset.value; mesaMenu.classList.add('hidden'); mesaInp.classList.remove('border-red-500'); } };
 
         const btnAddDefect = card.querySelector('.btn-add-defect-tab');
         if(btnAddDefect) {
@@ -650,7 +588,7 @@
         if(tabs.length > 0) tabs[0].click(); else card.querySelector('.empty-defects-state').classList.remove('hidden');
     };
 
-    // --- COMBOBOX ---
+    // --- COMBOBOX CON VALIDACIÓN ESTRICTA ---
     function setupCombobox(inp, lst, data, cb) {
         if(!inp) return;
         const render = (q='') => {
@@ -659,13 +597,42 @@
             lst.classList.remove('hidden');
             f.forEach(x => {
                 const d = document.createElement('div'); d.className = 'p-2 hover:bg-gray-600 cursor-pointer text-white text-xs border-b border-gray-600'; d.innerText = x.nombre;
-                d.onmousedown = (e) => { e.preventDefault(); inp.value = x.nombre; lst.classList.add('hidden'); if(cb) cb(x.nombre); };
+                d.onmousedown = (e) => { 
+                    e.preventDefault(); 
+                    inp.value = x.nombre; 
+                    inp.classList.remove('border-red-500', 'placeholder-red-400');
+                    lst.classList.add('hidden'); 
+                    if(cb) cb(x.nombre); 
+                };
                 lst.appendChild(d);
             });
         };
-        inp.oninput = (e) => render(e.target.value); 
-        inp.onfocus = () => render(inp.value); // FIX: Mostrar lista al hacer clic
+        inp.oninput = (e) => {
+            inp.classList.remove('border-red-500');
+            render(e.target.value);
+        }; 
+        inp.onfocus = () => render(inp.value); 
         inp.onclick = (e) => { e.stopPropagation(); closeAllMenus(); render(inp.value); };
+
+        // Blur validation strict
+        inp.addEventListener('blur', function() {
+            setTimeout(() => {
+                const val = this.value.trim();
+                if(val === "") return;
+                const exists = data.some(d => d.nombre.toLowerCase() === val.toLowerCase());
+                if(!exists) {
+                    this.value = "";
+                    this.placeholder = "Seleccione de la lista...";
+                    this.classList.add('border-red-500', 'placeholder-red-400');
+                    if(cb) cb("");
+                } else {
+                    // Corregir casing
+                    const correct = data.find(d => d.nombre.toLowerCase() === val.toLowerCase());
+                    if(correct) this.value = correct.nombre;
+                }
+                lst.classList.add('hidden');
+            }, 200);
+        });
     }
     
     function closeAllMenus() { document.querySelectorAll('.combo-list, .combo-list-lider, .select-menu, .combo-list-def, [id^="list-"], .circuito-menu').forEach(m => m.classList.add('hidden')); }
@@ -676,11 +643,16 @@
         const all = menu.querySelector('.chk-todas'); const nums = menu.querySelectorAll('.chk-num');
         input.addEventListener('click', (e) => { e.stopPropagation(); closeAllMenus(); menu.classList.remove('hidden'); });
         menu.addEventListener('click', (e) => e.stopPropagation());
+        
         const update = () => {
-            if (all.checked) { input.value = "Todas"; nums.forEach(c => c.checked = false); } else { 
-                const v = Array.from(nums).filter(c => c.checked).map(c => c.value); 
-                input.value = v.join(', '); 
+            let val = "";
+            if (all.checked) { 
+                val = "Todas"; nums.forEach(c => c.checked = false); 
+            } else { 
+                val = Array.from(nums).filter(c => c.checked).map(c => c.value).join(', '); 
             }
+            input.value = val;
+            if(val) input.classList.remove('border-red-500');
         };
         all.addEventListener('change', () => { if(all.checked) nums.forEach(c=>c.checked=false); update(); });
         nums.forEach(c => c.addEventListener('change', () => { if(c.checked) all.checked=false; update(); }));
@@ -695,7 +667,7 @@
         const inpCav = row.querySelector('.input-cav'); const menuCav = row.querySelector('.select-menu');
         if(inpCav) {
             inpCav.onclick = (e) => { e.stopPropagation(); closeAllMenus(); menuCav.classList.remove('hidden'); };
-            menuCav.onclick = (e) => { if(e.target.classList.contains('select-option')) { inpCav.value = e.target.dataset.value; menuCav.classList.add('hidden'); } };
+            menuCav.onclick = (e) => { if(e.target.classList.contains('select-option')) { inpCav.value = e.target.dataset.value; menuCav.classList.add('hidden'); inpCav.classList.remove('border-red-500'); } };
         }
         setupCircuitoMultiselect(row);
         container.appendChild(row);
@@ -713,41 +685,72 @@
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         
+        // 1. Validar Nombres de Parte Globales
+        const npSal = document.getElementById('input-saliente-main');
+        const npEnt = document.getElementById('input-entrante-main');
+        let globalError = false;
+
+        if(!npSal.value.trim()) { alert("Falta NP Saliente"); npSal.classList.add('border-red-500'); globalError=true; } else npSal.classList.remove('border-red-500');
+        if(!npEnt.value.trim()) { alert("Falta NP Entrante"); npEnt.classList.add('border-red-500'); globalError=true; } else npEnt.classList.remove('border-red-500');
+        
+        if(globalError) { switchTab('general'); return; }
+
+        // 2. Validar Técnicos Principal
         const mainCards = document.querySelectorAll('#tech-cards-content-main .tech-card-wrapper');
         if(mainCards.length === 0) { alert("Falta técnico en Orden Principal"); switchTab('general'); return; }
         
-        const npSal = document.getElementById('input-saliente-main');
-        const npEnt = document.getElementById('input-entrante-main');
-
-        if(!npSal.value.trim()) { alert("Falta NP Saliente"); npSal.classList.add('border-red-500'); switchTab('general'); return; } else npSal.classList.remove('border-red-500');
-        if(!npEnt.value.trim()) { alert("Falta NP Entrante"); npEnt.classList.add('border-red-500'); switchTab('general'); return; } else npEnt.classList.remove('border-red-500');
-
         const resultMain = extractData(mainCards, 'main');
-        if(!resultMain) return;
+        if(!resultMain) {
+            alert("Hay campos vacíos o inválidos en la Orden Principal.");
+            return;
+        }
 
         let asignacionesVinc = [];
+        let resultVinc = { data: [], log: "" };
         const tipo = document.querySelector('input[name="tipo_tarjeta"]:checked').value;
+        
         if(tipo === 'roja') {
             const vincId = document.getElementById('orden-vinculada-id').value;
-            if(!vincId) { alert("Seleccione Orden Vinculada"); switchTab('vinculada'); return; }
-            const copiar = document.getElementById('check-copiar-tecnicos').checked;
-            if(copiar) {
-                asignacionesVinc = resultMain.data.map(item => ({ ...item, detalles: [] })); 
-            } else {
-                const vincCards = document.querySelectorAll('#tech-cards-content-vinc .tech-card-wrapper');
-                if(vincCards.length === 0) { alert("Falta técnico en Orden Vinculada"); switchTab('vinculada'); return; }
-                const resultVinc = extractData(vincCards, 'vinc');
-                if(!resultVinc) { switchTab('vinculada'); return; }
-                asignacionesVinc = resultVinc.data;
+            // Validar Orden seleccionada
+            if(!vincId) { 
+                alert("Seleccione Orden Vinculada de la lista."); 
+                document.getElementById('input-orden-vinculada').classList.add('border-red-500');
+                switchTab('vinculada'); 
+                return; 
             }
+            
+            // Validar Técnicos Vinculada (OBLIGATORIO MANUAL)
+            const vincCards = document.querySelectorAll('#tech-cards-content-vinc .tech-card-wrapper');
+            if(vincCards.length === 0) { 
+                alert("Debe agregar técnicos manualmente a la Orden Vinculada."); 
+                switchTab('vinculada'); 
+                return; 
+            }
+            
+            resultVinc = extractData(vincCards, 'vinc');
+            if(!resultVinc) { 
+                switchTab('vinculada'); 
+                alert("Hay campos vacíos o inválidos en la Orden Vinculada.");
+                return; 
+            }
+            asignacionesVinc = resultVinc.data;
         }
 
         let comentariosFinales = "--- REPORTE DE CAMBIO (CHO) ---\n";
         comentariosFinales += `NP Saliente: ${npSal.value}\nNP Entrante: ${npEnt.value}\n\n`;
         comentariosFinales += resultMain.log;
+        if(tipo === 'roja') comentariosFinales += "\n\n--- ORDEN VINCULADA ---\n" + resultVinc.log;
 
         document.getElementById('asignaciones-json').value = JSON.stringify(resultMain.data);
-        document.getElementById('asignaciones-vinc-json').value = JSON.stringify(asignacionesVinc);
+        
+        // Si hay datos en vinculada, enviamos el JSON. Si no, enviamos string vacío.
+        // Esto corrige el problema de ordenes no creadas en el backend.
+        if(asignacionesVinc.length > 0) {
+            document.getElementById('asignaciones-vinc-json').value = JSON.stringify(asignacionesVinc);
+        } else {
+            document.getElementById('asignaciones-vinc-json').value = "";
+        }
+
         document.getElementById('comentarios-generados').value = comentariosFinales;
         
         formToSubmit = form;
@@ -760,22 +763,25 @@
         let error = false;
 
         cardsNodeList.forEach(card => {
-            const n = card.querySelector('.input-nombre').value.trim();
-            const l = card.querySelector('.input-lider').value.trim();
-            const m = card.querySelector('.input-mesa').value.trim();
+            const inpNombre = card.querySelector('.input-nombre');
+            const inpLider = card.querySelector('.input-lider');
+            const inpMesa = card.querySelector('.input-mesa');
             
-            if(!n || !l || !m) { 
-                card.querySelector('.input-nombre').classList.add('border-red-500'); 
-                error = true; 
-            } else {
-                card.querySelector('.input-nombre').classList.remove('border-red-500');
-            }
+            const n = inpNombre.value.trim();
+            const l = inpLider.value.trim();
+            const m = inpMesa.value.trim();
+            
+            if(!n) { inpNombre.classList.add('border-red-500'); error = true; } else inpNombre.classList.remove('border-red-500');
+            if(!l) { inpLider.classList.add('border-red-500'); error = true; } else inpLider.classList.remove('border-red-500');
+            if(!m) { inpMesa.classList.add('border-red-500'); error = true; } else inpMesa.classList.remove('border-red-500');
+            
+            if(n && l && m) logText += `> TÉCNICO: ${n} (L: ${l}, M: ${m})\n`;
 
             const defectos = [];
-            logText += `> TÉCNICO: ${n} (L: ${l}, M: ${m})\n`;
-
             const defCards = card.querySelectorAll('.defect-card');
+            
             if(defCards.length === 0) { error = true; card.classList.add('border', 'border-red-500'); } 
+            else card.classList.remove('border', 'border-red-500');
 
             defCards.forEach(dc => {
                 let dn = '';
@@ -783,7 +789,13 @@
                 const inputDef = dc.querySelector('.input-defecto');
                 if(selectDef) dn = selectDef.value; else if(inputDef) dn = inputDef.value.trim();
 
-                if(!dn) { error = true; return; }
+                if(!dn) { 
+                    error = true; 
+                    if(inputDef) inputDef.classList.add('border-red-500');
+                    return; 
+                } else {
+                    if(inputDef) inputDef.classList.remove('border-red-500');
+                }
 
                 const rows = dc.querySelectorAll('.location-row');
                 if(rows.length === 0) { error = true; return; } 
@@ -804,10 +816,25 @@
                         if(!ent || !sal) rowError = true;
                     } else {
                         if(context === 'main') { 
-                            ent = row.querySelector('.input-entrante')?.value.trim() || '';
-                            sal = row.querySelector('.input-saliente')?.value.trim() || '';
-                            if(!ent || !sal) rowError = true;
+                            // En tarjeta verde, buscamos inputs dentro de la fila
+                            const inpEntRow = row.querySelector('.input-entrante');
+                            const inpSalRow = row.querySelector('.input-saliente');
+                            ent = inpEntRow?.value.trim() || '';
+                            sal = inpSalRow?.value.trim() || '';
+                            
+                            if(!ent) { if(inpEntRow) inpEntRow.classList.add('border-red-500'); rowError=true; } 
+                            else if(inpEntRow) inpEntRow.classList.remove('border-red-500');
+
+                            if(!sal) { if(inpSalRow) inpSalRow.classList.add('border-red-500'); rowError=true; }
+                            else if(inpSalRow) inpSalRow.classList.remove('border-red-500');
                         }
+                        
+                        // Validaciones comunes (Cav, Circ, Lado)
+                        const inpC = row.querySelector('.input-cav');
+                        const inpCi = row.querySelector('.input-circ');
+                        
+                        if(!cav) { if(inpC) inpC.classList.add('border-red-500'); rowError=true; } else if(inpC) inpC.classList.remove('border-red-500');
+                        if(!circ) { if(inpCi) inpCi.classList.add('border-red-500'); rowError=true; } else if(inpCi) inpCi.classList.remove('border-red-500');
                         if(!fijo && !movil) rowError = true;
                     }
 
@@ -827,7 +854,7 @@
             arr.push({ nombre: n, lider: l, mesa: m, detalles: defectos });
         });
 
-        if(error) { alert("Faltan datos obligatorios (resaltados en rojo)."); return null; }
+        if(error) return null;
         return { data: arr, log: logText };
     }
 </script>
